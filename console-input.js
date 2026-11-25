@@ -1,4 +1,5 @@
 import {onDesktopEvent} from './picture-in-picture.js';
+import {setCatalogCollapsed} from './console-shell.js';
 // One spatial navigator for the shell, live application panels and the board iframe.
 export function attachConsoleInput(api){
  const selector='button:not(:disabled),summary,input:not(:disabled),select:not(:disabled),textarea:not(:disabled),a[href],[tabindex="0"]';
@@ -17,7 +18,18 @@ export function attachConsoleInput(api){
   for(const el of list){if(el===from)continue;const b=el.getBoundingClientRect(),dx=b.x+b.width/2-x,dy=b.y+b.height/2-y,forward=(horizontal?dx:dy)*sign,cross=Math.abs(horizontal?dy:dx);if(forward<2)continue;const value=forward+cross*3;if(value<score){score=value;best=el;}}
   if(best)focus(best);
  }
- function home(){if(document.fullscreenElement?.classList.contains('window')){document.exitFullscreen().then(()=>home()).catch(()=>{});return;}document.activeElement?.blur();api.home();focus(document.querySelector('#app-catalog:not([inert]) summary')||document.getElementById('chat-launcher'));}
+ function home(openCatalog=false){
+  if(document.fullscreenElement?.classList.contains('window')){document.exitFullscreen().then(()=>home(openCatalog)).catch(()=>{});return;}
+  document.activeElement?.blur();api.home();
+  const toggle=document.getElementById('catalog-toggle');
+  if(openCatalog&&toggle?.getAttribute('aria-expanded')==='false'&&visible(toggle))setCatalogCollapsed(false);
+  focus(document.querySelector('#app-catalog:not([inert]) summary')||document.getElementById('chat-launcher'));
+ }
+ function dismissCompactCatalog(){
+  const shade=document.getElementById('catalog-shade');
+  if(!shade||shade.hidden||document.querySelector('.console-panel:not([hidden]),.app-link-panel'))return false;
+  setCatalogCollapsed(true);focus(document.getElementById('catalog-toggle'));return true;
+ }
  function gameOwnsKeys(doc){const el=doc.activeElement;if(el?.closest('#app-catalog,.desktop-header,#console-dock,.console-panel,.titlebar,.app-link-panel'))return false;return !!doc.querySelector('#window-game:not([hidden]) #game-overlay[hidden],#window-kart:not([hidden]) .kart-play:not([hidden])')||el?.matches('canvas');}
  function activate(doc=currentDoc()){
   const el=doc.activeElement;
@@ -28,7 +40,7 @@ export function attachConsoleInput(api){
   if(!editing(el)||el.matches('input[type=checkbox],input[type=radio]'))el.click();else el.focus();
  }
  function key(e){
-  if(e.key==='F6'){e.preventDefault();e.stopImmediatePropagation();home();return;}
+  if(e.key==='F6'){e.preventDefault();e.stopImmediatePropagation();home(true);return;}
   if(e.altKey||e.ctrlKey||e.metaKey||editing(e.target))return;
   if(e.target.closest('[data-native-keys]'))return;
   if(e.key==='Escape'&&(e.target.closest('.game-sound-control')||e.target.ownerDocument.querySelector('.app-link-panel')))return;
@@ -49,7 +61,8 @@ export function attachConsoleInput(api){
   padFrame=0;if(document.hidden)return;
   const pads=[...(navigator.getGamepads?.()||[])].filter(Boolean);if(!pads.length){pressed.clear();return;}
   const pad=pads[0],down=new Set(pad.buttons.map((b,i)=>b.pressed?i:-1).filter(i=>i>=0)),doc=currentDoc();
-  if(down.has(9)&&!pressed.has(9))home();
+  if(down.has(9)&&!pressed.has(9))home(true);
+  else if(down.has(1)&&!pressed.has(1)&&dismissCompactCatalog()){lastDirection='';}
   else if(!gameOwnsKeys(doc)){
    const direction=down.has(14)||pad.axes[0]<-.55?'left':down.has(15)||pad.axes[0]>.55?'right':down.has(12)||pad.axes[1]<-.55?'up':down.has(13)||pad.axes[1]>.55?'down':'';
    if(direction&&(direction!==lastDirection||now>=repeatAt)){

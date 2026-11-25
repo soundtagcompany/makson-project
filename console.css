@@ -748,10 +748,198 @@ html,body{font-synthesis:none}
  outline-offset:-4px!important;
 }
 
-/* Bundled Pixelify Sans and its two-glyph Cyrillic supplement (SIL OFL 1.1). */
+/* Compact shell: one stable workspace, with an independently scrolling app drawer. */
+@media(max-width:700px), (max-width:950px) and (pointer:coarse){
+ :root{--mobile-console-footer:calc(52px + env(safe-area-inset-bottom,0px))}
+ .console-desktop #console-shell,
+ .console-desktop.catalog-collapsed #console-shell,
+ .console-desktop.has-open-windows #console-shell,
+ .console-desktop.has-open-windows.catalog-collapsed #console-shell{
+  grid-template-columns:minmax(0,1fr);
+  grid-template-rows:minmax(0,1fr) var(--mobile-console-footer);
+  transition:none;
+ }
+ .console-desktop #app-workspace{grid-area:1/1;min-width:0;min-height:0}
+ .console-desktop #console-shell>#catalog-toggle,
+ .console-desktop.catalog-collapsed #console-shell>#catalog-toggle,
+ .console-desktop.has-open-windows #console-shell>#catalog-toggle{
+  grid-area:2/1;align-self:start;justify-self:stretch;
+  width:auto;height:52px;min-height:44px;margin:0;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  background:#09160e;border:0;border-top:1px solid #31593b;
+  font:18px/1 ConsoleMono;color:#b9f5c6;text-shadow:none!important;
+ }
+ .console-desktop #catalog-toggle::after{content:'Каталог';font:15px/1.2 ConsoleMono}
+ .console-desktop #app-catalog,.console-desktop.has-open-windows #app-catalog{
+  position:absolute;grid-area:auto;inset:auto 0 var(--mobile-console-footer);
+  display:block;z-index:4;height:auto;max-height:min(70%,440px);
+  border:0;border-top:1px solid #42704d;background:#07110b;
+  padding:8px 12px 16px;overflow:auto;overscroll-behavior:contain;
+  box-shadow:0 -8px 24px #000a;
+ }
+ .console-desktop.catalog-collapsed #app-catalog{visibility:hidden;pointer-events:none}
+ .console-desktop #catalog-groups,.console-desktop.has-open-windows #catalog-groups,
+ .console-desktop.has-open-windows .catalog-group{display:block;min-width:0}
+ .console-desktop.has-open-windows .catalog-group>summary{display:flex}
+ .console-desktop #app-catalog summary{
+  position:sticky;top:0;z-index:1;min-height:44px;background:#07110b;
+  padding:0 8px;font-size:14px!important;color:#b9f5c6;
+ }
+ .console-desktop #app-catalog .catalog-group>.catalog-items{
+  display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:8px;padding:8px 0 0;height:auto!important;opacity:1!important;
+ }
+ .console-desktop #app-catalog .catalog-group:not([open])>.catalog-items{display:none!important}
+ .console-desktop #app-catalog .catalog-row{min-width:0;min-height:48px;white-space:normal;margin:0}
+ .console-desktop #app-catalog .catalog-row>button:first-child{
+  min-width:0;min-height:48px;padding:6px 8px;gap:8px;
+  border:1px solid #2a4731;background:#0b1710;color:#d3eddb;
+  font-size:clamp(12px,3.6vw,15px)!important;line-height:1.2;
+ }
+ .console-desktop #app-catalog .catalog-app-icon{width:22px;flex:0 0 22px}
+ .console-desktop #app-catalog .catalog-caret{display:none}
+ .console-desktop #app-catalog .catalog-app-name{overflow-wrap:normal;word-break:normal}
+ .console-desktop .window>.titlebar{min-height:52px!important;height:52px!important;gap:4px}
+ .console-desktop .window .window-controls{gap:2px}
+ .console-desktop .window .window-controls button{
+  min-width:44px!important;min-height:44px!important;width:44px!important;height:44px!important;
+ }
+ .console-desktop #console-dock{min-height:50px;padding:2px 4px}
+ .console-desktop .console-task>button{min-height:44px}
+ .console-desktop #app-workspace.has-docked-apps>.window{height:calc(100% - 50px)!important}
+ .console-desktop #app-workspace.has-docked-apps>#sphere-stage{bottom:50px}
+}
+@media(max-width:350px){
+ .console-desktop #app-catalog .catalog-group>.catalog-items{grid-template-columns:minmax(0,1fr)}
+}
+@media(max-width:700px), (max-width:950px) and (pointer:coarse){
+ .console-desktop .desktop-header :is(h1,button),
+ .console-desktop .sphere-stage .desktop-icon span:last-child,
+ .console-desktop .console-task button{text-shadow:none!important}
+ .console-desktop .desktop-header :is(#console-settings,#chat-launcher){height:44px!important}
+ .console-desktop .sphere-stage .desktop-icon span:last-child{font-size:12px!important}
+}
+
+/* 12×12 sprite grid; native text and media stay out of decorative effects. */
+.console-desktop .app-pixel-icon{width:24px;height:24px;flex:none;shape-rendering:crispEdges}
+.console-desktop .sphere-stage .node-symbol .app-pixel-icon{
+ width:36px;height:36px;filter:none!important;
+}
+@media(max-width:700px), (max-width:950px) and (pointer:coarse){
+ .console-desktop #app-catalog .catalog-app-icon{width:24px;flex:0 0 24px}
+ .console-desktop .sphere-stage .node-symbol .app-pixel-icon{width:24px;height:24px}
+ .console-desktop #app-catalog .catalog-row>button:first-child{position:relative}
+ .console-desktop #app-catalog .catalog-row>button:first-child::before{
+  content:'';position:absolute;right:2px;top:2px;width:3px;height:3px;
+  background:#548563;box-shadow:-3px 0 #34543f,0 3px #34543f;pointer-events:none;
+ }
+}
+
+/* Pixelify Sans (SIL OFL 1.1, fonts/pixelify-OFL.txt) supplies native pixel outlines.
+   The small derived addon covers Cyrillic capital О and П absent from the bundled font. */
 @font-face{font-family:MaksonPixel;src:url('fonts/PixelifySans.ttf') format('truetype');font-weight:400 700;font-display:swap}
 @font-face{font-family:MaksonPixel;src:url('data:font/woff;base64,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') format('woff');font-weight:400 700;font-display:swap;unicode-range:U+041F}
+.console-desktop .desktop-header h1,
+.console-desktop #app-catalog :is(.catalog-group summary,.catalog-group summary span,.catalog-app-name),
+.console-desktop #catalog-toggle::after,
+:is(.console-desktop,.pip-desktop) .window :is(.titlebar>span,h2,.meme-section-title>b){
+ font-family:MaksonPixel,ConsoleMono,monospace!important;
+ font-weight:600;text-shadow:none!important;
+}
+@media(max-width:700px), (max-width:950px) and (pointer:coarse){
+ .console-desktop .desktop-header h1,.console-desktop .desktop-header.has-login-hint h1{
+  font-size:clamp(17px,5.45vw,23px)!important;letter-spacing:.02em!important;
+ }
+ .console-desktop #app-catalog .catalog-group summary{font-size:20px!important;line-height:1.05}
+ .console-desktop #app-catalog .catalog-group summary span{font-size:18px!important}
+ .console-desktop #app-catalog .catalog-app-name{font-size:17px!important;line-height:1.05}
+ .console-desktop #catalog-toggle::after{font-size:19px;line-height:1;text-transform:uppercase}
+ :is(.console-desktop,.pip-desktop) .window .titlebar>span{font-size:22px!important;line-height:1.05}
+ :is(.console-desktop,.pip-desktop) .window h2{font-size:clamp(23px,6vw,31px)!important;line-height:1.12}
+}
+.console-desktop .desktop-header #chat-launcher span,
+.console-desktop .sphere-stage .desktop-icon span:last-child,
+.console-desktop .console-task>button:first-child{
+ font-family:MaksonPixel,ConsoleMono,monospace!important;font-weight:600;
+ text-shadow:none!important;
+}
+@media(max-width:700px), (max-width:950px) and (pointer:coarse){
+ .console-desktop .desktop-header #chat-launcher span{font-size:18px;line-height:1}
+ .console-desktop .sphere-stage .desktop-icon span:last-child{
+  font-size:13px!important;line-height:1.05;
+ }
+ .console-desktop .window.console-colored-app>.titlebar>span,
+ .pip-desktop .window.console-colored-app>.titlebar>span{text-shadow:none!important}
+ /* Use local feedback, not the browser's tap highlight after the drawer disappears. */
+ .console-desktop :is(#catalog-toggle,#app-catalog button,[data-sphere-app]){-webkit-tap-highlight-color:transparent}
+ .console-desktop #app-catalog .catalog-row>button:first-child:active{background:#1a3422}
+}
 
+/* A compact catalog sits above, rather than competes with, the running app. */
+#catalog-shade{display:none}
+@media(max-width:700px), (max-width:950px) and (pointer:coarse){
+ .console-desktop #catalog-shade:not([hidden]){
+  display:block;position:absolute;inset:0 0 var(--mobile-console-footer);z-index:3;
+  background:rgb(0 0 0 / .62);touch-action:manipulation;
+ }
+ .console-desktop.console-booting #catalog-shade{visibility:hidden}
+ .console-desktop #app-catalog,.console-desktop.has-open-windows #app-catalog{
+  max-height:min(70%,440px,calc(100% - var(--mobile-console-footer) - 44px));
+ }
+}
+/* Landscape phones have room for shorter rows without reducing hit targets. */
+@media (min-width:650px) and (max-width:950px) and (pointer:coarse) and (orientation:landscape){
+ .console-desktop #app-catalog .catalog-group>.catalog-items{
+  grid-template-columns:repeat(3,minmax(0,1fr));
+ }
+}
+
+/* First arrival: the sphere is interactive, and the catalog reads as a control. */
+.sphere-touch-hint,.catalog-toggle-title,.catalog-toggle-count{display:none}
+@media(max-width:700px), (max-width:950px) and (pointer:coarse){
+ .console-desktop #catalog-toggle::after{content:none}
+ .console-desktop #console-shell>#catalog-toggle{
+  justify-content:flex-start;padding:0 16px;gap:8px;
+  color:#c3f6cf;box-shadow:none!important;
+ }
+ .catalog-toggle-arrow{
+  order:2;width:24px;height:24px;display:grid;place-items:center;line-height:1;color:#9cdbad;
+ }
+ .catalog-toggle-title{
+  display:block;margin-right:auto;font:600 20px/1 MaksonPixel,ConsoleMono,monospace;
+  text-transform:uppercase;letter-spacing:.03em;
+ }
+ .catalog-toggle-count{
+  display:grid;place-items:center;min-width:28px;height:24px;
+  font:12px/1 ConsoleMono,monospace;color:#9cdbad;border:1px solid #365644;
+ }
+ .console-desktop.catalog-collapsed:not(.has-open-windows) #console-shell>#catalog-toggle{
+  background:#123021;border-top-color:#538065;
+ }
+ .console-desktop #console-shell>#catalog-toggle:active{background:#22432f}
+ .sphere-touch-hint{
+  display:block;position:absolute;bottom:16px;left:8px;right:8px;z-index:2;
+  margin:0;text-align:center;color:#b1a0c7;pointer-events:none;
+  font:12px/1.4 ConsoleMono,monospace;
+ }
+ .sphere-touch-hint::before{
+  content:'';display:inline-block;width:4px;height:4px;margin:0 8px 2px 0;
+  background:#a378c9;box-shadow:4px 0 #6b527d;
+ }
+ .console-desktop .sphere-stage .desktop-icon>span:last-child{
+  padding:1px 3px;background:#08050e;color:#ebdcfa;
+ }
+ .console-desktop .sphere-stage .desktop-icon:active>span:last-child{
+  background:#ccb2f0;color:#180e23;
+ }
+}
+@media(max-height:480px) and (orientation:landscape) and (max-width:950px) and (pointer:coarse){
+ .sphere-touch-hint{left:16px;right:auto;bottom:16px;width:min(24vw,180px);text-align:left}
+}
+@media(orientation:portrait) and (min-height:520px) and (max-width:700px),
+       (orientation:portrait) and (min-height:520px) and (max-width:950px) and (pointer:coarse){
+ .sphere-touch-hint{bottom:auto;top:min(calc(50% + min(46vw,39%) + 16px),calc(100% - 32px))}
+}
 /* Desktop terminal: an invisible 8px layout grid. Only artwork renders as pixels. */
 @media(min-width:951px){
  body.console-desktop{
@@ -830,7 +1018,6 @@ html,body{font-synthesis:none}
  font-weight:500;letter-spacing:.01em;
 }
 .console-desktop .desktop-header h1::after{content:none}
-
 /* Static pixel grain lifts the black of the canvas without covering the artwork. */
 .console-desktop #sphere-stage::after{
  content:'';display:block!important;position:absolute;inset:0;

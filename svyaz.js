@@ -6,8 +6,8 @@ import {setupVoice} from './voice.js';
 import {setupPhotos} from './svyaz-photos.js';
 const accountRoot=desktopElement('svyaz-root'),chatWindow=desktopElement('window-svyaz'),root=desktopElement('svyaz-chat'),tabs=desktopElement('overview-tabs');
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-let user=null,csrf='',page='chat',authMode='login',dialog=null,peer=null,dialogs=[],messages=[],blocked=false,peerRead=0,hasOlder=false,busy=false,polling=false,timer,searchTimer,searchVersion=0,viewVersion=0,pendingSend=null;
-const social=setupSocial({api,getUser:()=>user,getPeer:()=>peer,root,openChat:async id=>{openWindow('svyaz');selectPage('chat');const r=await api('open',{user:id});await loadDialog(r.dialog,r.peer);}});
+let user=null,csrf='',page='chat',authMode='login',dialog=null,peer=null,dialogs=[],messages=[],blocked=false,peerRead=0,hasOlder=false,busy=false,polling=false,timer,searchTimer,searchVersion=0,viewVersion=0,pendingSend=null,openRequest=0,listReturn=null;
+const social=setupSocial({api,getUser:()=>user,getPeer:()=>peer,root,openChat:async id=>{openWindow('svyaz');selectPage('chat');await openContact(id);}});
 const drafts=new Map();
 const photos=setupPhotos({root,getDialog:()=>dialog,canAttach:()=>!!dialog&&!blocked&&!busy,notice});
 const voice=setupVoice({api,getUser:()=>user,getPeer:()=>peer,root,chatWindow});
@@ -30,7 +30,7 @@ function renderStats(){
  const achievements=[['ПЕРВЫЙ ЗАПУСК',played>=1],['ПЕРВАЯ ПОБЕДА',wins>=1],['ДЕСЯТЬ ПОБЕД',wins>=10],['ВСЕ ИГРЫ',Object.keys(gameNames).every(game=>totals.some(t=>t.game===game&&t.played>0))]];
  const badges='<div class="sv-strip">ДОСТИЖЕНИЯ</div><div class="console-achievements">'+achievements.map(([name,done])=>'<span class="'+(done?'earned':'locked')+'">'+(done?'[+] ':'[ ] ')+name+'</span>').join('')+'</div>';
 
- box.innerHTML=badges+`<div class="sv-strip">ИГРОВЫЕ РЕЗУЛЬТАТЫ</div><div class="sv-stats-body">${totals.length?totals.map(t=>`<article><strong>${gameNames[t.game]} ${modeNames[t.mode]||''}</strong><small>${t.network?'ОНЛАЙН':'ОДИНОЧНАЯ'} · ${t.played} ИГР · ${t.wins} ПОБЕД · ${t.losses} ПОРАЖЕНИЙ</small>${t.game==='asteroid'?`<p>${t.mode==='endless'?'ВЫЖИВАНИЕ '+timeText(t.longest):'ЛУЧШЕЕ ВРЕМЯ '+(t.bestTime?timeText(t.bestTime):'—')}<br>${t.bestScore.toLocaleString('ru')} ОЧКОВ · ${t.distance.toLocaleString('ru')} М</p>`:`<p>${Math.round(t.wins/t.played*100)}% ПОБЕД${t.game==='pulse'?' · ДО '+t.maxRounds+' ПАРТИИ':''}</p>`}</article>`).join(''):'<p>Сыграй после входа — здесь появятся рекорды и результаты. Гостевые результаты остаются на устройстве.</p>'}${recent.length?`<details><summary>ПОСЛЕДНИЕ ИГРЫ</summary>${recent.map(r=>`<div class="sv-history"><span>${gameNames[r.game]}<small>${new Date(r.finished_at).toLocaleString('ru',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})} · ${r.network?'ОНЛАЙН':'ОДИНОЧНАЯ'} ${modeNames[r.mode]||''}</small></span><b>${{win:'ПОБЕДА',loss:'ПОРАЖЕНИЕ',draw:'НИЧЬЯ'}[r.outcome]}</b></div>`).join('')}</details>`:''}</div>`;
+ box.innerHTML=badges+`<div class="sv-strip">ИГРОВЫЕ РЕЗУЛЬТАТЫ</div><div class="sv-stats-body">${totals.length?totals.map(t=>`<article><strong>${gameNames[t.game]} ${modeNames[t.mode]||''}</strong><small>${t.network?'ОНЛАЙН':'ОДИНОЧНАЯ'} · ${t.played} ИГР · ${t.wins} ПОБЕД · ${t.losses} ПОРАЖЕНИЙ</small>${t.game==='asteroid'?`<p>${t.mode==='endless'?'ВЫЖИВАНИЕ '+timeText(t.longest):'ЛУЧШЕЕ ВРЕМЯ '+(t.bestTime?timeText(t.bestTime):'—')}<br>${t.bestScore.toLocaleString('ru')} ОЧКОВ · ${t.distance.toLocaleString('ru')} М</p>`:`<p>${Math.round(t.wins/t.played*100)}% ПОБЕД${t.game==='pulse'?' · ДО '+t.maxRounds+' ПАРТИИ':''}</p>`}</article>`).join(''):'<p>Пока нет результатов. Сыграй в любую игру, чтобы здесь появились рекорды. Результаты гостя остаются на устройстве.</p>'}${recent.length?`<details><summary>ПОСЛЕДНИЕ ИГРЫ</summary>${recent.map(r=>`<div class="sv-history"><span>${gameNames[r.game]}<small>${new Date(r.finished_at).toLocaleString('ru',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})} · ${r.network?'ОНЛАЙН':'ОДИНОЧНАЯ'} ${modeNames[r.mode]||''}</small></span><b>${{win:'ПОБЕДА',loss:'ПОРАЖЕНИЕ',draw:'НИЧЬЯ'}[r.outcome]}</b></div>`).join('')}</details>`:''}</div>`;
 }
 let link=Object.fromEntries(new URLSearchParams(location.hash.slice(1)));
 if(!['verify','reset'].includes(link.svyaz))link=null;
@@ -41,7 +41,7 @@ async function api(action,data){
 }
 function notice(text='',container=root){const box=container.querySelector('.sv-error');if(box)box.textContent=text;}
 function selectPage(next){
- saveDraft();const previous=page;page=!user||next==='account'?'account':'chat';
+ openRequest++;saveDraft();const previous=page;page=!user||next==='account'?'account':'chat';
  tabs.querySelectorAll('[data-overview]').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.overview===page)));
  accountRoot.hidden=page!=='account';root.hidden=page!=='chat';
  if(page==='account'){if(user||previous!=='account'||!accountRoot.firstElementChild)renderAccount();}else render();schedule();
@@ -113,6 +113,25 @@ function changeChatView(back,change){
  const incoming=target?.animate([{opacity:0,transform:`translateX(${direction*64}px) scale(.98)`},{opacity:1,transform:'translateX(0) scale(1)'}],{duration:380,easing:'cubic-bezier(.16,1,.3,1)'});
  navigationAnimations=[outgoing,incoming].filter(Boolean);outgoing.finished.then(()=>ghost.remove(),()=>ghost.remove());
 }
+async function openContact(id,position=null){
+ const request=++openRequest,owner=user?.id;
+ let result;
+ try{result=await api('open',{user:id});}
+ catch(error){if(request===openRequest&&user?.id===owner&&page==='chat')throw error;return;}
+ if(request!==openRequest||user?.id!==owner||page!=='chat')return;
+ listReturn=position;await loadDialog(result.dialog,result.peer);
+}
+function backToContacts(){
+ openRequest++;saveDraft();const position=listReturn;listReturn=null;
+ changeChatView(true,()=>{dialog=null;peer=null;messages=[];viewVersion++;});
+ const list=root.querySelector('.sv-contact-list'),search=root.querySelector('[name=search]');
+ if(!list)return;
+ const target=position&&list.querySelector('.sv-contact[data-user="'+position.id+'"]');
+ if(position&&!position.filtered)list.scrollTop=position.top;
+ (target||search)?.focus({preventScroll:true});
+ if(target){const row=target.getBoundingClientRect(),box=list.getBoundingClientRect();
+  if(row.top<box.top||row.bottom>box.bottom)target.scrollIntoView({block:'nearest'});}
+}
 async function loadDialog(id,p){saveDraft();changeChatView(false,()=>{dialog=id;peer=p;messages=[];peerRead=0;blocked=false;hasOlder=false;viewVersion++;});const version=viewVersion;try{const r=await api('messages?dialog='+id);if(version!==viewVersion||dialog!==id)return;messages=r.messages;peer=r.peer;peerRead=r.peerRead;hasOlder=r.more;blocked=r.blocked;renderMessages(true);updatePeer();root.querySelector('.sv-peer strong').textContent=peer.name;root.querySelectorAll('.sv-compose textarea,.sv-attach,.sv-send').forEach(n=>n.disabled=blocked);photos.draw();await readCurrent();await refreshDialogs();}catch(e){if(version===viewVersion)notice(e.message);}}
 let dialogsSignature='';async function refreshDialogs(){const r=await api('dialogs'),signature=JSON.stringify(r.dialogs);if(signature===dialogsSignature)return;dialogsSignature=signature;dialogs=r.dialogs;const count=dialogs.reduce((n,d)=>n+d.unread,0);desktopElement('svyaz-unread').textContent=count?' · '+count:'';const badge=desktopElement('chat-launcher')?.querySelector('b');if(badge)badge.textContent=count?String(count):'';chatWindow.dataset.title=count?'СВЯЗЬ ('+count+')':'СВЯЗЬ';if(!root.querySelector('[name=search]')?.value)renderContacts();}
 async function poll(){
@@ -146,16 +165,20 @@ async function submit(e){
 root.addEventListener('submit',submit);accountRoot.addEventListener('submit',submit);
 async function clicked(e){
  const auth=e.target.closest('[data-auth]');if(auth){authMode=auth.dataset.auth;renderAccount();return;}
- const contact=e.target.closest('.sv-contact[data-user]');if(contact){try{const result=await api('open',{user:Number(contact.dataset.user)});await loadDialog(result.dialog,result.peer);}catch(e){notice(e.message);}return;}
+ const contact=e.target.closest('.sv-contact[data-user]');if(contact){
+  const id=Number(contact.dataset.user),list=contact.closest('.sv-contact-list');
+  try{await openContact(id,{id,top:list?.scrollTop||0,filtered:!!root.querySelector('[name=search]')?.value});}
+  catch(e){notice(e.message);}return;
+ }
  const action=e.target.closest('[data-sv]')?.dataset.sv;if(!action)return;
  try{
  if(action==='resend-code'){const email=accountRoot.querySelector('[name=email]')?.value||verificationEmail;pendingEmail(email);const result=await api('resend',{email});notice(result.message,accountRoot);}
  if(action==='find')root.querySelector('[name=search]')?.focus();
  if(action==='chat')selectPage('chat');
  if(action==='account')selectPage('account');
- if(action==='back'){saveDraft();changeChatView(true,()=>{dialog=null;peer=null;messages=[];viewVersion++;});}
+ if(action==='back')backToContacts();
  if(action==='clear-search'){root.querySelector('[name=search]').value='';searchVersion++;renderContacts();}
- if(action==='logout'){await api('logout',{});user=null;dialog=null;messages=[];dialogs=[];drafts.clear();photos.clearAll();pendingSend=null;viewVersion++;accountLabel();desktopElement('svyaz-unread').textContent='';authMode='login';selectPage('account');render();schedule();}
+ if(action==='logout'){openRequest++;listReturn=null;await api('logout',{});user=null;dialog=null;messages=[];dialogs=[];drafts.clear();photos.clearAll();pendingSend=null;viewVersion++;accountLabel();desktopElement('svyaz-unread').textContent='';authMode='login';selectPage('account');render();schedule();}
  if(action==='block'){await api('block',{dialog,blocked:!blocked});blocked=!blocked;saveDraft();render();}
  if(action==='older'){const id=dialog,version=viewVersion,log=root.querySelector('.sv-log'),oldHeight=log.scrollHeight,oldTop=log.scrollTop;const r=await api('messages?dialog='+id+'&before='+messages[0].id);if(id!==dialog||version!==viewVersion)return;messages=[...r.messages,...messages];hasOlder=r.more;renderMessages();log.scrollTop=oldTop+log.scrollHeight-oldHeight;}
  }catch(error){notice(error.message,accountRoot.contains(e.target)?accountRoot:root);}

@@ -10,20 +10,21 @@ const apps=[
  {id:'pulse',color:'#ff7585',name:'ПУЛЬС',group:'games',glyph:'ϟ'},
  {id:'naval',color:'#75d9ff',name:'МОРСКАЯ ДВИЖУХА',group:'games',glyph:'≋'},
 ];
-// Shared square-grid pictograms keep the catalog and sphere visually consistent.
-const iconPaths={
- editor:'M2 4h20v18H2zM7 4v18M17 4v18M2 10h5m-5 6h5M17 10h5m-5 6h5M10 9l4 4-4 4z',
- convert:'M3 6h15m-4-4 4 4-4 4M21 18H6m4-4-4 4 4 4',
- download:'M12 2v13m-5-5 5 5 5-5M3 16v6h18v-6',
- meme:'M3 3h18v19H3zM7 8h3m4 0h3M7 14v3h10v-3M9 17v2m6-2v2',
- buffer:'M7 4H3v18h18V4h-4M8 2h8v5H8zM7 12h10M7 17h7',
- game:'m12 2 5 7v9H7V9zM7 12l-4 5v4h4m10-9 4 5v4h-4M10 11h4v4h-4zM10 21v3m4-3v3',
- importopoly:'M3 3h18v18H3zM3 8h18M8 3v18M16 3v18M3 16h18M10 10h4v4h-4z',
- pulse:'M2 3h20v18H2zM4 12h4l2-5 4 10 2-5h4',
- naval:'M2 15h20l-4 6H6zM7 15V8h10v7M12 8V2m0 3h7M2 24h20',
- kart:'M4 9h16v9H4zM7 9V4h10v5M2 12v9m20-9v9'
+// Hand-drawn 12×12 sprites: integer cells, not a blur on top of vector strokes.
+const appSprites={
+ editor:'............/##########../#.#....#.#../###....###../#.#.##.#.#../###.###.##../#.#.##.#.#../###....###../#.#....#.#../##########../............/............',
+ convert:'............/.......#..../........#.../.#########../........#.../.......#..../....#......./...#......../..#########./...#......../....#......./............',
+ download:'............/.....##...../.....##...../.....##...../..#..##..#../...#.##.#.../....####..../.....##...../.#........#./.#........#./.##########./............',
+ meme:'............/.##########./.#........#./.#.#....#.#./.#.#....#.#./.#........#./.#.#....#.#./.#..####..#./.#........#./.##########./............/............',
+ buffer:'....####..../..########../..#......#../..#.####.#../..#......#../..#.####.#../..#......#../..#.###..#../..#......#../..########../............/............',
+ game:'.....##...../....####..../....####..../...##..##.../...##..##.../...######.../..########../.###.##.###./.#...##...#./.....##...../....#..#..../............',
+ importopoly:'............/.##########./.#..#..#..#./.#..#..#..#./.##########./.#..####..#./.#..####..#./.##########./.#..#..#..#./.##########./............/............',
+ pulse:'............/.##########./.#....#...#./.#....#...#./.#...##...#./.####.#.###./.#....##..#./.#.....#..#./.#........#./.##########./............/............',
+ naval:'.....#....../.....####.../.....#....../....####..../....#..#..../############/.##########./..########../............/.##..##..##./............/............',
+ kart:'............/....####..../...#....#.../...#....#.../.##########./.#.######.#./############/############/..##....##../..##....##../............/............',
 };
-const appIcon=id=>`<svg class="app-pixel-icon" viewBox="0 0 24 26" aria-hidden="true"><path d="${iconPaths[id]}" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="miter"/></svg>`;
+const spritePaths=Object.fromEntries(Object.entries(appSprites).map(([id,sprite])=>[id,sprite.split('/').map((row,y)=>[...row].map((pixel,x)=>pixel==='#'?`M${x} ${y}h1v1H${x}z`:'').join('')).join('')]));
+const appIcon=id=>`<svg class="app-pixel-icon" viewBox="0 0 12 12" shape-rendering="crispEdges" aria-hidden="true"><path d="${spritePaths[id]||''}" fill="currentColor"/></svg>`;
 let callbacks,selected='',zoom=1;
 const $=id=>document.getElementById(id);
 export function mountConsole(){
@@ -36,9 +37,13 @@ export function mountConsole(){
  zoomControls.append(zoomControls.querySelector('#zoom-out'),zoomControls.querySelector('#zoom-value'),zoomControls.querySelector('#zoom-in'));
  const screenControls=document.createElement('div');screenControls.className='screen-settings';screenControls.append(zoomControls);
  $('window-settings').querySelector('.utility-body').prepend(screenControls);
- const shell=document.createElement('div');shell.id='console-shell';shell.innerHTML=`<aside id="app-catalog" aria-label="Каталог приложений"><div id="catalog-groups"></div></aside><button id="catalog-toggle" aria-label="Свернуть каталог" aria-expanded="true" aria-controls="app-catalog">‹</button><main id="app-workspace" aria-label="Рабочая область"></main>`;
+ const shell=document.createElement('div');shell.id='console-shell';shell.innerHTML=`<div id="catalog-shade" aria-hidden="true" hidden></div><aside id="app-catalog" aria-label="Каталог приложений"><div id="catalog-groups"></div></aside><button id="catalog-toggle" aria-label="Свернуть каталог" aria-expanded="true" aria-controls="app-catalog"><span class="catalog-toggle-arrow" aria-hidden="true">‹</span><span class="catalog-toggle-title" aria-hidden="true">Каталог</span><span class="catalog-toggle-count" aria-hidden="true">${String(apps.length).padStart(2,"0")}</span></button><main id="app-workspace" aria-label="Рабочая область"></main>`;
  document.querySelector('.desktop-header').after(shell);
- const workspace=$('app-workspace');workspace.append($('sphere-stage'));const dock=document.createElement('nav');dock.id='console-dock';dock.setAttribute('aria-label','Свёрнутые приложения');dock.hidden=true;workspace.append(dock);
+ const workspace=$('app-workspace');workspace.append($('sphere-stage'));
+ const sphereHint=document.createElement('p');sphereHint.className='sphere-touch-hint';
+ sphereHint.textContent='Проведи, чтобы крутить';
+ $('sphere-stage').append(sphereHint);
+ const dock=document.createElement('nav');dock.id='console-dock';dock.setAttribute('aria-label','Свёрнутые приложения');dock.hidden=true;workspace.append(dock);
  for(const win of document.querySelectorAll('.window')){if(['window-svyaz','window-settings'].includes(win.id)){win.classList.add('console-panel');document.body.append(win);}else workspace.append(win);}
  $('sphere-stage').querySelector('.desktop-icons').innerHTML=apps.map(a=>`<button class="desktop-icon" data-sphere-app="${a.id}" style="--app-color:${a.color}" aria-label="Открыть ${a.name}"><span class="node-symbol" aria-hidden="true">${appIcon(a.id)}</span><span>${a.name}</span></button>`).join('');
  for(const app of apps){const win=$('window-'+app.id);if(win){win.style.setProperty('--app-color',app.color);win.classList.add('console-colored-app');}}
@@ -59,18 +64,25 @@ export function mountConsole(){
  $('reset-settings').textContent='Сбросить';footer.append($('reset-settings'));
  const hint=document.createElement('details');hint.className='console-input-help';hint.innerHTML='<summary>Управление</summary><p>Стрелки — выбор<br>Enter — открыть · Esc — назад<br>F6 — каталог<br>Геймпад: стик / крестовина, A — выбрать, B — назад, Start — каталог.</p>';footer.append(hint);$('window-settings').querySelector('.utility-body').append(footer);
  const full=document.createElement('button');full.id='site-fullscreen';full.className='xp-button';full.setAttribute('aria-label','Сайт на весь экран устройства');full.textContent='Вкл.';const fullRow=document.createElement('div');fullRow.className='settings-fullscreen';fullRow.innerHTML='<span>Полный экран</span>';fullRow.append(full);screenControls.append(fullRow);
- const syncToggle=()=>{const portrait=matchMedia('(max-width:700px), (max-width:950px) and (pointer:coarse)').matches&&matchMedia('(orientation:portrait)').matches,collapsed=document.body.classList.contains('catalog-collapsed');$('catalog-toggle').textContent=portrait?(collapsed?'⌃':'⌄'):(collapsed?'›':'‹');};
- addEventListener('resize',syncToggle);document.addEventListener('catalogchange',syncToggle);syncToggle();
+ const syncToggle=()=>{
+  const compact=compactCatalog(),collapsed=document.body.classList.contains('catalog-collapsed');
+  $('catalog-toggle').querySelector('.catalog-toggle-arrow').textContent=compact?(collapsed?'⌃':'⌄'):(collapsed?'›':'‹');
+  const drawer=compact&&!collapsed&&!document.body.classList.contains('game-fullscreen-on');
+  $('catalog-shade').hidden=!drawer;workspace.inert=drawer;
+ };
+ addEventListener('resize',syncToggle);document.addEventListener('catalogchange',syncToggle);document.addEventListener('desktopfullscreenchange',syncToggle);syncToggle();
 }
+// Compact layout is a drawer rather than a resizing desktop sidebar.
+const compactCatalog=()=>matchMedia('(max-width:700px), (max-width:950px) and (pointer:coarse)').matches;
 let catalogMotion=null;
 export function setCatalogCollapsed(value){
  const catalog=$('app-catalog'),workspace=$('app-workspace'),toggle=$('catalog-toggle'),shell=$('console-shell');
  const changed=document.body.classList.contains('catalog-collapsed')!==value;
- const moving=changed&&callbacks?.storage.get('settings',{}).motion!==false&&!matchMedia('(prefers-reduced-motion: reduce)').matches;
+ const moving=changed&&!compactCatalog()&&callbacks?.storage.get('settings',{}).motion!==false&&!matchMedia('(prefers-reduced-motion: reduce)').matches;
  const before=moving?[catalog,workspace,toggle].map(el=>el.getBoundingClientRect()):null;
  catalogMotion?.();catalogMotion=null;
  document.body.classList.toggle('catalog-collapsed',value);catalog.inert=value;
- toggle.setAttribute('aria-expanded',String(!value));toggle.setAttribute('aria-label',value?'Раскрыть каталог':'Свернуть каталог');toggle.textContent=value?'›':'‹';
+ toggle.setAttribute('aria-expanded',String(!value));toggle.setAttribute('aria-label',value?'Открыть каталог':'Свернуть каталог');
  if(moving){
   // Commit the pane layout once. Only compositor motion follows, so the sphere canvas
   // and live games are not resized and repainted on every animation frame.
@@ -101,11 +113,28 @@ export function bindConsole(api){
  $('catalog-groups').addEventListener('click',e=>{
   const pip=e.target.closest('[data-pip-app]');if(pip){api.open(pip.dataset.pipApp);api.pip($('window-'+pip.dataset.pipApp));return;}
   const button=e.target.closest('[data-select-app]');if(!button)return;const id=button.dataset.selectApp;
+  if(compactCatalog()){
+   selectApp('');api.open(id);setCatalogCollapsed(true);
+   if(e.detail===0){const title=$('window-'+id)?.querySelector('.titlebar>span');if(title){title.tabIndex=-1;title.focus({preventScroll:true});}}
+   return;
+  }
   if(selected===id)api.open(id);else{api.preview();selectApp(id);}
  });
- $('sphere-stage').addEventListener('click',e=>{const b=e.target.closest('[data-sphere-app]');if(b){const id=b.dataset.sphereApp;if(selected===id)api.open(id);else selectApp(id);}});
+ $('sphere-stage').addEventListener('click',e=>{const b=e.target.closest('[data-sphere-app]');if(b){const id=b.dataset.sphereApp;if(compactCatalog()){selectApp('');api.open(id);setCatalogCollapsed(true);return;}if(selected===id)api.open(id);else selectApp(id);}});
  document.addEventListener('desktopfullscreenchange',()=>{if(document.body.classList.contains('game-fullscreen-on')){catalogMotion?.();catalogMotion=null;}});
- $('catalog-toggle').onclick=()=>setCatalogCollapsed(!document.body.classList.contains('catalog-collapsed'));
+ const toggle=$('catalog-toggle'),catalog=$('app-catalog');
+ toggle.onclick=e=>{
+  const closing=!document.body.classList.contains('catalog-collapsed');
+  setCatalogCollapsed(closing);
+  if(!closing&&compactCatalog()&&e.detail===0)catalog.querySelector('summary')?.focus({preventScroll:true});
+ };
+ const dismissDrawer=()=>{setCatalogCollapsed(true);toggle.focus({preventScroll:true});};
+ $('catalog-shade').onclick=dismissDrawer;
+ document.addEventListener('keydown',e=>{
+  if(e.key!=='Escape'||e.defaultPrevented||$('catalog-shade').hidden||
+     document.fullscreenElement||document.querySelector('.fullscreen-fallback,.app-link-panel,.console-panel:not([hidden])'))return;
+  e.preventDefault();e.stopImmediatePropagation();dismissDrawer();
+ },true);
  document.addEventListener('click',e=>{
   if(selected&&!e.target.closest('[data-select-app],[data-sphere-app],[data-pip-app]'))selectApp('');
  });
@@ -133,7 +162,7 @@ export function bindConsole(api){
  const mobile=matchMedia('(max-width:700px), (max-width:950px) and (pointer:coarse)').matches;const initialZoom=mobile?1:1.3;const savedZoom=Number(api.storage.get(mobile?'mobile_ui_scale':'ui_scale',initialZoom));zoom=savedZoom||initialZoom;if(!api.storage.get('large_ui_default',false)){if(savedZoom===1)zoom=initialZoom;api.storage.set('large_ui_default',true);}scale();$('zoom-in').onclick=()=>{zoom+=.1;scale(true);};$('zoom-out').onclick=()=>{zoom-=.1;scale(true);};
  document.addEventListener('catalogfullscreen',e=>setCatalogCollapsed(e.detail));
  try{localStorage.removeItem('makson_catalog_collapsed');}catch{}
- setCatalogCollapsed(false);
+ setCatalogCollapsed(compactCatalog());
 }
 
 // The same controls stay attached to each live window, including native PiP.
