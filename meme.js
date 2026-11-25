@@ -19,8 +19,8 @@ export function initMeme(){
  const visible=()=>!win.hidden&&!win.ownerDocument.hidden;
  const saveButton=root.querySelector('[data-meme=save]');
  function labels(){for(const key of ['size','stroke','shakal'])$(key+'-value').value=$(key).value+'%';$('pixel-value').value=+$('pixel').value===1?'Выкл.':$('pixel').value+' px';}
- function fit(){if(!preview)return;const r=stage.getBoundingClientRect(),z=parseFloat(win.ownerDocument.defaultView.getComputedStyle(win.ownerDocument.body).zoom)||1,w=Math.max(60,r.width/z-24),h=Math.max(80,r.height/z-40),scale=Math.min(w/preview.width,h/preview.height);wrap.style.width=preview.width*scale+'px';wrap.style.height=preview.height*scale+'px';}
- function show(image){const scale=Math.min(1,900/Math.max(image.width,image.height));canvas.width=Math.round(image.width*scale);canvas.height=Math.round(image.height*scale);canvas.getContext('2d').drawImage(image,0,0,canvas.width,canvas.height);preview=image;wrap.hidden=false;root.querySelector('.meme-empty').hidden=true;fit();}
+ function fit(){if(!preview)return;const r=stage.getBoundingClientRect(),z=parseFloat(win.ownerDocument.defaultView.getComputedStyle(win.ownerDocument.body).zoom)||1,w=Math.max(60,r.width/z-24),h=Math.max(80,r.height/z-40),scale=Math.min(w/preview.width,h/preview.height);wrap.style.width=Math.max(1,preview.width*scale)+'px';wrap.style.height=Math.max(1,preview.height*scale)+'px';}
+ function show(image){const scale=Math.min(1,900/Math.max(image.width,image.height));canvas.width=Math.max(1,Math.round(image.width*scale));canvas.height=Math.max(1,Math.round(image.height*scale));canvas.getContext('2d').drawImage(image,0,0,canvas.width,canvas.height);preview=image;wrap.hidden=false;root.querySelector('.meme-empty').hidden=true;fit();}
  function queue(){labels();dirty=true;version++;clearTimeout(timer);if(!source||draft||!visible())return;timer=setTimeout(paint,90);}
  async function paint(){
   if(working||!source||draft||!visible())return;working=true;dirty=false;const token=version;
@@ -29,7 +29,7 @@ export function initMeme(){
  }
  function setCropping(on){cropLayer.hidden=!on;root.querySelector('.meme-crop-tools').hidden=!on;root.querySelector('.meme-crop-hint').hidden=!on;root.classList.toggle('meme-cropping',on);saveButton.disabled=on||!source||exporting;}
  function frame(){cropBox.style.left=draft.x*100+'%';cropBox.style.top=draft.y*100+'%';cropBox.style.width=draft.w*100+'%';cropBox.style.height=draft.h*100+'%';}
- function beginCrop(){if(!source)return;version++;draft={...crop};setCropping(true);const c=surface(source.width,source.height);c.getContext('2d').drawImage(source,0,0);if(preview)preview.width=preview.height=1;show(c);frame();cropLayer.focus({preventScroll:true});}
+ function beginCrop(){if(!source)return;version++;$('ratio').value='0';draft={...crop};setCropping(true);const c=surface(source.width,source.height);c.getContext('2d').drawImage(source,0,0);if(preview)preview.width=preview.height=1;show(c);frame();cropLayer.focus({preventScroll:true});}
  function endCrop(apply){if(!draft)return;if(apply)crop={...draft};draft=null;gesture=null;setCropping(false);root.querySelector('[data-meme=uncrop]').hidden=crop.w===1&&crop.h===1;queue();}
  function reset(){endCrop(false);crop=full();for(const [id,value]of Object.entries({top:'',bottom:'',size:8,stroke:10,ink:'#ffffff',outline:'#000000',shakal:0,pixel:1}))$(id).value=value;$('caps').checked=true;$('ratio').value='0';root.querySelector('[data-meme=uncrop]').hidden=true;queue();}
  async function load(file){
