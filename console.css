@@ -826,3 +826,22 @@ html,body{font-synthesis:none}
  .console-desktop .desktop-header :is(#console-settings,#chat-launcher){height:44px!important}
  .console-desktop .sphere-stage .desktop-icon span:last-child{font-size:12px!important}
 }
+
+/* 12×12 sprite grid; native text and media stay out of decorative effects. */
+.console-desktop .app-pixel-icon{width:24px;height:24px;flex:none;shape-rendering:crispEdges}
+.console-desktop .sphere-stage .node-symbol .app-pixel-icon{
+ width:36px;height:36px;filter:none!important;
+}
+.console-desktop #sphere-stage::before{
+ background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32' shape-rendering='crispEdges'%3E%3Cpath fill='%23806fc5' d='M0 0h4v4H0z'/%3E%3C/svg%3E");
+ opacity:.38;
+}
+@media(max-width:700px), (max-width:950px) and (pointer:coarse){
+ .console-desktop #app-catalog .catalog-app-icon{width:24px;flex:0 0 24px}
+ .console-desktop .sphere-stage .node-symbol .app-pixel-icon{width:24px;height:24px}
+ .console-desktop #app-catalog .catalog-row>button:first-child{position:relative}
+ .console-desktop #app-catalog .catalog-row>button:first-child::before{
+  content:'';position:absolute;right:2px;top:2px;width:3px;height:3px;
+  background:#548563;box-shadow:-3px 0 #34543f,0 3px #34543f;pointer-events:none;
+ }
+}
