@@ -712,8 +712,7 @@ html,body{font-synthesis:none}
 @media(prefers-reduced-motion:reduce){.console-desktop{transition:none}}
 
 
-/* The 8px layout unit is distinct from the 2px artwork pixel. Keep text and
-   controls out of the raster effect, even in fullscreen and picture-in-picture. */
+/* Shared UI spacing is defined in logical screen pixels near the end of this file. */
 :root{
  --console-unit:8px;
  --console-space-2:calc(var(--console-unit) * 2);
@@ -1133,7 +1132,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
 
 /* The screen's pixel grid belongs to the controls, not to the wallpaper. */
 :is(.console-desktop,.pip-desktop){
- --chrome-pixel:3px;
+ --chrome-pixel:var(--screen-dot,3px);
  --chrome-two:calc(2 * var(--chrome-pixel));
  --chrome-step:polygon(
   0 var(--chrome-two),var(--chrome-pixel) var(--chrome-two),
@@ -1182,4 +1181,74 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
  :is(.console-desktop,.pip-desktop) .window .window-controls>button[data-action=close]::after{
   clip-path:polygon(0 0,3px 0,3px 3px,6px 3px,6px 6px,9px 6px,9px 3px,12px 3px,12px 0,15px 0,15px 3px,12px 3px,12px 6px,9px 6px,9px 9px,12px 9px,12px 12px,15px 12px,15px 15px,12px 15px,12px 12px,9px 12px,9px 9px,6px 9px,6px 12px,3px 12px,3px 15px,0 15px,0 12px,3px 12px,3px 9px,6px 9px,6px 6px,3px 6px,3px 3px,0 3px);
  }
+}
+
+/* One invisible screen coordinate system; flex text and media stay native. */
+:root{
+ --screen-dot:3px;
+ --screen-small:calc(2 * var(--screen-dot));
+ --screen-gap:calc(3 * var(--screen-dot));
+ --screen-pad:calc(4 * var(--screen-dot));
+ --screen-gutter:calc(6 * var(--screen-dot));
+ --console-unit:var(--screen-gap);
+ --console-space-2:var(--screen-gutter);
+ --console-space-3:calc(9 * var(--screen-dot));
+}
+body.console-desktop{--header-height:calc(16 * var(--screen-dot));--terminal-step:var(--screen-gap)}
+.console-desktop :is(.desktop-header,.desktop-header.has-login-hint){
+ height:var(--header-height)!important;padding-inline:var(--screen-pad);border-bottom-width:var(--screen-dot);
+}
+.console-desktop #app-catalog{
+ padding:var(--screen-pad);border-right-width:var(--screen-dot);
+}
+.console-desktop #app-catalog .catalog-group{margin-block-end:var(--screen-gutter)}
+.console-desktop #app-catalog .catalog-group summary{min-height:calc(12 * var(--screen-dot));padding-inline:var(--screen-gap)}
+.console-desktop #app-catalog .catalog-items{gap:var(--screen-gap);padding-block-start:var(--screen-gap);padding-block-end:var(--screen-small)}
+.console-desktop #app-catalog .catalog-row{min-height:calc(18 * var(--screen-dot));box-sizing:border-box}
+.console-desktop #app-catalog .catalog-row>button:first-child{gap:var(--screen-pad);padding:var(--screen-gap)}
+.console-desktop #app-catalog .catalog-app-icon{
+ width:calc(8 * var(--screen-dot));height:calc(8 * var(--screen-dot));flex-shrink:0;
+}
+.console-desktop #app-catalog .app-pixel-icon{
+ width:calc(8 * var(--screen-dot));height:calc(8 * var(--screen-dot));
+}
+:is(.console-desktop,.pip-desktop) .window>.titlebar{
+ min-height:calc(16 * var(--screen-dot));height:calc(16 * var(--screen-dot));padding-inline:var(--screen-pad);
+}
+:is(.console-desktop,.pip-desktop) .window .window-controls{gap:var(--screen-small)}
+:is(.console-desktop,.pip-desktop) .window :is(.utility-body,.tools-body){padding:var(--screen-gutter)}
+:is(.console-desktop,.pip-desktop) #window-svyaz .overview-tabs{gap:var(--screen-gap);padding-inline:var(--screen-pad);min-height:calc(15 * var(--screen-dot))}
+:is(.console-desktop,.pip-desktop) #window-svyaz #svyaz-chat :is(.sv-chat-head,.sv-compose){
+ padding-inline:var(--screen-gap);
+}
+:is(.console-desktop,.pip-desktop) #window-svyaz .sv-form{gap:var(--screen-pad)}
+:is(.console-desktop,.pip-desktop) #window-svyaz .sv-form :is(input,button){min-height:calc(15 * var(--screen-dot))}
+@media(min-width:951px){
+ body.console-desktop{--header-height:calc(21 * var(--screen-dot))}
+ .console-desktop #app-catalog{padding:var(--screen-gutter) calc(8 * var(--screen-dot)) var(--screen-gutter) var(--screen-gutter)}
+ .console-desktop #app-catalog .catalog-row{min-height:calc(21 * var(--screen-dot))}
+}
+@supports(width:round(down,10px,3px)){
+ /* Only tiny viewport remainder pixels are left outside the workspace. */
+ .console-desktop :is(.desktop-header,#console-shell){right:auto;width:round(down,100%,var(--screen-dot))}
+ .console-desktop #console-shell{height:round(down,calc(var(--viewport-height,100dvh) - var(--header-height)),var(--screen-dot))}
+ @media(orientation:portrait) and (max-width:950px) and (pointer:coarse){
+  .console-desktop:not(.catalog-collapsed):not(.has-open-windows) #console-shell{
+   grid-template-rows:round(nearest,55%,var(--screen-dot)) minmax(0,1fr);
+  }
+ }
+ @media(min-width:951px), (orientation:landscape) and (max-width:950px){
+  .console-desktop:not(.catalog-collapsed) #console-shell{
+   grid-template-columns:round(nearest,var(--catalog-size,34%),var(--screen-dot)) minmax(0,1fr);
+  }
+ }
+}
+.console-desktop #app-catalog .catalog-group summary{border-block-width:0}
+.console-desktop #app-catalog .catalog-row{border-width:var(--screen-dot)}
+.console-desktop #app-catalog .app-pixel-icon>path{stroke-width:var(--screen-dot);vector-effect:non-scaling-stroke}
+@media(orientation:portrait) and (max-width:950px) and (pointer:coarse){
+ .console-desktop #app-catalog{border-top-width:var(--screen-dot)}
+}
+@supports(width:round(down,10px,3px)){
+ .console-desktop:not(.has-open-windows) #app-catalog .catalog-row{width:round(down,100%,var(--screen-dot))}
 }
