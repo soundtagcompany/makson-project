@@ -136,7 +136,9 @@ function installRasterScreen(){
  [data-screen-raster]:not(.sv-auth-wrap)>*:not(.screen-raster-canvas){opacity:0!important}
  [data-screen-raster].sv-auth-wrap{position:relative}
  [data-screen-raster-position]{position:relative!important}
- .desktop-header[data-screen-raster] #chat-launcher{min-width:102px}
+ .desktop-header[data-screen-raster] #chat-launcher{min-width:108px}
+ .desktop-header[data-screen-raster] #svyaz-signin-hint{min-width:66px}
+ .overview-tabs[data-screen-raster]>button{min-width:64px}
  .titlebar[data-screen-raster]>span{flex:1;min-width:0}
  [data-screen-raster].sv-auth-wrap :is([data-raster-label],button,small,.sv-strip,.sv-wordmark,.sv-auth-note){opacity:0!important}
  [data-screen-raster].sv-auth-wrap :is(input,textarea,select){position:relative;z-index:50001;}
@@ -239,19 +241,29 @@ function installRasterScreen(){
    const element=node.parentElement;
    const chars=Array.from(node.data.trim());
    const wrapOwner=element.closest('.catalog-app-name')?.closest('button')||element.closest('#chat-launcher')||element;
-   const bounds=slot(wrapOwner.getBoundingClientRect());
-   const group=slot(boxes[0]);
-   const end=Math.min(cw-1,bounds.x+bounds.w-(element.closest('.catalog-app-name')?7:1));
-   const center=element.matches('h1')||element.matches('button')&&!element.id;
-   const avail=center?Math.min(end-bounds.x,bounds.w):end-group.x;
+   const bounds=slot(wrapOwner.getBoundingClientRect()),group=slot(boxes[0]);
+   const catalog=!!element.closest('.catalog-app-name'),heading=element.matches('h1');
+   const header=heading&&host.matches('.desktop-header');
+   const chat=!!element.closest('#chat-launcher'),counter=element.matches('summary>span,.titlebar b');
+   let left=group.x,end=Math.min(cw-1,bounds.x+bounds.w-(catalog?7:1));
+   const center=header||element.matches('button')&&!element.id||element.matches('#svyaz-signin-hint');
+   if(center)left=bounds.x+1;
+   if(header){
+    const gear=host.querySelector('#console-settings'),actions=host.querySelector('.console-actions');
+    if(gear&&actions){const g=slot(gear.getBoundingClientRect()),a=slot(actions.getBoundingClientRect());left=g.x+g.w+3;end=a.x-3;}
+   }
+   if(chat&&wrapOwner.id==='chat-launcher'){left=Math.min(left,bounds.x+13);end=Math.min(cw-2,bounds.x+bounds.w-2);}
+   if(counter){left=Math.max(1,group.x-2);end=Math.min(cw-2,group.x+7);}
+   const avail=end-left;
    if(avail<3)return;
    const widths=chars.map(c=>c===' '?3:'!.,:·'.includes(c)?3:5);
    const desired=widths.reduce((a,b)=>a+b,0)+chars.length-1;
-   const tight=desired>avail;
-   const glyphWidth=tight?4:5;
-   const advance=widths.map(w=>Math.min(w,glyphWidth)+(tight&&chars.length*5>avail?0:1));
-   const total=advance.reduce((a,b)=>a+b,0)-1;
-   let x=center?bounds.x+Math.max(0,Math.floor((bounds.w-total)/2)):group.x;
+   const glyphWidth=desired<=avail?5:4;
+   const spacing=widths.reduce((sum,w)=>sum+Math.min(w,glyphWidth)+1,-1)<=avail?1:0;
+   const advance=widths.map(w=>Math.min(w,glyphWidth)+spacing);
+   const total=advance.reduce((a,b)=>a+b,0)-spacing;
+   const centered=header?Math.floor((cw-total)/2):Math.floor((left+end-total)/2);
+   let x=center?Math.max(left,Math.min(end-total,centered)):left;
    const y=group.y+Math.floor((group.h-7)/2);
    for(let i=0;i<chars.length&&x<end;i++){
     const c=chars[i],rows=glyph(c);
@@ -291,6 +303,7 @@ function installRasterScreen(){
     fill(bg,r.x+1,r.y+1,r.w-2,r.h-2);
     const border=e.matches(':focus-visible')?ps.color:ps.borderTopColor;
     if(e.matches('.catalog-row')||parseFloat(ps.borderTopWidth)>0||e.matches(':focus-visible'))bevel(r,border);
+    if(e.matches('.overview-tabs>button[aria-selected=true]'))fill(ps.color,r.x+2,r.y+r.h-2,r.w-4,1);
    }
    if(e.matches('summary')){
     const y=r.y+Math.round(r.h/2);fill(ps.color,r.x+2,y,4,1);
