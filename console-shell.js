@@ -37,7 +37,7 @@ export function mountConsole(){
  zoomControls.append(zoomControls.querySelector('#zoom-out'),zoomControls.querySelector('#zoom-value'),zoomControls.querySelector('#zoom-in'));
  const screenControls=document.createElement('div');screenControls.className='screen-settings';screenControls.append(zoomControls);
  $('window-settings').querySelector('.utility-body').prepend(screenControls);
- const shell=document.createElement('div');shell.id='console-shell';shell.innerHTML=`<aside id="app-catalog" aria-label="Каталог приложений"><div id="catalog-groups"></div></aside><button id="catalog-toggle" aria-label="Свернуть каталог" aria-expanded="true" aria-controls="app-catalog">‹</button><main id="app-workspace" aria-label="Рабочая область"></main>`;
+ const shell=document.createElement('div');shell.id='console-shell';shell.innerHTML=`<div id="catalog-shade" aria-hidden="true" hidden></div><aside id="app-catalog" aria-label="Каталог приложений"><div id="catalog-groups"></div></aside><button id="catalog-toggle" aria-label="Свернуть каталог" aria-expanded="true" aria-controls="app-catalog">‹</button><main id="app-workspace" aria-label="Рабочая область"></main>`;
  document.querySelector('.desktop-header').after(shell);
  const workspace=$('app-workspace');workspace.append($('sphere-stage'));const dock=document.createElement('nav');dock.id='console-dock';dock.setAttribute('aria-label','Свёрнутые приложения');dock.hidden=true;workspace.append(dock);
  for(const win of document.querySelectorAll('.window')){if(['window-svyaz','window-settings'].includes(win.id)){win.classList.add('console-panel');document.body.append(win);}else workspace.append(win);}
@@ -60,8 +60,13 @@ export function mountConsole(){
  $('reset-settings').textContent='Сбросить';footer.append($('reset-settings'));
  const hint=document.createElement('details');hint.className='console-input-help';hint.innerHTML='<summary>Управление</summary><p>Стрелки — выбор<br>Enter — открыть · Esc — назад<br>F6 — каталог<br>Геймпад: стик / крестовина, A — выбрать, B — назад, Start — каталог.</p>';footer.append(hint);$('window-settings').querySelector('.utility-body').append(footer);
  const full=document.createElement('button');full.id='site-fullscreen';full.className='xp-button';full.setAttribute('aria-label','Сайт на весь экран устройства');full.textContent='Вкл.';const fullRow=document.createElement('div');fullRow.className='settings-fullscreen';fullRow.innerHTML='<span>Полный экран</span>';fullRow.append(full);screenControls.append(fullRow);
- const syncToggle=()=>{const compact=compactCatalog(),collapsed=document.body.classList.contains('catalog-collapsed');$('catalog-toggle').textContent=compact?(collapsed?'⌃':'⌄'):(collapsed?'›':'‹');};
- addEventListener('resize',syncToggle);document.addEventListener('catalogchange',syncToggle);syncToggle();
+ const syncToggle=()=>{
+  const compact=compactCatalog(),collapsed=document.body.classList.contains('catalog-collapsed');
+  $('catalog-toggle').textContent=compact?(collapsed?'⌃':'⌄'):(collapsed?'›':'‹');
+  const drawer=compact&&!collapsed&&!document.body.classList.contains('game-fullscreen-on');
+  $('catalog-shade').hidden=!drawer;workspace.inert=drawer;
+ };
+ addEventListener('resize',syncToggle);document.addEventListener('catalogchange',syncToggle);document.addEventListener('desktopfullscreenchange',syncToggle);syncToggle();
 }
 // Compact layout is a drawer rather than a resizing desktop sidebar.
 const compactCatalog=()=>matchMedia('(max-width:700px), (max-width:950px) and (pointer:coarse)').matches;
@@ -104,12 +109,28 @@ export function bindConsole(api){
  $('catalog-groups').addEventListener('click',e=>{
   const pip=e.target.closest('[data-pip-app]');if(pip){api.open(pip.dataset.pipApp);api.pip($('window-'+pip.dataset.pipApp));return;}
   const button=e.target.closest('[data-select-app]');if(!button)return;const id=button.dataset.selectApp;
-  if(compactCatalog()){selectApp('');api.open(id);setCatalogCollapsed(true);return;}
+  if(compactCatalog()){
+   selectApp('');api.open(id);setCatalogCollapsed(true);
+   if(e.detail===0){const title=$('window-'+id)?.querySelector('.titlebar>span');if(title){title.tabIndex=-1;title.focus({preventScroll:true});}}
+   return;
+  }
   if(selected===id)api.open(id);else{api.preview();selectApp(id);}
  });
  $('sphere-stage').addEventListener('click',e=>{const b=e.target.closest('[data-sphere-app]');if(b){const id=b.dataset.sphereApp;if(compactCatalog()){selectApp('');api.open(id);setCatalogCollapsed(true);return;}if(selected===id)api.open(id);else selectApp(id);}});
  document.addEventListener('desktopfullscreenchange',()=>{if(document.body.classList.contains('game-fullscreen-on')){catalogMotion?.();catalogMotion=null;}});
- $('catalog-toggle').onclick=()=>setCatalogCollapsed(!document.body.classList.contains('catalog-collapsed'));
+ const toggle=$('catalog-toggle'),catalog=$('app-catalog');
+ toggle.onclick=e=>{
+  const closing=!document.body.classList.contains('catalog-collapsed');
+  setCatalogCollapsed(closing);
+  if(!closing&&compactCatalog()&&e.detail===0)catalog.querySelector('summary')?.focus({preventScroll:true});
+ };
+ const dismissDrawer=()=>{setCatalogCollapsed(true);toggle.focus({preventScroll:true});};
+ $('catalog-shade').onclick=dismissDrawer;
+ document.addEventListener('keydown',e=>{
+  if(e.key!=='Escape'||e.defaultPrevented||$('catalog-shade').hidden||
+     document.fullscreenElement||document.querySelector('.fullscreen-fallback,.app-link-panel,.console-panel:not([hidden])'))return;
+  e.preventDefault();e.stopImmediatePropagation();dismissDrawer();
+ },true);
  document.addEventListener('click',e=>{
   if(selected&&!e.target.closest('[data-select-app],[data-sphere-app],[data-pip-app]'))selectApp('');
  });

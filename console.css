@@ -885,3 +885,22 @@ html,body{font-synthesis:none}
  .console-desktop :is(#catalog-toggle,#app-catalog button,[data-sphere-app]){-webkit-tap-highlight-color:transparent}
  .console-desktop #app-catalog .catalog-row>button:first-child:active{background:#1a3422}
 }
+
+/* A compact catalog sits above, rather than competes with, the running app. */
+#catalog-shade{display:none}
+@media(max-width:700px), (max-width:950px) and (pointer:coarse){
+ .console-desktop #catalog-shade:not([hidden]){
+  display:block;position:absolute;inset:0 0 var(--mobile-console-footer);z-index:3;
+  background:rgb(0 0 0 / .62);touch-action:manipulation;
+ }
+ .console-desktop.console-booting #catalog-shade{visibility:hidden}
+ .console-desktop #app-catalog,.console-desktop.has-open-windows #app-catalog{
+  max-height:min(70%,440px,calc(100% - var(--mobile-console-footer) - 44px));
+ }
+}
+/* Landscape phones have room for shorter rows without reducing hit targets. */
+@media (min-width:650px) and (max-width:950px) and (pointer:coarse) and (orientation:landscape){
+ .console-desktop #app-catalog .catalog-group>.catalog-items{
+  grid-template-columns:repeat(3,minmax(0,1fr));
+ }
+}
