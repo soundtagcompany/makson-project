@@ -9,6 +9,7 @@ const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 let user=null,csrf='',page='chat',authMode='login',dialog=null,peer=null,dialogs=[],messages=[],blocked=false,peerRead=0,hasOlder=false,busy=false,polling=false,timer,searchTimer,searchVersion=0,viewVersion=0,pendingSend=null,openRequest=0,listReturn=null;
 const social=setupSocial({api,getUser:()=>user,getPeer:()=>peer,root,openChat:async id=>{openWindow('svyaz');selectPage('chat');await openContact(id);}});
 const drafts=new Map();
+let directory={query:'',results:null,working:false};
 const photos=setupPhotos({root,getDialog:()=>dialog,canAttach:()=>!!dialog&&!blocked&&!busy,notice});
 const voice=setupVoice({api,getUser:()=>user,getPeer:()=>peer,root,chatWindow});
 let verificationEmail='';try{verificationEmail=sessionStorage.getItem('makson_pending_email')||'';}catch{}
@@ -52,7 +53,7 @@ function saveDraft(){const field=root.querySelector('[name=message]');if(field&&
 function render(){
  if(!user){root.innerHTML='<div class="sv-empty"><b>СВЯЗЬ</b><p>Войди в аккаунт, чтобы написать сообщение.</p><button data-sv="account">ВОЙТИ / РЕГИСТРАЦИЯ</button></div><p class="sv-error" role="status"></p>';return;}
  root.innerHTML=`<div class="sv-topline"><button class="sv-identity" data-sv="account" title="Мой аккаунт"><span class="sv-avatar">${esc(user.name[0]?.toUpperCase())}</span><span>${esc(user.name)}<small>@${esc(user.username)}</small></span></button><div class="sv-tools"></div></div><div class="sv-shell ${dialog?'sv-has-dialog':''}"><aside class="sv-contacts"><form class="sv-search"><input name="search" aria-label="Поиск по нику" placeholder="Найти @ник" maxlength="24" autocomplete="off"><button aria-label="Очистить поиск" type="button" data-sv="clear-search">×</button></form><div class="sv-contact-list"></div></aside><section class="sv-chat">${dialog?`<header class="sv-chat-head"><button class="sv-back" data-sv="back" aria-label="Назад к диалогам">←</button><span class="sv-avatar sv-peer-avatar">${esc(peer?.name[0]?.toUpperCase())}</span><div class="sv-peer"><strong>${esc(peer?.name)}</strong><small></small></div><div class="sv-peer-actions"></div><details class="sv-options"><summary aria-label="Действия с собеседником" title="Действия">⋯</summary><div><button data-sv="block">${blocked?'Разблокировать':'Блокировать'}</button></div></details></header><div class="sv-log" aria-label="Переписка"><button class="sv-older" data-sv="older" ${hasOlder?'':'hidden'}>РАНЬШЕ ↑</button><div class="sv-messages"></div></div><form class="sv-compose"><div class="sv-photo-preview" hidden></div><div class="sv-compose-row"><button type="button" class="sv-attach" data-photo="choose" aria-label="Прикрепить фото" title="Прикрепить фото" ${blocked?'disabled':''}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 12 6-6a3 3 0 0 1 4 4l-8 8a5 5 0 0 1-7-7l9-9M6 14l8-8"/></svg></button><input type="file" class="sv-photo-input" accept="image/jpeg,image/png,image/webp,image/gif" hidden><textarea name="message" maxlength="4000" rows="1" aria-label="Сообщение" placeholder="Написать…" ${blocked?'disabled':''}></textarea><button class="sv-send" type="submit" aria-label="Отправить сообщение" title="Отправить" ${blocked?'disabled':''}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 4 17 8-17 8 3-8-3-8Zm3 8h14"/></svg></button></div></form>`:`<div class="sv-empty"><svg viewBox="0 0 64 64" aria-hidden="true"><path d="M10 12h44v31H29L10 54V12Zm11 11h22M21 32h15"/></svg><b>НА СВЯЗИ</b><p>Выбери диалог или найди друга по нику.</p><button data-sv="find">НАЙТИ ДРУГА</button></div>`}</section></div><p class="sv-error" role="status"></p><div class="sv-bottom"><span id="sv-connection">● ПОДКЛЮЧЕНО</span><span>MAKSON PROJECT</span></div>`;
- social.draw();voice.draw();renderContacts();if(dialog){root.querySelector('[name=message]').value=drafts.get(dialog)||'';renderMessages(true);updatePeer();photos.draw();}
+ social.draw();voice.draw();root.querySelector('[name=search]').value=directory.query;renderDirectory();if(dialog){root.querySelector('[name=message]').value=drafts.get(dialog)||'';renderMessages(true);updatePeer();photos.draw();}
 }
 function renderAccount(){
  const profile=!!user&&!(link&&['verify','reset'].includes(authMode));
@@ -69,11 +70,33 @@ function renderAccount(){
  chatWindow.dataset.authMode=authMode;document.dispatchEvent(new Event('svyazlayout'));
  if(profile){renderStats();loadStats();}
 }
-function renderContacts(results){
+function resetDirectory(){
+ clearTimeout(searchTimer);searchVersion++;directory={query:'',results:null,working:false};
+ const field=root.querySelector('[name=search]');if(field)field.value='';
+ renderDirectory();
+}
+function renderDirectory(){renderContacts(directory.results,directory.working);}
+function searchDirectory(raw){
+ clearTimeout(searchTimer);
+ const q=raw.replace(/^@/,'').trim(),version=++searchVersion;
+ directory={query:raw,results:null,working:q.length>=2};renderDirectory();
+ if(!directory.working)return;
+ searchTimer=setTimeout(async()=>{
+  try{
+   const result=await api('search?q='+encodeURIComponent(q));
+   if(version!==searchVersion)return;
+   directory.results=result.users;directory.working=false;renderDirectory();
+  }catch(error){
+   if(version!==searchVersion)return;
+   directory.working=false;renderDirectory();notice(error.message);
+  }
+ },350);
+}
+function renderContacts(results,loading=false){
  const list=root.querySelector('.sv-contact-list');if(!list)return;
  const rows=results?results.map(p=>({peer:p})):dialogs;
- const signature=JSON.stringify([rows,dialog,!!results]);if(list.dataset.signature===signature)return;list.dataset.signature=signature;
- list.innerHTML=rows.length?rows.map(d=>`<button class="sv-contact" data-user="${d.peer.id}" ${d.id?'data-dialog="'+d.id+'"':''} aria-current="${d.id===dialog}"><i class="sv-contact-avatar ${d.peer.online?'online':''}">${esc(d.peer.name[0]?.toUpperCase())}</i><span><strong>${esc(d.peer.name)}</strong><small>${results?'@'+esc(d.peer.username):esc(d.last||'Начать разговор')}</small></span><span class="sv-contact-meta">${d.at?'<time>'+new Date(d.at).toLocaleTimeString('ru',{hour:'2-digit',minute:'2-digit'})+'</time>':''}${d.unread?'<b>'+d.unread+'</b>':''}</span></button>`).join(''):`<p class="sv-list-note">${results?'Никто не найден.':'Пока нет диалогов.<br>Найди друга по нику.'}</p>`;
+ const signature=JSON.stringify([rows,dialog,!!results,loading]);if(list.dataset.signature===signature)return;list.dataset.signature=signature;
+ list.innerHTML=loading?'<p class="sv-list-note" role="status">Поиск…</p>':rows.length?rows.map(d=>`<button class="sv-contact" data-user="${d.peer.id}" ${d.id?'data-dialog="'+d.id+'"':''} aria-current="${d.id===dialog}"><i class="sv-contact-avatar ${d.peer.online?'online':''}">${esc(d.peer.name[0]?.toUpperCase())}</i><span><strong>${esc(d.peer.name)}</strong><small>${results?'@'+esc(d.peer.username):esc(d.last||'Начать разговор')}</small></span><span class="sv-contact-meta">${d.at?'<time>'+new Date(d.at).toLocaleTimeString('ru',{hour:'2-digit',minute:'2-digit'})+'</time>':''}${d.unread?'<b>'+d.unread+'</b>':''}</span></button>`).join(''):`<p class="sv-list-note">${results?'Никто не найден.':'Пока нет диалогов.<br>Найди друга по нику.'}</p>`;
 }
 function updatePeer(){const label=root.querySelector('.sv-peer small');if(label)label.textContent='@'+peer.username+' · '+(peer.online?'В СЕТИ':'НЕ В СЕТИ');}
 function renderMessages(toBottom=false){
@@ -127,17 +150,17 @@ function backToContacts(){
  const list=root.querySelector('.sv-contact-list'),search=root.querySelector('[name=search]');
  if(!list)return;
  const target=position&&list.querySelector('.sv-contact[data-user="'+position.id+'"]');
- if(position&&!position.filtered)list.scrollTop=position.top;
+ if(position)list.scrollTop=position.top;
  (target||search)?.focus({preventScroll:true});
  if(target){const row=target.getBoundingClientRect(),box=list.getBoundingClientRect();
   if(row.top<box.top||row.bottom>box.bottom)target.scrollIntoView({block:'nearest'});}
 }
 async function loadDialog(id,p){saveDraft();changeChatView(false,()=>{dialog=id;peer=p;messages=[];peerRead=0;blocked=false;hasOlder=false;viewVersion++;});const version=viewVersion;try{const r=await api('messages?dialog='+id);if(version!==viewVersion||dialog!==id)return;messages=r.messages;peer=r.peer;peerRead=r.peerRead;hasOlder=r.more;blocked=r.blocked;renderMessages(true);updatePeer();root.querySelector('.sv-peer strong').textContent=peer.name;root.querySelectorAll('.sv-compose textarea,.sv-attach,.sv-send').forEach(n=>n.disabled=blocked);photos.draw();await readCurrent();await refreshDialogs();}catch(e){if(version===viewVersion)notice(e.message);}}
-let dialogsSignature='';async function refreshDialogs(){const r=await api('dialogs'),signature=JSON.stringify(r.dialogs);if(signature===dialogsSignature)return;dialogsSignature=signature;dialogs=r.dialogs;const count=dialogs.reduce((n,d)=>n+d.unread,0);desktopElement('svyaz-unread').textContent=count?' · '+count:'';const badge=desktopElement('chat-launcher')?.querySelector('b');if(badge)badge.textContent=count?String(count):'';chatWindow.dataset.title=count?'СВЯЗЬ ('+count+')':'СВЯЗЬ';if(!root.querySelector('[name=search]')?.value)renderContacts();}
+let dialogsSignature='';async function refreshDialogs(){const r=await api('dialogs'),signature=JSON.stringify(r.dialogs);if(signature===dialogsSignature)return;dialogsSignature=signature;dialogs=r.dialogs;const count=dialogs.reduce((n,d)=>n+d.unread,0);desktopElement('svyaz-unread').textContent=count?' · '+count:'';const badge=desktopElement('chat-launcher')?.querySelector('b');if(badge)badge.textContent=count?String(count):'';chatWindow.dataset.title=count?'СВЯЗЬ ('+count+')':'СВЯЗЬ';renderDirectory();}
 async function poll(){
  if(polling||!user||!visible())return;
  polling=true;
- try{await refreshDialogs();if(dialog){const id=dialog,version=viewVersion;let more=true;for(let n=0;n<4&&more;n++){const r=await api('messages?dialog='+id+'&after='+(messages.at(-1)?.id||0));if(dialog!==id||version!==viewVersion)return;more=r.more;peer=r.peer;peerRead=r.peerRead;for(const inv of r.invites||[]){const m=messages.find(m=>m.invite?.id===inv.id);if(m)m.invite=inv;}if(blocked!==r.blocked){blocked=r.blocked;saveDraft();render();}if(r.messages.length){const known=new Set(messages.map(m=>m.id));messages.push(...r.messages.filter(m=>!known.has(m.id)));}renderMessages();updatePeer();}await readCurrent();}const status=root.querySelector('#sv-connection');if(status)status.textContent='● ПОДКЛЮЧЕНО';}catch(e){const status=root.querySelector('#sv-connection');if(status)status.textContent='○ ПЕРЕПОДКЛЮЧЕНИЕ…';if(e.status===401){saveDraft();user=null;dialog=null;messages=[];drafts.clear();accountLabel();selectPage('account');notice('Сессия закончилась. Войди заново.',accountRoot);}}finally{polling=false;}}
+ try{await refreshDialogs();if(dialog){const id=dialog,version=viewVersion;let more=true;for(let n=0;n<4&&more;n++){const r=await api('messages?dialog='+id+'&after='+(messages.at(-1)?.id||0));if(dialog!==id||version!==viewVersion)return;more=r.more;peer=r.peer;peerRead=r.peerRead;for(const inv of r.invites||[]){const m=messages.find(m=>m.invite?.id===inv.id);if(m)m.invite=inv;}if(blocked!==r.blocked){blocked=r.blocked;saveDraft();render();}if(r.messages.length){const known=new Set(messages.map(m=>m.id));messages.push(...r.messages.filter(m=>!known.has(m.id)));}renderMessages();updatePeer();}await readCurrent();}const status=root.querySelector('#sv-connection');if(status)status.textContent='● ПОДКЛЮЧЕНО';}catch(e){const status=root.querySelector('#sv-connection');if(status)status.textContent='○ ПЕРЕПОДКЛЮЧЕНИЕ…';if(e.status===401){saveDraft();resetDirectory();user=null;dialog=null;messages=[];drafts.clear();accountLabel();selectPage('account');notice('Сессия закончилась. Войди заново.',accountRoot);}}finally{polling=false;}}
 function schedule(){clearInterval(timer);accountRoot.classList.toggle('svyaz-idle',chatWindow.hidden||chatWindow.ownerDocument.hidden||page!=='account');if(user&&visible()){poll();timer=setInterval(poll,5000);}}
 tabs.addEventListener('click',e=>{const b=e.target.closest('[data-overview]');if(b)selectPage(b.dataset.overview);});
 async function submit(e){
@@ -167,7 +190,7 @@ async function clicked(e){
  const auth=e.target.closest('[data-auth]');if(auth){authMode=auth.dataset.auth;renderAccount();return;}
  const contact=e.target.closest('.sv-contact[data-user]');if(contact){
   const id=Number(contact.dataset.user),list=contact.closest('.sv-contact-list');
-  try{await openContact(id,{id,top:list?.scrollTop||0,filtered:!!root.querySelector('[name=search]')?.value});}
+  try{await openContact(id,{id,top:list?.scrollTop||0});}
   catch(e){notice(e.message);}return;
  }
  const action=e.target.closest('[data-sv]')?.dataset.sv;if(!action)return;
@@ -177,14 +200,14 @@ async function clicked(e){
  if(action==='chat')selectPage('chat');
  if(action==='account')selectPage('account');
  if(action==='back')backToContacts();
- if(action==='clear-search'){root.querySelector('[name=search]').value='';searchVersion++;renderContacts();}
- if(action==='logout'){openRequest++;listReturn=null;await api('logout',{});user=null;dialog=null;messages=[];dialogs=[];drafts.clear();photos.clearAll();pendingSend=null;viewVersion++;accountLabel();desktopElement('svyaz-unread').textContent='';authMode='login';selectPage('account');render();schedule();}
+ if(action==='clear-search')resetDirectory();
+ if(action==='logout'){openRequest++;listReturn=null;await api('logout',{});resetDirectory();user=null;dialog=null;messages=[];dialogs=[];drafts.clear();photos.clearAll();pendingSend=null;viewVersion++;accountLabel();desktopElement('svyaz-unread').textContent='';authMode='login';selectPage('account');render();schedule();}
  if(action==='block'){await api('block',{dialog,blocked:!blocked});blocked=!blocked;saveDraft();render();}
  if(action==='older'){const id=dialog,version=viewVersion,log=root.querySelector('.sv-log'),oldHeight=log.scrollHeight,oldTop=log.scrollTop;const r=await api('messages?dialog='+id+'&before='+messages[0].id);if(id!==dialog||version!==viewVersion)return;messages=[...r.messages,...messages];hasOlder=r.more;renderMessages();log.scrollTop=oldTop+log.scrollHeight-oldHeight;}
  }catch(error){notice(error.message,accountRoot.contains(e.target)?accountRoot:root);}
 }
 root.addEventListener('click',clicked);accountRoot.addEventListener('click',clicked);
-root.addEventListener('input',e=>{if(e.target.name==='message'){saveDraft();e.target.style.height='auto';e.target.style.height=Math.min(100,e.target.scrollHeight)+'px';}if(e.target.name==='search'){clearTimeout(searchTimer);const q=e.target.value.replace(/^@/,'').trim(),version=++searchVersion;if(q.length<2){renderContacts();return;}searchTimer=setTimeout(async()=>{try{const r=await api('search?q='+encodeURIComponent(q));if(version===searchVersion)renderContacts(r.users);}catch(e){notice(e.message);}},350);}});
+root.addEventListener('input',e=>{if(e.target.name==='message'){saveDraft();e.target.style.height='auto';e.target.style.height=Math.min(100,e.target.scrollHeight)+'px';}if(e.target.name==='search')searchDirectory(e.target.value);});
 root.addEventListener('keydown',e=>{if(e.target.name==='message'&&e.key==='Enter'&&!e.shiftKey&&!e.isComposing&&matchMedia('(pointer:fine)').matches){e.preventDefault();e.target.form.requestSubmit();}});
 for(const event of ['windowfocus','windowhide','visibilitychange','settingschange'])document.addEventListener(event,schedule);
 document.addEventListener('recordschange',()=>{if(user)loadStats();});
