@@ -3,7 +3,9 @@
 export function attachConsoleEffects(settings){
  const reduced=()=>!settings.motion||matchMedia('(prefers-reduced-motion: reduce)').matches;
  installConsoleLife(settings);
- if(new URLSearchParams(location.search).get("raster")==="1")installRasterScreen();
+ const view=new URLSearchParams(location.search);
+ if(view.get("screen")==="1")installWholeScreenRaster();
+ else if(view.get("raster")==="1")installRasterScreen();
  let audio=null,noise=null,lastSwitch=-1,lastClick=-1;
  function unlock(){
   if(!settings.sound)return;
@@ -335,4 +337,74 @@ function installRasterScreen(){
   document.addEventListener(event,enqueue,true);
  window.addEventListener('resize',enqueue);contrast.addEventListener('change',enqueue);
  document.fonts?.ready.then(enqueue);enqueue();
+}
+
+// Treat the composited UI as one pixel screen. Each physical pixel in the
+// repeating map samples the same coordinate within its logical screen cell.
+function installWholeScreenRaster(){
+ const root=document.documentElement, ns="http://www.w3.org/2000/svg", step=2;
+ const forced=matchMedia("(forced-colors: active)"), contrast=matchMedia("(prefers-contrast: more)");
+ if(!CSS.supports("filter","url(#makson-screen-raster)"))return;
+ const create=(tag,attrs={})=>{
+  const node=document.createElementNS(ns,tag);
+  for(const [name,value] of Object.entries(attrs))node.setAttribute(name,value);
+  return node;
+ };
+ const svg=create("svg",{width:0,height:0,"aria-hidden":"true",focusable:"false",
+  style:"position:absolute;width:0;height:0;overflow:hidden;pointer-events:none"});
+ const filter=create("filter",{id:"makson-screen-raster",filterUnits:"userSpaceOnUse",
+  x:0,y:0,"color-interpolation-filters":"sRGB"});
+ const tile=create("feImage",{x:0,y:0,width:step,height:step,preserveAspectRatio:"none",result:"matrix"});
+ const displacement=create("feDisplacementMap",{in:"videoSignal",in2:"grid",scale:step,xChannelSelector:"R",yChannelSelector:"G"});
+ filter.append(create("feGaussianBlur",{in:"SourceGraphic",stdDeviation:".46",edgeMode:"duplicate",result:"videoSignal"}),tile,create("feTile",{in:"matrix",result:"grid"}),displacement);
+ svg.append(filter);
+ const surface=document.createElement("canvas"), ctx=surface.getContext("2d");
+ if(!ctx)return;
+ const style=document.createElement("style");
+ style.textContent='html[data-makson-pixel-screen]{filter:url("#makson-screen-raster")}';
+ document.head.append(style);document.body.append(svg);
+ let factor=0, frame=0, pendingImage=null, densityWatch=null, usable=false;
+ const apply=()=>{
+  if(usable&&!forced.matches&&!contrast.matches&&!document.fullscreenElement)
+   root.setAttribute("data-makson-pixel-screen","");
+  else root.removeAttribute("data-makson-pixel-screen");
+ };
+ const sync=()=>{
+  frame=0;
+  const dpr=window.devicePixelRatio||1;
+  const physical=Math.max(2,Math.round(dpr*step)), pitch=physical/dpr;
+  filter.setAttribute("width",Math.ceil(innerWidth/pitch)*pitch);
+  filter.setAttribute("height",Math.ceil(innerHeight/pitch)*pitch);
+  if(dpr===factor)return;
+  factor=dpr;
+  densityWatch?.removeEventListener("change",schedule);
+  densityWatch=matchMedia(`(resolution: ${dpr}dppx)`);
+  densityWatch.addEventListener("change",schedule,{once:true});
+  surface.width=surface.height=physical;
+  const bytes=ctx.createImageData(physical,physical), center=Math.floor(physical/2);
+  // Encode integer device-pixel offsets, not half-texel offsets. The latter
+  // introduce a second sample and make every other dot visibly softer.
+  const offset=i=>Math.round(255*(.5+(center-i)/physical));
+  for(let y=0;y<physical;y++)for(let x=0;x<physical;x++){
+   bytes.data.set([offset(x),offset(y),128,255],4*(y*physical+x));
+  }
+  ctx.putImageData(bytes,0,0);
+  const url=surface.toDataURL();
+  const image=new Image();pendingImage=image;
+  image.onload=()=>{
+   if(pendingImage!==image)return;
+   usable=true;
+   tile.setAttribute("width",pitch);tile.setAttribute("height",pitch);
+   displacement.setAttribute("scale",pitch);
+   tile.setAttribute("href",url);
+   apply();
+  };
+  image.onerror=()=>{if(pendingImage===image){usable=false;apply();}};
+  image.src=url;
+ };
+ const schedule=()=>{if(!frame)frame=requestAnimationFrame(sync);};
+ addEventListener("resize",schedule,{passive:true});
+ document.addEventListener("fullscreenchange",apply);
+ for(const preference of [forced,contrast])preference.addEventListener("change",apply);
+ sync();
 }
