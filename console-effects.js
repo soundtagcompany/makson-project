@@ -3,6 +3,7 @@
 export function attachConsoleEffects(settings){
  const reduced=()=>!settings.motion||matchMedia('(prefers-reduced-motion: reduce)').matches;
  installConsoleLife(settings);
+ if(new URLSearchParams(location.search).get("raster")==="1")installRasterScreen();
  let audio=null,noise=null,lastSwitch=-1,lastClick=-1;
  function unlock(){
   if(!settings.sound)return;
@@ -124,3 +125,157 @@ function installConsoleLife(settings){
  });
 }
 
+
+// Experimental native-control / low-resolution paint split. No inputs, chats or media are sampled.
+function installRasterScreen(){
+ const cell=2,scope='.desktop-header,#app-catalog,.window>.titlebar,#window-svyaz .overview-tabs,#svyaz-root .sv-auth-wrap';
+ const contrast=matchMedia('(forced-colors:active)'),surfaces=new Map();
+ let frame=0;
+ const style=document.createElement('style');style.textContent=`
+ [data-screen-raster]{isolation:isolate}
+ [data-screen-raster]:not(.sv-auth-wrap)>*:not(.screen-raster-canvas){opacity:0!important}
+ [data-screen-raster].sv-auth-wrap{position:relative}
+ [data-screen-raster].sv-auth-wrap :is([data-raster-label],button,small,.sv-strip,.sv-wordmark,.sv-auth-note){opacity:0!important}
+ [data-screen-raster].sv-auth-wrap :is(input,textarea,select){position:relative;z-index:50001;}
+ [data-screen-raster]>.screen-raster-canvas{position:absolute;z-index:50000;inset:0 auto auto 0;
+  pointer-events:none!important;image-rendering:pixelated!important;max-width:none!important;max-height:none!important;}
+ @media(forced-colors:active){[data-screen-raster]>*:not(.screen-raster-canvas){opacity:revert!important}
+  [data-screen-raster]>.screen-raster-canvas{display:none!important}}`;
+ document.head.append(style);
+ function enqueue(){if(!frame)frame=requestAnimationFrame(paint);}
+ function unmount(el,s){s.canvas.remove();delete el.dataset.screenRaster;surfaces.delete(el);resize.unobserve(el);}
+ const resize=new ResizeObserver(enqueue);
+ const parseMask=value=>{
+  const data=value.match(/data:image\/svg\+xml,([^"')]+)/)?.[1];
+  if(!data)return null;
+  try{const svg=new DOMParser().parseFromString(decodeURIComponent(data),'image/svg+xml').documentElement;
+   const cells=svg.getAttribute('viewBox').split(/\s+/).map(Number),d=svg.querySelector('path').getAttribute('d');
+   return {cols:cells[2],rows:cells[3],path:new Path2D(d)};}catch{return null;}
+ };
+ const masks=new Map();
+ function paint(){
+  frame=0;
+  const hosts=[...document.querySelectorAll(scope)].filter(el=>!el.closest('[hidden]')&&el.getBoundingClientRect().width>0);
+  for(const [el,s] of surfaces)if(!hosts.includes(el)||contrast.matches)unmount(el,s);
+  if(contrast.matches)return;
+  for(const el of hosts){
+   let s=surfaces.get(el);
+   if(!s){const canvas=document.createElement('canvas');canvas.className='screen-raster-canvas';canvas.setAttribute('aria-hidden','true');const ctx=canvas.getContext('2d');
+    if(!ctx)continue;el.append(canvas);resize.observe(el);s={canvas,ctx,letters:document.createElement('canvas')};surfaces.set(el,s);}
+   try{draw(el,s);el.dataset.screenRaster='1';}catch{unmount(el,s);}
+  }
+ }
+ function draw(host,{canvas,ctx,letters}){
+  if(host.matches('.sv-auth-wrap'))for(const label of host.querySelectorAll('label')){
+   for(const n of [...label.childNodes])if(n.nodeType===3&&n.data.trim()){
+    const span=document.createElement('span');span.dataset.rasterLabel='';n.replaceWith(span);span.append(n);
+   }
+  }
+  const hostStyle=getComputedStyle(host),zoom=Number(getComputedStyle(document.body).zoom)||1;
+  const base=host.getBoundingClientRect(),vw=host.clientWidth,vh=host.clientHeight;
+  const cw=Math.ceil(vw/cell),ch=Math.ceil(vh/cell);
+  if(cw<1||ch<1||cw*ch>1000000)throw Error('Unusable surface');
+  if(canvas.width!==cw)canvas.width=cw;if(canvas.height!==ch)canvas.height=ch;
+  canvas.style.width=cw*cell+'px';canvas.style.height=ch*cell+'px';
+  canvas.style.top=host.scrollTop+'px';canvas.style.left=host.scrollLeft+'px';
+  const slot=r=>({x:Math.round((r.left-base.left)/zoom/cell),y:Math.round((r.top-base.top)/zoom/cell),w:Math.round(r.width/zoom/cell),h:Math.round(r.height/zoom/cell)});
+  if(letters.width!==cw)letters.width=cw;if(letters.height!==ch)letters.height=ch;
+  const ink=letters.getContext('2d',{willReadFrequently:true});
+  ink.clearRect(0,0,cw,ch);ctx.clearRect(0,0,cw,ch);
+  const clear=c=>!c||c==='transparent'||/rgba\([^)]*,\s*0\s*\)$/.test(c);
+  function fill(color,x,y,w,h){if(w>0&&h>0&&!clear(color)){ctx.fillStyle=color;ctx.fillRect(x,y,w,h);}}
+  function bevel(r,c,h=1){
+   fill(c,r.x+1,r.y,r.w-2,h);fill(c,r.x+1,r.y+r.h-h,r.w-2,h);
+   fill(c,r.x,r.y+1,h,r.h-2);fill(c,r.x+r.w-h,r.y+1,h,r.h-2);
+  }
+  ctx.imageSmoothingEnabled=false;
+  fill(hostStyle.backgroundColor,0,0,cw,ch);
+  if(clear(hostStyle.backgroundColor))fill('#060908',0,0,cw,ch);
+  let seed=37;const amber=host.matches('.desktop-header');
+  for(let y=0;y<ch;y++)for(let x=0;x<cw;x++){
+   seed=Math.imul(seed,1664525)+1013904223|0;
+   if((seed>>>28)<5)fill(amber?'#8f446c0d':'#4294670e',x,y,1,1);
+  }
+  if(host.matches('.desktop-header,.titlebar'))fill(hostStyle.borderBottomColor,0,ch-2,cw,1);
+  if(host.id==='app-catalog')fill(hostStyle.borderRightColor,cw-1,0,1,ch);
+  function bitmapText(node,ps){
+   if(!node.data.trim())return;
+   const range=document.createRange(),runs=[];
+   for(let i=0;i<node.length;i++){
+    range.setStart(node,i);range.setEnd(node,i+1);
+    const q=range.getBoundingClientRect();if(!q.height||(!q.width&&node.data[i]!==' '))continue;
+    const previous=runs.at(-1);
+    if(previous&&Math.abs(previous.top-q.top)<1){previous.text+=node.data[i];previous.right=q.right;}
+    else runs.push({text:node.data[i],left:q.left,right:q.right,top:q.top,height:q.height});
+   }
+   const size=Math.max(6,Math.round(parseFloat(ps.fontSize)/cell));const family=ps.fontFamily.split(',')[0].trim();
+   ink.font=`${ps.fontWeight} ${size}px ${family}, monospace`;ink.textBaseline='middle';ink.fillStyle=ps.color;
+   for(const r of runs){
+    let tx=r.text.trimEnd();if(ps.textTransform==='uppercase')tx=tx.toLocaleUpperCase('ru');
+    if(!tx)continue;
+    const x=Math.round((r.left-base.left)/zoom/cell),y=Math.round((r.top-base.top+r.height/2)/zoom/cell);
+    const max=Math.min(cw-x,Math.round((r.right-r.left)/zoom/cell));
+    if(max>0)ink.fillText(tx,x,y,max);
+   }
+  }
+  function sprite(e,r){
+   const before=getComputedStyle(e,'::before'),after=getComputedStyle(e,'::after');
+   if(!masks.has(before.maskImage))masks.set(before.maskImage,parseMask(before.maskImage));
+   const mask=masks.get(before.maskImage);
+   if(mask){
+    const dw=Math.round(parseFloat(before.width)/cell),dh=Math.round(parseFloat(before.height)/cell);
+    const centered=e.matches('.catalog-app-icon,#console-settings,[data-action=maximize]');
+    const x=centered?r.x+Math.round((r.w-dw)/2):r.x+3,y=r.y+Math.round((r.h-dh)/2);
+    ctx.save();ctx.translate(x,y);ctx.scale(dw/mask.cols,dh/mask.rows);ctx.fillStyle=getComputedStyle(e).color;ctx.fill(mask.path);ctx.restore();
+   }else if(after.content!=='none'&&e.matches('[data-action=close],[data-action=minimize]')){
+    const x=r.x+Math.round(r.w/2)-3,y=r.y+Math.round(r.h/2)-3,c=getComputedStyle(e).color;
+    if(e.matches('[data-action=minimize]'))fill(c,x,y+4,7,1);
+    else for(let i=0;i<7;i++){fill(c,x+i,y+i,1,1);fill(c,x+6-i,y+i,1,1);}
+   }
+  }
+  function walk(e){
+   if(e===canvas||e.matches('svg,input,textarea,select,video,img,canvas,iframe'))return;
+   const ps=getComputedStyle(e),r=slot(e.getBoundingClientRect());
+   if(ps.display==='none'||ps.visibility==='hidden'||r.y+r.h<0||r.y>ch)return;
+   if(e.matches('.catalog-row,summary,button')){
+    let bg=ps.backgroundColor;
+    if(e.matches('.catalog-row:not(.selected)'))bg=e.matches(':hover,:focus-within')?'#143526':'#0b1a14';
+    if(e.matches('button:focus-visible,summary:focus-visible'))bg='#19392b';
+    fill(bg,r.x+1,r.y+1,r.w-2,r.h-2);
+    const border=e.matches(':focus-visible')?ps.color:ps.borderTopColor;
+    if(e.matches('.catalog-row')||parseFloat(ps.borderTopWidth)>0||e.matches(':focus-visible'))bevel(r,border);
+   }
+   if(e.matches('summary')){
+    const y=r.y+Math.round(r.h/2);fill(ps.color,r.x+2,y,4,1);
+    if(!e.parentElement.open)fill(ps.color,r.x+4,y-2,1,5);
+   }
+   if(e.matches('[data-app-link],[data-action=pip],[data-pip-app]')){
+    const pattern=e.matches('[data-app-link]')?['0011100','0100100','1001000','0010010','0100100','0101000','0110000']:['1111111','1000001','1000001','1001111','1001001','1001111','1111111'];
+    const x=r.x+Math.round(r.w/2)-3,y=r.y+Math.round(r.h/2)-3;
+    pattern.forEach((row,j)=>[...row].forEach((v,i)=>{if(v==='1')fill(ps.color,x+i,y+j,1,1);}));
+   }
+   if(e.matches('.catalog-caret')&&!e.closest('.selected')&&!e.closest('.catalog-row')?.matches(':hover,:focus-within'))return;
+   sprite(e,r);
+   for(const n of e.childNodes){
+    if(n.nodeType===1)walk(n);
+    else if(n.nodeType===3){
+     if(e.matches('[data-action=close],[data-action=minimize],[data-action=maximize]'))continue;
+     bitmapText(n,ps);
+    }
+   }
+  }
+  for(const root of host.children)walk(root);
+  const glyphs=ink.getImageData(0,0,cw,ch),rgba=glyphs.data;
+  for(let i=3;i<rgba.length;i+=4)rgba[i]=rgba[i]<54?0:rgba[i]>144?255:Math.min(255,Math.round(rgba[i]*1.4));
+  ink.putImageData(glyphs,0,0);ctx.drawImage(letters,0,0);
+ }
+ const observer=new MutationObserver(records=>{
+  if(records.some(r=>!r.target.closest?.('.screen-raster-canvas')&&r.attributeName!=='data-screen-raster'
+   &&(r.target.closest?.(scope)||r.target===document.body||r.attributeName==='hidden'||r.type==='childList'&&r.target.closest?.('.window'))))enqueue();
+ });
+ observer.observe(document.body,{subtree:true,attributes:true,childList:true,characterData:true,attributeFilter:['class','hidden','open','aria-pressed','style','aria-expanded']});
+ for(const event of ['scroll','pointerover','pointerout','focusin','focusout','windowfocus','windowhide','transitionend','animationend','toggle','console-scale-change','console-boot-change'])
+  document.addEventListener(event,enqueue,true);
+ window.addEventListener('resize',enqueue);contrast.addEventListener('change',enqueue);
+ document.fonts?.ready.then(enqueue);enqueue();
+}
