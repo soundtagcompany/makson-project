@@ -128,13 +128,16 @@ function installConsoleLife(settings){
 
 // Experimental native-control / low-resolution paint split. No inputs, chats or media are sampled.
 function installRasterScreen(){
- const cell=2,scope='.desktop-header,#app-catalog,.window>.titlebar,#window-svyaz .overview-tabs,#svyaz-root .sv-auth-wrap';
+ const scope='.desktop-header,#app-catalog,.window>.titlebar,#window-svyaz .overview-tabs,#svyaz-root .sv-auth-wrap';
  const contrast=matchMedia('(forced-colors:active)'),surfaces=new Map();
  let frame=0;
  const style=document.createElement('style');style.textContent=`
  [data-screen-raster]{isolation:isolate}
  [data-screen-raster]:not(.sv-auth-wrap)>*:not(.screen-raster-canvas){opacity:0!important}
  [data-screen-raster].sv-auth-wrap{position:relative}
+ [data-screen-raster-position]{position:relative!important}
+ .desktop-header[data-screen-raster] #chat-launcher{min-width:102px}
+ .titlebar[data-screen-raster]>span{flex:1;min-width:0}
  [data-screen-raster].sv-auth-wrap :is([data-raster-label],button,small,.sv-strip,.sv-wordmark,.sv-auth-note){opacity:0!important}
  [data-screen-raster].sv-auth-wrap :is(input,textarea,select){position:relative;z-index:50001;}
  [data-screen-raster]>.screen-raster-canvas{position:absolute;z-index:50000;inset:0 auto auto 0;
@@ -143,16 +146,47 @@ function installRasterScreen(){
   [data-screen-raster]>.screen-raster-canvas{display:none!important}}`;
  document.head.append(style);
  function enqueue(){if(!frame)frame=requestAnimationFrame(paint);}
- function unmount(el,s){s.canvas.remove();delete el.dataset.screenRaster;surfaces.delete(el);resize.unobserve(el);}
+ function unmount(el,s){s.canvas.remove();delete el.dataset.screenRaster;delete el.dataset.screenRasterPosition;surfaces.delete(el);resize.unobserve(el);}
  const resize=new ResizeObserver(enqueue);
  const parseMask=value=>{
   const data=value.match(/data:image\/svg\+xml,([^"')]+)/)?.[1];
   if(!data)return null;
   try{const svg=new DOMParser().parseFromString(decodeURIComponent(data),'image/svg+xml').documentElement;
    const cells=svg.getAttribute('viewBox').split(/\s+/).map(Number),d=svg.querySelector('path').getAttribute('d');
-   return {cols:cells[2],rows:cells[3],path:new Path2D(d)};}catch{return null;}
+   const pixels=[...d.matchAll(/M(\d+) (\d+)h1v1h-1Z/g)].map(n=>[Number(n[1]),Number(n[2])]);
+   return pixels.length?{cols:cells[2],rows:cells[3],pixels}:null;}catch{return null;}
  };
  const masks=new Map();
+ // Original 5×7/8 terminal glyphs; each hex row is five binary screen cells.
+ const romans={
+  A:'0e11111f111111',B:'1e11111e11111e',C:'0f10101010100f',D:'1e11111111111e',E:'1f10101e10101f',F:'1f10101e101010',
+  G:'0f10101711110f',H:'1111111f111111',I:'0e04040404040e',J:'0702020212120c',K:'11121418141211',L:'1010101010101f',
+  M:'111b1515111111',N:'11191513111111',O:'0e11111111110e',P:'1e11111e101010',Q:'0e11111115120d',R:'1e11111e141211',
+  S:'0f10100e01011e',T:'1f040404040404',U:'1111111111110e',V:'11111111110a04',W:'11111115151b11',X:'11110a040a1111',
+  Y:'11110a04040404',Z:'1f01020408101f',
+  '0':'0e11131519110e','1':'040c040404040e','2':'0e11010204081f','3':'1e01010601011e','4':'02060a121f0202',
+  '5':'1f10101e01011e','6':'0e10101e11110e','7':'1f010204080808','8':'0e11110e11110e','9':'0e11110f01010e',
+  ' ':'00000000000000','-':'0000001f000000','−':'0000001f000000','_':'0000000000001f','.':'00000000000c0c',',':'00000000000c08',
+  '!':'04040404040004','?':'0e110102040004',':':'00040c00040c00','/':'01010204081010','+':'0004041f040400',
+  '›':'00080402040800','>':'10080402040810','‹':'00020408040200','<':'01020408040201','→':'0004021f020400','←':'0004081f080400',
+  '·':'00000004000000','(':'02040808080402',')':'08040202020408','%':'19190204081313','&':'0c12140815120d',
+  '–':'0000001f000000','—':'0000001f000000','№':'090d0b09091700','«':'00050912090500','»':'00141209121400'
+ };
+ const russian={
+  А:'A',В:'B',Е:'E',З:'3',К:'K',М:'M',Н:'H',О:'O',Р:'P',С:'C',Т:'T',У:'Y',Х:'X',
+  Б:'1f10101e11111e',Г:'1f101010101010',Д:'060a0a0a0a1f1111',Ё:'0a001f101e101f00',Ж:'1515150e151515',
+  И:'11131315191911',Й:'0a04111315191111',Л:'07090909090911',П:'1f111111111111',Ф:'041f1515151f04',
+  Ц:'12121212121f01',Ч:'1111110f010101',Ш:'1515151515151f',Щ:'1515151515151f01',Ъ:'1810080e09090e',
+  Ы:'11111119151519',Ь:'1010101e11111e',Э:'1e01010f01011e',Ю:'1215151d151512',Я:'0f11110f050911',
+ };
+ const glyphs=new Map();
+ function glyph(character){
+  const c=character.toLocaleUpperCase('ru');
+  if(glyphs.has(c))return glyphs.get(c);
+  const ref=russian[c],rows=(ref?.length===1?romans[ref]:ref)||romans[c]||romans['?'];
+  const out=rows.match(/../g).map(n=>parseInt(n,16));glyphs.set(c,out);return out;
+ }
+
  function paint(){
   frame=0;
   const hosts=[...document.querySelectorAll(scope)].filter(el=>!el.closest('[hidden]')&&el.getBoundingClientRect().width>0);
@@ -161,11 +195,11 @@ function installRasterScreen(){
   for(const el of hosts){
    let s=surfaces.get(el);
    if(!s){const canvas=document.createElement('canvas');canvas.className='screen-raster-canvas';canvas.setAttribute('aria-hidden','true');const ctx=canvas.getContext('2d');
-    if(!ctx)continue;el.append(canvas);resize.observe(el);s={canvas,ctx,letters:document.createElement('canvas')};surfaces.set(el,s);}
-   try{draw(el,s);el.dataset.screenRaster='1';}catch{unmount(el,s);}
+    if(!ctx)continue;el.append(canvas);resize.observe(el);s={canvas,ctx};surfaces.set(el,s);}
+   try{if(getComputedStyle(el).position==='static')el.dataset.screenRasterPosition='1';draw(el,s);el.dataset.screenRaster='1';}catch{unmount(el,s);}
   }
  }
- function draw(host,{canvas,ctx,letters}){
+ function draw(host,{canvas,ctx}){
   if(host.matches('.sv-auth-wrap'))for(const label of host.querySelectorAll('label')){
    for(const n of [...label.childNodes])if(n.nodeType===3&&n.data.trim()){
     const span=document.createElement('span');span.dataset.rasterLabel='';n.replaceWith(span);span.append(n);
@@ -173,15 +207,14 @@ function installRasterScreen(){
   }
   const hostStyle=getComputedStyle(host),zoom=Number(getComputedStyle(document.body).zoom)||1;
   const base=host.getBoundingClientRect(),vw=host.clientWidth,vh=host.clientHeight;
-  const cw=Math.ceil(vw/cell),ch=Math.ceil(vh/cell);
+  const physical=(window.devicePixelRatio||1)*zoom,cell=Math.max(2,Math.round(2*physical))/physical;
+  const cw=Math.floor(vw/cell),ch=Math.floor(vh/cell);
   if(cw<1||ch<1||cw*ch>1000000)throw Error('Unusable surface');
   if(canvas.width!==cw)canvas.width=cw;if(canvas.height!==ch)canvas.height=ch;
   canvas.style.width=cw*cell+'px';canvas.style.height=ch*cell+'px';
   canvas.style.top=host.scrollTop+'px';canvas.style.left=host.scrollLeft+'px';
   const slot=r=>({x:Math.round((r.left-base.left)/zoom/cell),y:Math.round((r.top-base.top)/zoom/cell),w:Math.round(r.width/zoom/cell),h:Math.round(r.height/zoom/cell)});
-  if(letters.width!==cw)letters.width=cw;if(letters.height!==ch)letters.height=ch;
-  const ink=letters.getContext('2d',{willReadFrequently:true});
-  ink.clearRect(0,0,cw,ch);ctx.clearRect(0,0,cw,ch);
+  ctx.clearRect(0,0,cw,ch);
   const clear=c=>!c||c==='transparent'||/rgba\([^)]*,\s*0\s*\)$/.test(c);
   function fill(color,x,y,w,h){if(w>0&&h>0&&!clear(color)){ctx.fillStyle=color;ctx.fillRect(x,y,w,h);}}
   function bevel(r,c,h=1){
@@ -200,22 +233,34 @@ function installRasterScreen(){
   if(host.id==='app-catalog')fill(hostStyle.borderRightColor,cw-1,0,1,ch);
   function bitmapText(node,ps){
    if(!node.data.trim())return;
-   const range=document.createRange(),runs=[];
-   for(let i=0;i<node.length;i++){
-    range.setStart(node,i);range.setEnd(node,i+1);
-    const q=range.getBoundingClientRect();if(!q.height||(!q.width&&node.data[i]!==' '))continue;
-    const previous=runs.at(-1);
-    if(previous&&Math.abs(previous.top-q.top)<1){previous.text+=node.data[i];previous.right=q.right;}
-    else runs.push({text:node.data[i],left:q.left,right:q.right,top:q.top,height:q.height});
-   }
-   const size=Math.max(6,Math.round(parseFloat(ps.fontSize)/cell));const family=ps.fontFamily.split(',')[0].trim();
-   ink.font=`${ps.fontWeight} ${size}px ${family}, monospace`;ink.textBaseline='middle';ink.fillStyle=ps.color;
-   for(const r of runs){
-    let tx=r.text.trimEnd();if(ps.textTransform==='uppercase')tx=tx.toLocaleUpperCase('ru');
-    if(!tx)continue;
-    const x=Math.round((r.left-base.left)/zoom/cell),y=Math.round((r.top-base.top+r.height/2)/zoom/cell);
-    const max=Math.min(cw-x,Math.round((r.right-r.left)/zoom/cell));
-    if(max>0)ink.fillText(tx,x,y,max);
+   const range=document.createRange();range.selectNodeContents(node);
+   const boxes=[...range.getClientRects()].filter(r=>r.width&&r.height);
+   if(!boxes.length)return;
+   const element=node.parentElement;
+   const chars=Array.from(node.data.trim());
+   const wrapOwner=element.closest('.catalog-app-name')?.closest('button')||element.closest('#chat-launcher')||element;
+   const bounds=slot(wrapOwner.getBoundingClientRect());
+   const group=slot(boxes[0]);
+   const end=Math.min(cw-1,bounds.x+bounds.w-(element.closest('.catalog-app-name')?7:1));
+   const center=element.matches('h1')||element.matches('button')&&!element.id;
+   const avail=center?Math.min(end-bounds.x,bounds.w):end-group.x;
+   if(avail<3)return;
+   const widths=chars.map(c=>c===' '?3:'!.,:·'.includes(c)?3:5);
+   const desired=widths.reduce((a,b)=>a+b,0)+chars.length-1;
+   const tight=desired>avail;
+   const glyphWidth=tight?4:5;
+   const advance=widths.map(w=>Math.min(w,glyphWidth)+(tight&&chars.length*5>avail?0:1));
+   const total=advance.reduce((a,b)=>a+b,0)-1;
+   let x=center?bounds.x+Math.max(0,Math.floor((bounds.w-total)/2)):group.x;
+   const y=group.y+Math.floor((group.h-7)/2);
+   for(let i=0;i<chars.length&&x<end;i++){
+    const c=chars[i],rows=glyph(c);
+    for(let j=0;j<rows.length;j++)for(let k=0;k<glyphWidth;k++){
+     const col=glyphWidth===4?[0,1,3,4][k]:k;
+     const ox=widths[i]===3?k-1:k;
+     if(ox>=0&&ox<advance[i]&&x+ox<end&&(rows[j]&(16>>col)))fill(ps.color,x+ox,y+j,1,1);
+    }
+    x+=advance[i];
    }
   }
   function sprite(e,r){
@@ -224,9 +269,11 @@ function installRasterScreen(){
    const mask=masks.get(before.maskImage);
    if(mask){
     const dw=Math.round(parseFloat(before.width)/cell),dh=Math.round(parseFloat(before.height)/cell);
+    const size=Math.max(1,Math.floor(Math.min(dw/mask.cols,dh/mask.rows)));
     const centered=e.matches('.catalog-app-icon,#console-settings,[data-action=maximize]');
-    const x=centered?r.x+Math.round((r.w-dw)/2):r.x+3,y=r.y+Math.round((r.h-dh)/2);
-    ctx.save();ctx.translate(x,y);ctx.scale(dw/mask.cols,dh/mask.rows);ctx.fillStyle=getComputedStyle(e).color;ctx.fill(mask.path);ctx.restore();
+    const x=(centered?r.x+Math.round((r.w-dw)/2):r.x+3)+Math.round((dw-size*mask.cols)/2);
+    const y=r.y+Math.round((r.h-size*mask.rows)/2),color=getComputedStyle(e).color;
+    for(const [dx,dy] of mask.pixels)fill(color,x+dx*size,y+dy*size,size,size);
    }else if(after.content!=='none'&&e.matches('[data-action=close],[data-action=minimize]')){
     const x=r.x+Math.round(r.w/2)-3,y=r.y+Math.round(r.h/2)-3,c=getComputedStyle(e).color;
     if(e.matches('[data-action=minimize]'))fill(c,x,y+4,7,1);
@@ -265,9 +312,6 @@ function installRasterScreen(){
    }
   }
   for(const root of host.children)walk(root);
-  const glyphs=ink.getImageData(0,0,cw,ch),rgba=glyphs.data;
-  for(let i=3;i<rgba.length;i+=4)rgba[i]=rgba[i]<54?0:rgba[i]>144?255:Math.min(255,Math.round(rgba[i]*1.4));
-  ink.putImageData(glyphs,0,0);ctx.drawImage(letters,0,0);
  }
  const observer=new MutationObserver(records=>{
   if(records.some(r=>!r.target.closest?.('.screen-raster-canvas')&&r.attributeName!=='data-screen-raster'
