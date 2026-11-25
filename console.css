@@ -1130,3 +1130,56 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
  :is(.console-desktop,.pip-desktop) #window-naval{--crt-tint:rgba(6,24,31,.27)}
  :is(.console-desktop,.pip-desktop) #window-meme{--crt-tint:rgba(30,8,20,.23)}
 }
+
+/* The screen's pixel grid belongs to the controls, not to the wallpaper. */
+:is(.console-desktop,.pip-desktop){
+ --chrome-pixel:3px;
+ --chrome-two:calc(2 * var(--chrome-pixel));
+ --chrome-step:polygon(
+  0 var(--chrome-two),var(--chrome-pixel) var(--chrome-two),
+  var(--chrome-pixel) var(--chrome-pixel),var(--chrome-two) var(--chrome-pixel),var(--chrome-two) 0,
+  calc(100% - var(--chrome-two)) 0,calc(100% - var(--chrome-two)) var(--chrome-pixel),
+  calc(100% - var(--chrome-pixel)) var(--chrome-pixel),calc(100% - var(--chrome-pixel)) var(--chrome-two),100% var(--chrome-two),
+  100% calc(100% - var(--chrome-two)),calc(100% - var(--chrome-pixel)) calc(100% - var(--chrome-two)),
+  calc(100% - var(--chrome-pixel)) calc(100% - var(--chrome-pixel)),calc(100% - var(--chrome-two)) calc(100% - var(--chrome-pixel)),calc(100% - var(--chrome-two)) 100%,
+  var(--chrome-two) 100%,var(--chrome-two) calc(100% - var(--chrome-pixel)),var(--chrome-pixel) calc(100% - var(--chrome-pixel)),
+  var(--chrome-pixel) calc(100% - var(--chrome-two)),0 calc(100% - var(--chrome-two)));
+ --chrome-lit:inset 0 3px color-mix(in srgb,currentColor 24%,transparent),inset 3px 0 color-mix(in srgb,currentColor 14%,transparent),inset 0 -3px #0005;
+}
+@media not all and (forced-colors:active){
+ .console-desktop #app-catalog .catalog-row,
+ .console-desktop :is(#console-settings,#chat-launcher),
+ :is(.console-desktop,.pip-desktop) .window .window-controls>button,
+ :is(.console-desktop,.pip-desktop) .window :is(.sv-primary,.tool-action,.xp-button,.meme-primary,.launch-button,.edit-tabs>button,.meme-toolbar>button),
+ :is(.console-desktop,.pip-desktop) #window-svyaz :is(.sv-form input,.sv-auth-links>button,.sv-compose textarea,.sv-compose-row>button){
+  clip-path:var(--chrome-step);
+  box-shadow:var(--chrome-lit)!important;
+ }
+ .console-desktop #app-catalog .catalog-row:not(.selected){color:#6bbd88}
+ .console-desktop #app-catalog .catalog-row.selected{color:#073d22}
+ .console-desktop #app-catalog .catalog-row:focus-within{outline:2px solid #b4facc;outline-offset:-4px}
+ .console-desktop :is(#console-settings,#chat-launcher):focus-visible,
+ :is(.console-desktop,.pip-desktop) .window .window-controls>button:focus-visible,
+ :is(.console-desktop,.pip-desktop) .window :is(.sv-primary,.tool-action,.xp-button,.meme-primary,.launch-button,.edit-tabs>button,.meme-toolbar>button):focus-visible,
+ :is(.console-desktop,.pip-desktop) #window-svyaz :is(.sv-form input,.sv-auth-links>button,.sv-compose textarea,.sv-compose-row>button):focus-visible{
+  outline:2px solid currentColor!important;outline-offset:-5px!important;
+ }
+ :is(.console-desktop,.pip-desktop) .window>.titlebar{
+  border-bottom-width:3px!important;border-bottom-style:solid!important;
+  box-shadow:inset 0 3px color-mix(in srgb,currentColor 18%,transparent)!important;
+ }
+ /* Square-pixel icons are separate from accessible control names. */
+ :is(.console-desktop,.pip-desktop) .window .window-controls>button:is([data-action=close],[data-action=minimize]){
+  font-size:0!important;
+ }
+ :is(.console-desktop,.pip-desktop) .window .window-controls>button:is([data-action=close],[data-action=minimize])>svg{display:none}
+ :is(.console-desktop,.pip-desktop) .window .window-controls>button:is([data-action=close],[data-action=minimize])::after{
+  content:'';display:block;width:15px;height:15px;flex:none;background:currentColor;
+ }
+ :is(.console-desktop,.pip-desktop) .window .window-controls>button[data-action=minimize]::after{
+  clip-path:inset(9px 0 3px);
+ }
+ :is(.console-desktop,.pip-desktop) .window .window-controls>button[data-action=close]::after{
+  clip-path:polygon(0 0,3px 0,3px 3px,6px 3px,6px 6px,9px 6px,9px 3px,12px 3px,12px 0,15px 0,15px 3px,12px 3px,12px 6px,9px 6px,9px 9px,12px 9px,12px 12px,15px 12px,15px 15px,12px 15px,12px 12px,9px 12px,9px 9px,6px 9px,6px 12px,3px 12px,3px 15px,0 15px,0 12px,3px 12px,3px 9px,6px 9px,6px 6px,3px 6px,3px 3px,0 3px);
+ }
+}
