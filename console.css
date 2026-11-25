@@ -1,0 +1,714 @@
+@font-face{font-family:ConsoleMono;src:url('fonts/IBMPlexMono-Medium.ttf') format('truetype');font-weight:400 700;font-display:swap}
+:root{--console-green:#71ef8b;--console-muted:#86a88c;--console-rule:#203b27;--console-red:#ff4b50;--console-purple:#c579ff;--ui-scale:1;--header-height:42px;font-family:ConsoleMono,monospace;font-size:16px;color-scheme:dark}
+/* Fixed shell: catalog 34% + workspace 66%. Phone: workspace 64% + catalog 36%. */
+html,body.console-desktop{width:100%;height:100%;margin:0;background:#000;color:var(--console-green);overflow:hidden}
+body.console-desktop,body.pip-desktop{--blur-strength:0;--glow-strength:0;--display-filter:none;--paper:#080d09;--ink:#ccebd2;--chrome:#080d09;font-family:ConsoleMono,monospace;cursor:auto}
+.console-desktop *,.pip-desktop *{text-shadow:none!important;box-shadow:none!important;filter:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;border-radius:0!important;cursor:auto;}
+.console-desktop *::before,.console-desktop *::after,.pip-desktop *::before,.pip-desktop *::after{filter:none!important;backdrop-filter:none!important;text-shadow:none!important;box-shadow:none!important}
+.console-desktop button,.console-desktop input,.console-desktop textarea,.console-desktop select,.pip-desktop button,.pip-desktop input,.pip-desktop textarea{font-family:ConsoleMono,monospace!important;letter-spacing:0}
+.console-desktop button,.console-desktop summary{cursor:pointer}
+.console-desktop button:focus-visible,.console-desktop summary:focus-visible,.console-desktop input:focus-visible,.console-desktop textarea:focus-visible{outline:2px solid var(--console-green);outline-offset:-2px}
+.console-desktop .wallpaper,.console-desktop .crt,.console-desktop #cursor-ring,.console-desktop .sphere-axis,.console-desktop .desktop-sticker,.console-desktop #start-menu{display:none!important}
+.console-desktop .desktop-header{position:fixed;inset:0 0 auto;height:var(--header-height);display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:0 10px;background:#000;border:0;border-bottom:1px solid #392022;z-index:8000;pointer-events:auto}
+.desktop-header h1{font:500 1.125rem/1 ConsoleMono,monospace;color:var(--console-red);letter-spacing:2px;margin:0;text-align:center;white-space:nowrap}
+.console-zoom,.console-actions{display:flex;align-items:center;gap:4px}.console-actions{justify-content:flex-end}
+.console-desktop .desktop-header button{border:0;background:#000;color:var(--console-red);min-width:32px;height:36px;padding:0 7px;position:static;transform:none;font:400 1.1rem ConsoleMono;display:flex;align-items:center;justify-content:center;gap:4px}
+.console-desktop .desktop-header button:hover,.console-desktop .desktop-header button[aria-expanded=true]{background:#241113;color:#ff999c}
+.console-desktop #chat-launcher{width:auto;min-width:65px;z-index:auto}.console-desktop #chat-launcher b:empty{display:none}.console-desktop #chat-launcher b{font-size:.75rem;color:#000;background:#ff4b50;padding:1px 3px}
+#console-settings svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.5;shape-rendering:crispEdges}
+#console-shell{position:fixed;inset:var(--header-height) 0 0;bottom:calc(100dvh - var(--viewport-height,100dvh));display:grid;grid-template-columns:34% minmax(0,1fr);isolation:isolate}
+#app-catalog{grid-column:1;grid-row:1;min-width:0;overflow:auto;border-right:1px solid var(--console-rule);padding:28px 26px 20px;display:flex;flex-direction:column;background:#000;scrollbar-width:thin;scrollbar-color:#25482d #000}
+.catalog-heading{font-size:.75rem;color:var(--console-muted);display:flex;justify-content:space-between;padding-bottom:26px;letter-spacing:2px}
+.catalog-group{margin:0 0 12px}.catalog-group summary{display:flex;align-items:center;gap:9px;list-style:none;min-height:46px;font-size:1.25rem;color:var(--console-green);border-bottom:1px solid var(--console-rule)}
+.catalog-group summary::-webkit-details-marker{display:none}.catalog-group summary::before{content:'+';font-size:1.2rem;width:16px}.catalog-group[open] summary::before{content:'−'}.catalog-group summary span{margin-left:auto;color:var(--console-muted);font-size:.75rem}
+.catalog-items{padding:9px 0 4px}.catalog-row{display:flex;align-items:stretch;min-height:44px}.catalog-row>button{background:#000;border:0;color:#67c77c;padding:9px 0;font-size:1rem;text-align:left;line-height:1.25}
+.catalog-row>button:first-child{flex:1;display:flex;gap:9px;align-items:center;min-width:0}.catalog-caret{opacity:0;width:16px;flex-shrink:0}.catalog-row.selected .catalog-caret{opacity:1}.catalog-row.selected>button,.catalog-row>button:hover{color:#bcffca}.catalog-row.selected{border-bottom:1px solid #71ef8b}.catalog-row button[aria-current=true]::after{content:'●';margin-left:auto;font-size:8px}
+.catalog-row .catalog-pip{width:40px;display:flex;align-items:center;justify-content:center;flex-shrink:0}.catalog-pip svg{width:20px;height:20px}
+.catalog-bottom{margin-top:auto;display:flex;flex-wrap:wrap;gap:18px;padding-top:30px}.catalog-bottom button{border:0;padding:8px 0;background:#000;color:var(--console-muted);font-size:.75rem}
+#desktop-files{position:static!important;display:flex!important;flex-direction:column;gap:0;width:auto!important;transform:none!important;pointer-events:auto}#desktop-files:empty{display:none!important}#desktop-files:not(:empty){border-top:1px solid var(--console-rule);margin-top:20px;padding-top:10px}#desktop-files .desktop-icon{position:static!important;display:flex;align-items:center;width:100%;min-height:44px;padding:8px 0;color:var(--console-green);text-align:left}#desktop-files .desktop-icon svg{width:18px;height:18px;margin:0 8px 0 0}#desktop-files .desktop-icon span{font:1rem ConsoleMono;text-transform:none;overflow-wrap:anywhere}
+#app-workspace{grid-column:2;grid-row:1;position:relative;min-width:0;min-height:0;overflow:hidden}
+#catalog-toggle{position:absolute;left:34%;top:50%;transform:translate(-100%,-50%);z-index:5000;width:24px;min-height:54px;padding:0;border:1px solid var(--console-rule);border-right:0;background:#050b07;color:var(--console-green);font:24px ConsoleMono}
+.catalog-collapsed #console-shell{grid-template-columns:0 minmax(0,1fr)}.catalog-collapsed #app-catalog{visibility:hidden;padding:0;overflow:hidden}.catalog-collapsed #catalog-toggle{left:0;transform:translate(0,-50%);border-right:1px solid var(--console-rule)}
+.console-desktop #sphere-stage{position:absolute;inset:0;width:100%;height:100%;min-height:0;overflow:hidden;touch-action:none;transform:none;background:#000;contain:layout paint}
+#sphere-canvas{position:absolute;inset:0;width:100%!important;height:100%!important;image-rendering:pixelated!important}
+.console-desktop .sphere-stage .desktop-icons{position:absolute;inset:0;width:auto;height:auto;display:block;pointer-events:none;transform:none}
+.console-desktop .sphere-stage .desktop-icon{position:absolute;left:0;top:0;width:106px;min-height:50px;padding:4px 2px;background:#000;border:0;pointer-events:auto;transform-origin:center;transition:none!important;animation:none!important;color:#d6b0ff;display:flex;flex-direction:column;gap:5px;align-items:center}
+.console-desktop .sphere-stage .desktop-icon .node-symbol{position:static;display:block;width:auto;height:auto;min-height:0;font:24px/1 ConsoleMono;margin:0;color:#cf93ff}
+.console-desktop .sphere-stage .desktop-icon span:last-child{font:12px/1.1 ConsoleMono;text-transform:uppercase;white-space:normal}.console-desktop .sphere-stage .desktop-icon.node-selected{color:#f0dbff;outline:1px solid #a951dc;outline-offset:4px}
+.console-desktop .window{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;max-width:none!important;max-height:none!important;min-width:0!important;min-height:0!important;margin:0!important;transform:none!important;border:0!important;background:#030704;color:#ccebd2;display:flex;flex-direction:column;z-index:100;overflow:hidden;padding:0;animation:none}
+.console-desktop .window .titlebar,.pip-desktop .titlebar{background:#060d08!important;color:var(--console-green)!important;border:0;border-bottom:1px solid var(--console-rule);min-height:36px;height:36px;padding:0 10px;flex-shrink:0;font:1rem ConsoleMono;cursor:default}
+.console-desktop .titlebar>span{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.console-desktop .titlebar>span>svg{display:none}
+.console-desktop .window-controls button,.pip-desktop .window-controls button{background:#060d08;border:1px solid #26472e;color:#9bebb0;width:30px;height:28px;min-height:28px;padding:0;display:inline-flex;align-items:center;justify-content:center;font-size:20px}.window-controls svg{width:18px;height:18px}
+.console-desktop .window .window-status{background:#060d08;color:var(--console-muted);border:0;border-top:1px solid var(--console-rule);font:12px ConsoleMono;min-height:24px}.console-desktop .utility-body{background:#030704;color:#ccebd2;padding:20px;font:1rem/1.45 ConsoleMono;overflow:auto;min-height:0}.console-desktop .utility-body h2{font:1.3rem ConsoleMono;color:var(--console-green)}.console-desktop .subtle,.console-desktop .utility-body small{color:var(--console-muted)}
+.console-desktop .xp-button,.console-desktop .menubar button{border:1px solid #31593b;background:#09150d;color:#bbf5c8;font:1rem ConsoleMono;min-height:36px;padding:6px 10px}.console-desktop input,.console-desktop select,.console-desktop textarea{background:#030704;color:#ccebd2;border:1px solid #31593b;font-size:1rem;padding:8px;accent-color:#71ef8b}.console-desktop .setting{border-color:#203b27;padding:12px 0}.console-desktop .volume-setting{color:#bbd6c0;font:1rem ConsoleMono;display:flex;gap:8px}.volume-setting input{min-width:0;flex:1}
+
+
+.console-panel .window-controls [data-action=maximize],.console-panel .window-controls [data-action=minimize]{display:none!important}
+.console-desktop .overview-tabs{display:flex;flex-shrink:0;background:#000;border-bottom:1px solid #203b27;padding:0 12px;gap:20px;min-height:44px}.console-desktop .overview-tabs button{background:none;color:#86a88c;border:0;font:1rem ConsoleMono;padding:8px 0}.console-desktop .overview-tabs button[aria-selected=true]{color:#bbffcb;border-bottom:1px solid #71ef8b}
+.console-desktop #svyaz-root,.console-desktop #svyaz-chat{background:#030704;min-height:0;flex:1;overflow:auto;font-family:ConsoleMono,monospace}.console-desktop #svyaz-root{padding:0}.console-desktop .sv-auth-wrap{padding:20px;max-width:100%;margin:0}.console-desktop .sv-auth-card{background:#030704;border:1px solid #203b27}.console-desktop .sv-surface,.console-desktop .sv-surface button,.console-desktop .sv-surface input{font-family:ConsoleMono,monospace!important}.console-desktop .sv-wordmark{font:1.4rem ConsoleMono!important;color:#71ef8b}.console-desktop .sv-wordmark i{display:none}
+.console-desktop .sv-strip,.console-desktop .sv-topline,.console-desktop .sv-chat-head,.console-desktop .sv-compose,.console-desktop .sv-contacts,.console-desktop .sv-contact,.console-desktop .sv-bottom,.console-desktop .social-tabs{background:#060d08!important;color:#bbf5c8!important;border-color:#203b27!important}.console-desktop .sv-form,.console-desktop .sv-form label,.console-desktop .sv-empty,.console-desktop .sv-auth-note{color:#bbd6c0!important}.console-desktop .sv-form button,.console-desktop .sv-empty button{background:#0b1a10!important;color:#bbf5c8!important;border:1px solid #31593b!important}.console-desktop .sv-chat{background:#030704!important}.console-desktop .sv-avatar{background:#112416!important;color:#bbf5c8!important}
+.console-desktop .sv-message{background:#0c2012!important;color:#d8f5df!important}.console-desktop .sv-message.own{background:#17251b!important}.console-desktop .sv-stats{color:#ccebd2}
+.console-desktop .taskbar{position:fixed;left:10px;bottom:10px;right:auto;top:auto;width:auto;height:auto;min-height:0;background:transparent;border:0;z-index:8001;padding:0;pointer-events:none;display:flex}.console-desktop .taskbar>*{pointer-events:auto}.console-desktop .taskbar>#start-button,.console-desktop .taskbar>#desktop-toggle,.console-desktop .taskbar>#task-buttons,.console-desktop .taskbar>.system-tray,.console-desktop .taskbar>.social-bell{display:none!important}
+.console-desktop #toast{background:#07120b;border:1px solid #31593b;color:#baf5c7;font:1rem ConsoleMono;bottom:16px;right:16px;z-index:9000;max-width:calc(100% - 32px)}
+.console-desktop canvas,.pip-desktop canvas{image-rendering:pixelated!important}.console-desktop .window-resize{display:none!important}.console-desktop .game-screen::after{display:none!important}.console-desktop .game-overlay{background:#030704e8}.console-desktop .game-overlay h2{font-family:ConsoleMono!important;font-size:clamp(22px,4vw,44px)!important;color:#bcffcb!important}.console-desktop .race-sidebar{background:#08120c;color:#bce6c6}.console-desktop .race-sidebar h3,.console-desktop .race-sidebar label,.console-desktop .controls-guide{color:#bce6c6}.console-desktop .game-toolbar{background:#08120c;color:#bce6c6}.console-desktop .menubar,.console-desktop .note-name-row{background:#08120c;color:#bce6c6}.console-desktop .note-window textarea{flex:1;min-height:0;width:100%;resize:none}
+.console-desktop .naval-ocean,.console-desktop .naval-moon,.console-desktop .naval-ocean-grid{animation:none!important}.console-desktop .naval-ocean{display:none!important}
+.pip-desktop .window{border:1px solid #31593b!important;background:#030704!important;color:#ccebd2}.pip-desktop .titlebar{font-family:ConsoleMono!important}.pip-desktop #window-svyaz #svyaz-root{flex:1;min-height:0;overflow:auto}
+.console-desktop.reduced-motion *{scroll-behavior:auto!important;animation:none!important;transition:none!important}
+@media(max-width:700px), (max-width:950px) and (pointer:coarse){
+ :root{--header-height:44px}.console-desktop .desktop-header{padding:0 3px;grid-template-columns:64px minmax(0,1fr) 94px}.desktop-header h1{font-size:.875rem;letter-spacing:0}.console-desktop .desktop-header button{padding:0 4px;min-width:28px;height:42px;font-size:.875rem}.console-zoom,.console-actions{gap:0}.console-desktop #chat-launcher{min-width:62px}#console-settings svg{width:17px;height:17px}
+ #console-shell{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,64fr) minmax(0,36fr)}#app-workspace{grid-row:1;grid-column:1}#app-catalog{grid-row:2;grid-column:1;border-right:0;border-top:1px solid var(--console-rule);padding:14px 20px 18px}.catalog-heading{display:none}.catalog-group{margin-bottom:4px}.catalog-group summary{font-size:1.125rem;min-height:44px}.catalog-row>button{font-size:1rem}.catalog-bottom{padding-top:10px;margin-top:10px}.catalog-bottom button{min-height:44px}.catalog-items{padding-top:4px}
+ #catalog-toggle{top:64%;left:50%;transform:translate(-50%,-100%) rotate(90deg);width:24px;min-height:48px;border:1px solid var(--console-rule)}.catalog-collapsed #console-shell{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) 0}.catalog-collapsed #catalog-toggle{top:auto;bottom:0;left:50%;transform:translate(-50%,0) rotate(90deg)}
+ .console-desktop .sphere-stage .desktop-icon{width:86px}.console-desktop .sphere-stage .desktop-icon span:last-child{font-size:11px}.console-desktop .sphere-stage .desktop-icon .node-symbol{font-size:21px}
+ .console-desktop .window .titlebar{height:36px;min-height:36px;font-size:.875rem}.console-desktop .utility-body{padding:16px}.console-desktop .sv-auth-wrap{padding:14px}.console-desktop .overview-tabs{gap:16px}.console-desktop .overview-tabs button{font-size:.875rem}
+ .console-desktop .game-layout{min-height:0}.console-desktop .game-overlay{padding:8px}.console-desktop .game-overlay .lobby-ship{display:none}.console-desktop .game-overlay h2{font-size:22px!important;margin:4px}.console-desktop .game-overlay p{font-size:12px!important;margin:4px}.console-desktop .game-overlay .launch-button{padding:8px;font:14px ConsoleMono!important}.console-desktop .lobby-hint{font-size:11px;margin:4px}
+}
+@media(prefers-reduced-motion:reduce){.console-desktop *{scroll-behavior:auto!important;animation:none!important;transition:none!important}}
+/* Override the legacy floating launcher ID and decorative orbit pseudo-elements. */
+.console-desktop .desktop-header #chat-launcher{position:static!important;inset:auto!important;transform:none!important;color:var(--console-red);background:#000;border:0;font:400 1rem ConsoleMono;display:flex!important;padding:0 7px;margin:0;height:36px;opacity:1}
+.console-desktop .sphere-stage::before,.console-desktop .sphere-stage::after,.console-desktop .sphere-stage .desktop-icon::before,.console-desktop .sphere-stage .desktop-icon::after{display:none!important}
+.console-desktop .sphere-stage .desktop-icon .node-symbol{background:none!important;border:0!important;font-size:30px}
+.console-desktop .sphere-stage .desktop-icon span:last-child{font-size:14px}
+.console-desktop #site-fullscreen{position:static;width:100%;height:auto;font:1rem ConsoleMono;margin-top:12px;background:#09150d;border:1px solid #31593b;color:#baf5c7;padding:10px}
+@media(max-width:700px), (max-width:950px) and (pointer:coarse){.console-desktop .desktop-header #chat-launcher{font-size:.875rem;padding:0 3px}.console-desktop .sphere-stage .desktop-icon span:last-child{font-size:12px}.console-desktop .sphere-stage .desktop-icon .node-symbol{font-size:26px}}
+.console-achievements{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:16px;font-size:.875rem}.console-achievements .earned{color:#98ffb1}.console-achievements .locked{color:#859789}
+.console-desktop #svyaz-root::before,.pip-desktop #svyaz-root::before{display:none!important;animation:none!important}
+.console-desktop #window-svyaz .window-controls button{background:#060d08!important;border:1px solid #31593b!important;color:#baf5c7!important}
+.console-desktop #window-svyaz>.titlebar{font:1rem ConsoleMono!important}
+.console-desktop #svyaz-root .sv-wordmark{letter-spacing:1px}.console-desktop #svyaz-root .sv-form label{font-size:1rem}.console-desktop #svyaz-root .sv-auth-note{font-size:.875rem}
+
+.console-desktop #window-svyaz .sv-empty{color:#bce6c6!important}.console-desktop #window-svyaz .sv-empty p{color:#86a88c!important}
+.console-desktop .sphere-stage .desktop-icon{width:132px;overflow-wrap:normal;word-break:normal}.console-desktop .sphere-stage .desktop-icon span:last-child{white-space:normal;overflow-wrap:normal;word-break:normal}
+.console-desktop.night{--console-green:#57b76b;--console-red:#bc4448;--console-muted:#748b78}
+@media(max-width:700px), (max-width:950px) and (pointer:coarse){.console-desktop .sphere-stage .desktop-icon{width:114px}}
+.console-desktop .utility-window .utility-body{background:#030704!important;color:#ccebd2!important;border:0!important}
+.console-desktop .utility-window .setting,.console-desktop .utility-window .setting b,.console-desktop .utility-window .setting small{font-family:ConsoleMono,monospace!important;color:#bce6c6}
+.console-desktop .utility-window .setting small{color:#86a88c;font-size:.875rem}.console-desktop .utility-window .utility-body input:not([type=checkbox]):not([type=range]){background:#030704!important;color:#ccebd2!important;border:1px solid #31593b!important}
+.console-desktop #window-buffer .utility-body h2{font:1.3rem ConsoleMono!important;color:#71ef8b}.console-desktop .utility-body .upload-zone{background:#09150d;color:#bbf5c8;border:1px dashed #31593b;font:1rem ConsoleMono}
+.console-desktop .utility-body .xp-button{background:#09150d;color:#bbf5c8;border:1px solid #31593b;font:1rem ConsoleMono}
+.console-desktop #window-game .game-toolbar,.console-desktop #window-game .window-status{background:#060d08!important;color:#bce6c6!important;border-color:#203b27!important}
+.console-desktop #window-game .game-toolbar button,.console-desktop #window-game .launch-button{background:#0b1a10!important;color:#baf5c7!important;border:1px solid #31593b!important;font-family:ConsoleMono!important}
+.console-desktop #window-game .game-overlay{background:#020704cc!important}.console-desktop #window-game .game-overlay p{font-family:ConsoleMono!important;color:#bce6c6!important}.console-desktop #window-game .race-sidebar{background:#08120c!important;color:#bce6c6!important}
+@media(max-width:700px), (max-width:950px) and (pointer:coarse){.console-desktop .desktop-header{grid-template-columns:94px minmax(0,1fr) 94px}}
+.console-desktop.game-fullscreen-on .desktop-header,.console-desktop.game-fullscreen-on .desktop-files{visibility:visible!important}.console-desktop.game-fullscreen-on .taskbar{display:flex!important}
+/* Bound game layers to their pane so legacy fullscreen z-indices cannot cover the divider. */
+#app-workspace{z-index:0;isolation:isolate}
+/* Soft static bloom on console chrome; keep the glyphs and game pixels sharp. */
+.console-desktop .desktop-header{box-shadow:0 1px 12px #ff4b5026!important}
+.console-desktop .desktop-header h1,.console-desktop .desktop-header button{ text-shadow:0 0 5px #ff4b5080,0 0 12px #ff4b5033!important}
+.console-desktop .catalog-group summary,.console-desktop .catalog-row>button,.console-desktop #catalog-toggle{ text-shadow:0 0 5px #71ef8b70,0 0 11px #71ef8b26!important}
+.console-desktop .catalog-group summary,.console-desktop .catalog-row.selected{box-shadow:0 3px 9px -5px #71ef8b80!important}
+.console-desktop #catalog-toggle{box-shadow:0 0 10px #71ef8b26!important}
+.console-desktop .console-panel{box-shadow:0 0 18px #71ef8b22!important}
+.console-desktop .utility-body h2,.console-desktop .utility-body button,.console-desktop .setting b,.console-desktop .sv-wordmark,.console-desktop .overview-tabs button,.console-desktop .sv-strip,.console-desktop .sv-form button{ text-shadow:0 0 6px #71ef8b66!important}
+.console-desktop .utility-body button,.console-desktop .sv-form button{box-shadow:0 0 8px #71ef8b18!important}
+.console-desktop .window>.titlebar,.pip-desktop .window>.titlebar{ text-shadow:0 0 6px #71ef8b66!important;box-shadow:0 2px 10px #71ef8b1c!important}
+.console-desktop .sphere-stage .desktop-icon,.console-desktop .sphere-stage .desktop-icon .node-symbol,.console-desktop .sphere-stage .desktop-icon span:last-child{color:var(--app-color,#cf93ff)!important;text-shadow:0 0 5px color-mix(in srgb,var(--app-color,#cf93ff) 65%,transparent),0 0 11px color-mix(in srgb,var(--app-color,#cf93ff) 25%,transparent)!important}
+.console-desktop .sphere-stage .desktop-icon.node-selected{outline-color:var(--app-color,#cf93ff);box-shadow:0 0 15px color-mix(in srgb,var(--app-color,#cf93ff) 28%,transparent)!important}
+.console-desktop .window.console-colored-app>.titlebar,.pip-desktop .window.console-colored-app>.titlebar{color:var(--app-color)!important;background:#08090b!important;border-bottom:1px solid color-mix(in srgb,var(--app-color) 48%,#000)!important;box-shadow:0 2px 12px color-mix(in srgb,var(--app-color) 25%,transparent)!important}
+.console-desktop .window.console-colored-app>.titlebar>span,.pip-desktop .window.console-colored-app>.titlebar>span{color:var(--app-color)!important;text-shadow:0 0 6px color-mix(in srgb,var(--app-color) 65%,transparent),0 0 12px color-mix(in srgb,var(--app-color) 25%,transparent)!important}
+.console-desktop .window.console-colored-app>.titlebar .window-controls button,.pip-desktop .window.console-colored-app>.titlebar .window-controls button{color:var(--app-color)!important;background:#08090b!important;border-color:color-mix(in srgb,var(--app-color) 40%,#000)!important;text-shadow:0 0 5px color-mix(in srgb,var(--app-color) 50%,transparent)!important}
+/* Console v2: scale the entire surface, including chrome, hit areas and games. */
+#console-shell{bottom:auto;height:calc(var(--viewport-height,100dvh) - var(--header-height))}
+.console-desktop .window *,.pip-desktop .window *{font-family:ConsoleMono,monospace!important}
+.console-desktop .window img,.pip-desktop .window img{image-rendering:pixelated}
+.console-desktop .window svg{shape-rendering:crispEdges}
+.console-desktop .window :is(button,summary),.console-desktop :is(.catalog-row button,.catalog-group summary,.desktop-header button,#catalog-toggle),.pip-desktop button{transition:color 140ms ease,background-color 140ms ease,outline-color 140ms ease,translate 140ms ease;outline:1px solid transparent;outline-offset:-2px}
+.console-desktop :is(button,summary):hover,.pip-desktop button:hover{outline-color:currentColor;translate:0 -1px}
+.console-desktop :is(button,summary):active,.pip-desktop button:active{translate:0 1px}
+.console-desktop :is(button,summary):focus-visible,.console-desktop .console-nav-focus,.pip-desktop :focus-visible{outline:2px solid currentColor!important;outline-offset:-2px!important}
+.console-desktop .catalog-group[open] .catalog-items{animation:console-enter 170ms ease-out}
+@keyframes console-enter{from{opacity:0;transform:translateY(-7px)}to{opacity:1;transform:none}}
+.console-desktop .desktop-header :is(h1,button){text-shadow:0 0 3px #ff5c60,0 0 9px #ff4b50aa,0 0 20px #ff4b5070!important}
+.console-desktop .catalog-group summary,.console-desktop .catalog-row>button,.console-desktop #catalog-toggle,.console-desktop .overview-tabs button,.console-desktop .utility-body :is(h2,b,button),.console-desktop .sv-form button,.console-desktop .sv-wordmark{ text-shadow:0 0 3px #71ef8b88,0 0 9px #71ef8b88,0 0 19px #71ef8b55!important}
+.console-desktop .catalog-group summary,.console-desktop #catalog-toggle,.console-desktop .utility-body button,.console-desktop .overview-tabs button[aria-selected=true]{box-shadow:0 0 9px #71ef8b20,inset 0 0 10px #71ef8b12!important}
+.console-desktop .console-panel{box-shadow:0 0 12px #71ef8b28,0 0 32px #71ef8b18!important}
+.console-input-hint{font-size:13px;line-height:1.55;color:var(--console-muted);margin:12px 0}
+.console-desktop #console-dock{position:absolute;bottom:0;left:0;right:0;z-index:300;display:flex;gap:5px;padding:5px 7px;background:#040906;border-top:1px solid #31593b;overflow-x:auto;min-height:40px;scrollbar-width:thin}
+.console-desktop #console-dock[hidden]{display:none}
+.console-task{display:flex;flex:0 0 auto;max-width:260px;min-width:120px;border:1px solid color-mix(in srgb,var(--app-color) 45%,#000);animation:console-enter 160ms ease-out;background:#080d09}
+.console-task button{background:transparent;color:var(--app-color);border:0;font:14px ConsoleMono;min-height:30px;padding:5px 9px;text-shadow:0 0 8px color-mix(in srgb,var(--app-color) 60%,transparent)!important}
+.console-task button:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;text-align:left}.console-task button:last-child{min-width:32px;border-left:1px solid #203b27}
+.console-desktop #app-workspace.has-docked-apps>.window{height:calc(100% - 46px)!important}
+.console-desktop #app-workspace.has-docked-apps>#sphere-stage{bottom:46px;height:auto}
+/* Small chat window, freely movable and resizable, retained between openings. */
+
+.console-desktop #window-svyaz>.titlebar{touch-action:none;cursor:move}
+.console-desktop #window-svyaz .window-controls :is([data-action=minimize],[data-action=maximize]){display:inline-flex!important}
+.console-desktop #window-svyaz .sv-surface{min-height:0!important;height:100%;max-height:100%;overflow:auto}
+.console-desktop #window-svyaz .console-resize{display:block!important;position:absolute;z-index:100;touch-action:none}
+.console-resize.resize-n,.console-resize.resize-s{left:9px;right:9px;height:8px;cursor:ns-resize}.console-resize.resize-n{top:0}.console-resize.resize-s{bottom:0}
+.console-resize.resize-e,.console-resize.resize-w{top:9px;bottom:9px;width:8px;cursor:ew-resize}.console-resize.resize-e{right:0}.console-resize.resize-w{left:0}
+.console-resize.resize-ne,.console-resize.resize-nw,.console-resize.resize-se,.console-resize.resize-sw{width:13px;height:13px}.console-resize.resize-ne{right:0;top:0;cursor:nesw-resize}.console-resize.resize-nw{left:0;top:0;cursor:nwse-resize}.console-resize.resize-se{right:0;bottom:0;cursor:nwse-resize;border-right:2px solid #71ef8b;border-bottom:2px solid #71ef8b}.console-resize.resize-sw{left:0;bottom:0;cursor:nesw-resize}
+.console-desktop .panel-dragging,.console-desktop .panel-dragging *{user-select:none!important}
+/* Fullscreen never opens or folds the catalog. Browser top layer fills the display. */
+.console-desktop .window:fullscreen,.console-desktop #window-svyaz:fullscreen,.console-desktop #app-workspace>.window:fullscreen{position:fixed!important;inset:0!important;width:100%!important;height:100%!important;max-width:none!important;max-height:none!important;zoom:1!important}
+.console-desktop .window.fullscreen-fallback,.console-desktop #window-svyaz.fullscreen-fallback{position:fixed!important;inset:0!important;width:100%!important;height:var(--viewport-height,100dvh)!important;z-index:9001!important}
+.window:fullscreen .console-resize,.window.fullscreen-fallback .console-resize{display:none!important}
+.console-desktop.reduced-motion *, .console-desktop.reduced-motion *::before,.console-desktop.reduced-motion *::after{animation:none!important;transition:none!important;translate:none!important}
+@media(prefers-reduced-motion:reduce){.console-desktop *{animation:none!important;transition:none!important;translate:none!important}}
+@media(max-width:700px), (max-width:950px) and (pointer:coarse){
+ .console-desktop .desktop-header h1{font-size:clamp(8px,2.8vw,14px)}
+ .console-desktop .desktop-header{grid-template-columns:56px minmax(0,1fr) 82px;padding:0 2px}
+ .console-desktop .desktop-header button{min-width:26px;padding:0 2px}.console-desktop .desktop-header #chat-launcher{min-width:52px;font-size:12px;padding:0 2px}
+ 
+ .console-desktop #console-dock{padding:4px;min-height:42px}.console-task button{min-height:34px}
+}
+
+.console-desktop #window-svyaz .sv-empty{background:#030704!important}
+/* ID-scoped legacy game rules used important font shorthands; override those too. */
+:is(.console-desktop,.pip-desktop) :is(#window-game,#window-naval,#window-pulse,#window-shabash,#window-kart,#window-importopoly,#window-buffer,#window-svyaz).window *{font-family:ConsoleMono,monospace!important}
+
+/* One short boot reveal: no images, postprocessing or JavaScript frame loop. */
+.console-desktop #console-boot{position:fixed;inset:0;z-index:20000;background:#000;display:grid;place-items:center;opacity:1;transition:opacity 180ms ease-out}
+.console-desktop #console-boot[hidden]{display:none}.console-desktop #console-boot.boot-ready{opacity:0;pointer-events:none}
+.boot-content{width:min(290px,76vw);text-align:center;font:14px ConsoleMono,monospace;color:#71ef8b}
+.console-desktop .boot-content>b{display:block;color:#ff4b50;font:24px ConsoleMono,monospace;letter-spacing:2px;text-shadow:0 0 6px #ff4b5099,0 0 18px #ff4b5066!important}
+.boot-track{position:relative;height:10px;border:1px solid #31593b;margin:26px 0 18px;overflow:hidden}
+.console-desktop .boot-track>i{display:block;width:25%;height:100%;background:#71ef8b;box-shadow:0 0 14px #71ef8b88!important;animation:boot-scan 850ms steps(9,end) infinite alternate}
+.console-desktop #boot-status{text-shadow:0 0 9px #71ef8b77!important;letter-spacing:2px}.boot-dots{animation:boot-blink 650ms steps(2,end) infinite}
+@keyframes boot-scan{from{transform:translateX(0)}to{transform:translateX(300%)}}
+@keyframes boot-blink{50%{opacity:.2}}
+@media(prefers-reduced-motion:reduce){.console-desktop #console-boot{transition:none}.boot-content *{animation:none!important}}
+/* Whole-screen sampling, including DOM artwork, iframes and media. */
+html.console-pixel-screen{filter:url('#console-screen-pixels')!important;background:#000}
+.console-pixel-defs{position:absolute!important;width:0!important;height:0!important;overflow:hidden!important;pointer-events:none!important}
+.console-desktop .window:fullscreen,.pip-desktop .window:fullscreen{filter:url('#console-screen-pixels')!important}
+:root{--console-ease:cubic-bezier(.2,.75,.2,1);font-size:18px}
+/* Smooth response comes from a single travelling frame, not many jumping outlines. */
+:is(.console-desktop,.pip-desktop) :is(button,summary){transition:color 220ms ease,background-color 260ms ease,opacity 220ms ease!important;translate:none}
+:is(.console-desktop,.pip-desktop) :is(button,summary):hover{outline-color:transparent!important;translate:none}
+:is(.console-desktop,.pip-desktop) .window button:active{transform:none!important;translate:none}
+.console-desktop .catalog-group[open] .catalog-items{animation:none!important}
+.console-desktop .catalog-row>button{min-height:46px}
+.console-desktop .desktop-header h1{position:relative;isolation:isolate}
+.console-desktop .desktop-header h1::after{content:attr(data-logo);position:absolute;inset:0;color:#ff7679;pointer-events:none;text-shadow:0 0 10px #ff4b50,0 0 24px #ff4b5088!important;opacity:.22;animation:console-logo-breathe 4200ms ease-in-out infinite}
+@keyframes console-logo-breathe{0%,100%{opacity:.12}50%{opacity:.58}}
+.console-desktop #console-shell{transition:grid-template-columns 400ms var(--console-ease),grid-template-rows 400ms var(--console-ease)}
+.console-desktop #app-catalog{transition:padding 400ms var(--console-ease),opacity 260ms ease,visibility 0s;opacity:1}
+.console-desktop.catalog-collapsed #app-catalog{opacity:0;transition:padding 400ms var(--console-ease),opacity 220ms ease,visibility 0s 400ms}
+.console-desktop #catalog-toggle{transition:left 400ms var(--console-ease),top 400ms var(--console-ease),color 220ms ease!important}
+.console-desktop .utility-body :is(p,small),.console-desktop .setting small,.console-desktop .console-input-hint{font-size:16px!important;line-height:1.5}
+.console-desktop .window .window-status{font-size:14px}
+.console-desktop .sphere-stage .desktop-icon span:last-child{font-size:16px}
+.console-desktop .boot-track>i{animation:boot-scan 1300ms cubic-bezier(.45,0,.55,1) infinite alternate}
+.console-desktop .boot-dots{animation:console-logo-breathe 1600ms ease-in-out infinite}
+.console-desktop .console-task{animation:console-enter 320ms var(--console-ease)}
+@media(max-width:700px), (max-width:950px) and (pointer:coarse){
+ .console-desktop .desktop-header h1{font-size:14px;letter-spacing:0}
+ .console-desktop .sphere-stage .desktop-icon span:last-child{font-size:14px}
+ .console-desktop .utility-body :is(p,small),.console-desktop .setting small{font-size:16px!important}
+}
+.console-desktop.reduced-motion .desktop-header h1::after,.console-desktop.reduced-motion .boot-track>i,.console-desktop.reduced-motion .boot-dots{animation:none!important}
+.console-desktop.reduced-motion #console-shell,.console-desktop.reduced-motion #app-catalog,.console-desktop.reduced-motion #catalog-toggle{transition:none!important}
+@media(prefers-reduced-motion:reduce){.console-desktop .desktop-header h1::after,.console-desktop .boot-track>i,.console-desktop .boot-dots{animation:none!important}.console-desktop #console-shell,.console-desktop #app-catalog,.console-desktop #catalog-toggle{transition:none!important}}
+/* Give the larger controls enough width on tablets. */
+@media(min-width:701px){
+ :root{--catalog-size:34%}
+ #console-shell{grid-template-columns:var(--catalog-size) minmax(0,1fr)}
+ #catalog-toggle{left:var(--catalog-size)}
+ .catalog-collapsed #console-shell{grid-template-columns:0 minmax(0,1fr)}
+ .catalog-collapsed #catalog-toggle{left:0}
+}
+@media(min-width:701px) and (max-width:1000px){:root{--catalog-size:42%}}
+
+/* A single static terminal face: no synthetic bold or decorative glyph alternates. */
+html,body{font-synthesis:none}
+:is(.console-desktop,.pip-desktop) .window *{font-synthesis:none}
+/* Animate the live window; forms and game sessions keep their DOM. */
+.console-desktop .window.dock-transition{transform-origin:0 0!important;pointer-events:none!important;will-change:translate,scale,opacity}
+/* Shared game chrome: one audio panel and readiness-driven loading. */
+.console-desktop .desktop-header #chat-launcher{align-items:center;gap:6px}
+.console-desktop #chat-launcher .svyaz-app-icon{display:block!important;width:18px;height:18px;flex:none}
+:is(.console-desktop,.pip-desktop) .window-controls{overflow:visible}
+.game-sound-control{position:relative;display:flex;align-items:center}
+:is(.console-desktop,.pip-desktop) .game-sound-button{display:grid;place-items:center;min-width:30px}
+.game-sound-button svg{width:17px;height:17px;display:block!important}
+:is(.console-desktop,.pip-desktop) .game-sound-panel{position:absolute;z-index:1000;right:0;top:calc(100% + 8px);width:240px;max-width:75vw;padding:16px;background:#080a09!important;border:1px solid var(--app-color);color:#d9e5de;box-shadow:0 5px 22px #000b!important;text-align:left;white-space:normal}
+.game-sound-panel[hidden]{display:none!important}.game-sound-panel>b{display:block;margin-bottom:16px;color:var(--app-color);font-size:13px}
+.game-sound-panel label{display:grid;grid-template-columns:1fr auto;gap:10px;margin-top:16px;font:14px ConsoleMono}
+.game-sound-panel output{font-variant-numeric:tabular-nums}
+:is(.console-desktop,.pip-desktop) .game-sound-panel input{grid-column:1/-1;display:block;width:100%;height:26px;margin:0;padding:0;accent-color:var(--app-color);cursor:pointer;touch-action:pan-y}
+:is(.console-desktop,.pip-desktop) .window>.titlebar{z-index:600;position:relative;overflow:visible}
+.game-loading{position:absolute;inset:38px 0 0;z-index:500;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:20px;padding:24px;background:#030504;color:var(--app-color,#71ef8b);text-align:center}
+.game-loading b{font:20px ConsoleMono;max-width:100%;overflow-wrap:anywhere}.loading-symbol{font-size:32px}.loading-label{font:12px ConsoleMono;color:#a6b8ac}
+.loading-track{width:min(220px,80%);height:3px;background:#203128;overflow:hidden}.loading-track i{display:block;width:40%;height:100%;background:var(--app-color);animation:game-load-scan 1300ms ease-in-out infinite alternate}
+@keyframes game-load-scan{from{transform:translateX(-100%)}to{transform:translateX(250%)}}
+.game-is-loading>:not(.titlebar):not(.game-loading){visibility:hidden}
+.game-loading.load-failed .loading-symbol{display:none}
+.console-desktop #console-boot{transition:opacity 420ms cubic-bezier(.2,.7,.2,1)}
+.console-desktop .boot-track>i{animation:boot-scan 1400ms ease-in-out infinite alternate}
+.console-desktop .boot-content{animation:boot-appear 420ms ease-out both}
+.console-desktop .boot-dots{animation:none}
+@keyframes boot-appear{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+/* Menu structure follows the game: primary local play, optional network and rules. */
+:is(.console-desktop,.pip-desktop) .game-menu-fold{display:block;border:0;border-top:1px solid #2a3930;margin:18px 0 0;padding:0;background:transparent!important}
+:is(.console-desktop,.pip-desktop) .game-menu-fold summary{padding:16px 0;cursor:pointer;font:13px/1.4 ConsoleMono;color:var(--app-color);min-height:44px}
+.game-menu-fold-body{padding:0 0 16px;display:grid;gap:12px}
+.game-menu-fold-body .room-join{margin:0}.game-menu-fold-body p{margin:0}
+:is(.console-desktop,.pip-desktop) #window-game:not(.racing) .game-layout{display:block;overflow:auto;min-height:0;background:#030504}
+:is(.console-desktop,.pip-desktop) #window-game:not(.racing) .game-screen{height:170px;min-height:170px;width:100%;background:transparent}
+:is(.console-desktop,.pip-desktop) #window-game:not(.racing) #race-canvas{opacity:0;pointer-events:none}
+:is(.console-desktop,.pip-desktop) #window-game:not(.racing) .game-overlay{position:absolute;inset:0;align-items:flex-start;justify-content:center;padding:24px max(24px,calc((100% - 560px)/2));text-align:left;background:transparent!important}
+:is(.console-desktop,.pip-desktop) #window-game:not(.racing) .game-overlay h2{font-size:clamp(22px,3vw,32px)!important;letter-spacing:0;margin:0 0 12px;color:var(--app-color)}
+:is(.console-desktop,.pip-desktop) #window-game:not(.racing) .game-overlay p{font:14px/1.6 ConsoleMono!important;margin:0;color:#a6b8ac}
+:is(.console-desktop,.pip-desktop) #window-game:not(.racing) :is(.lobby-ship,.boost-meter,.touch-hint){display:none}
+:is(.console-desktop,.pip-desktop) #window-game:not(.racing) .race-sidebar{width:min(608px,100%);margin:0 auto;padding:0 24px 24px;overflow:visible;background:transparent!important;border:0;max-height:none}
+:is(.console-desktop,.pip-desktop) #window-game .race-sidebar label{font-size:13px;color:#c3d0c7;margin-bottom:8px}
+:is(.console-desktop,.pip-desktop) #window-game .race-sidebar :is(input,select){min-height:42px;width:100%;font-size:14px}
+:is(.console-desktop,.pip-desktop) #solo-start{width:100%;min-height:48px;margin:16px 0 0;text-align:left;font:15px ConsoleMono;background:#191025!important;border:1px solid var(--app-color)!important;color:var(--app-color)}
+:is(.console-desktop,.pip-desktop) #window-game .race-sidebar .controls-guide{padding:0 0 16px}
+:is(.console-desktop,.pip-desktop) #window-game .race-sidebar .race-record{margin-top:20px;font-size:12px}
+:is(.console-desktop,.pip-desktop) #window-game.racing .race-sidebar{display:none}
+:is(.console-desktop,.pip-desktop) #window-game.racing .game-layout{grid-template-columns:1fr}
+.game-menu-heading{padding:24px 24px 0;margin:0 auto;max-width:656px}
+.game-menu-heading h2{font:clamp(22px,3vw,32px)/1.15 ConsoleMono;color:var(--app-color);margin:0 0 12px}
+.game-menu-heading p{font:14px/1.6 ConsoleMono;color:#a6b8ac;margin:0}
+:is(.console-desktop,.pip-desktop) #window-naval .naval-online{margin:18px 24px;background:none!important;padding:0;border:0;border-top:1px solid #283b40}
+:is(.console-desktop,.pip-desktop) #naval-connect{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px}
+:is(.console-desktop,.pip-desktop) #naval-connect :is(input,button){min-width:0;min-height:42px;font-size:13px}
+:is(.console-desktop,.pip-desktop) #window-naval[data-phase=setup] .naval-orders{padding:16px 24px;background:none!important;border:0}
+:is(.console-desktop,.pip-desktop) #window-naval .naval-setup{padding:12px 24px;gap:10px;align-items:stretch;background:none!important;border:0}
+:is(.console-desktop,.pip-desktop) #naval-start{flex-basis:100%;margin:0;min-height:46px;text-align:left;font:14px ConsoleMono!important;border:1px solid var(--app-color)!important;background:#091b24!important;color:var(--app-color)}
+#window-naval:not([data-phase=setup]) .naval-menu-heading{display:none}
+:is(.console-desktop,.pip-desktop) .pulse-front{background:#040605!important;align-items:flex-start;padding:24px;overflow:auto}
+:is(.console-desktop,.pip-desktop) .pulse-front-inner{width:min(560px,100%);max-height:none;margin:0 auto;padding:0}
+:is(.console-desktop,.pip-desktop) .pulse-front h2{font:32px/1.2 ConsoleMono!important;letter-spacing:0;margin:0 0 12px;color:var(--app-color)}
+:is(.console-desktop,.pip-desktop) .pulse-front p{font:14px/1.6 ConsoleMono!important;max-width:none;color:#a6b8ac}
+:is(.console-desktop,.pip-desktop) .pulse-front :is(.pulse-menu-art,.pulse-menu-kicker){display:none}
+:is(.console-desktop,.pip-desktop) #pulse-solo{padding:14px 12px;min-height:48px;background:#251116!important;border:1px solid var(--app-color)!important;color:var(--app-color);font:14px ConsoleMono!important;letter-spacing:0}
+:is(.console-desktop,.pip-desktop) .pulse-front button{font:13px ConsoleMono!important;letter-spacing:0;min-height:42px}
+:is(.console-desktop,.pip-desktop) .pulse-front details p{font-size:12px!important}
+:is(.console-desktop,.pip-desktop) .pulse-front details summary{min-height:44px;padding:14px 0;color:var(--app-color);font:13px ConsoleMono}
+@media(max-width:700px), (max-width:950px) and (pointer:coarse){.console-desktop .desktop-header{grid-template-columns:56px minmax(0,1fr) 100px!important}.console-desktop .desktop-header #chat-launcher{gap:3px;padding:0 3px}.console-desktop #chat-launcher .svyaz-app-icon{width:14px;height:14px}.game-sound-panel{width:215px!important;padding:12px!important}.game-menu-heading{padding:20px 16px 0}.game-menu-heading h2{font-size:22px}.console-desktop #window-game:not(.racing) .game-screen{min-height:145px;height:145px}.console-desktop #window-game:not(.racing) .game-overlay{padding:20px 16px}.console-desktop #window-game:not(.racing) .race-sidebar{padding:0 16px 20px}.console-desktop #window-naval .naval-online{margin:16px}.console-desktop #window-naval .naval-setup,.console-desktop #window-naval[data-phase=setup] .naval-orders{padding:12px 16px}.console-desktop .pulse-front{padding:20px 16px}}
+@media(prefers-reduced-motion:reduce){.loading-track i{animation:none}.console-desktop #console-boot{transition:none}}
+/* Replace legacy light naval surfaces while preserving shot/placement states. */
+:is(.console-desktop,.pip-desktop) #window-naval :is(.naval-content,.naval-toolbar,.naval-online,.naval-board-panel,.naval-orders,.naval-setup,.naval-weapons,.naval-log){background:#030809!important;color:#b9cdd4;border-color:#29414b;box-shadow:none!important}
+:is(.console-desktop,.pip-desktop) #window-naval .naval-toolbar{border-bottom:1px solid #29414b;padding:6px 12px}
+:is(.console-desktop,.pip-desktop) #window-naval :is(.naval-toolbar,.naval-online,.naval-setup,.naval-weapons) button{background:#0a151a!important;color:#bad9e4;border:1px solid #365461;box-shadow:none;font-size:13px;min-height:40px}
+:is(.console-desktop,.pip-desktop) #window-naval :is(.naval-orders strong,.naval-board-panel>header){color:#91ddf5;background:transparent}
+:is(.console-desktop,.pip-desktop) #window-naval :is(.naval-orders>span,.naval-legend,.naval-board-panel>header>span){color:#9bb8c2}
+:is(.console-desktop,.pip-desktop) #window-naval .naval-board-panel{border:1px solid #315362;padding:12px}
+:is(.console-desktop,.pip-desktop) #window-naval .naval-grid{background:#101f25;border:1px solid #294752}
+:is(.console-desktop,.pip-desktop) #window-naval .naval-cell{background:#0b1a22;color:#8bb5c4;border:1px solid #203a46;box-shadow:none;min-height:0}
+:is(.console-desktop,.pip-desktop) #window-naval .naval-cell.ship{background:#315568;box-shadow:inset 0 0 0 1px #729bad!important}
+:is(.console-desktop,.pip-desktop) #window-naval .naval-cell.ship:after{background:#98beca;border-color:#415e70}
+:is(.console-desktop,.pip-desktop) #window-naval .naval-cell.hit{background:#6c382d;color:#ffd28d}
+:is(.console-desktop,.pip-desktop) #window-naval .naval-cell.sunk{background:#442d34;color:#ff9292}
+:is(.console-desktop,.pip-desktop) #window-naval .naval-cell.miss{background:#102129;color:#88c1d6}
+:is(.console-desktop,.pip-desktop) #window-naval .naval-cell.water{background:#0b151c;color:#526e7a}
+:is(.console-desktop,.pip-desktop) #window-naval .naval-cell:is(.scanned,.preview){background:#2e5c50;color:#acffcc}
+:is(.console-desktop,.pip-desktop) #window-naval .naval-cell.invalid{background:#73363e}
+:is(.console-desktop,.pip-desktop) #window-naval .naval-cell:hover:not(:disabled){outline:1px solid #8fdcff;outline-offset:-2px}
+:is(.console-desktop,.pip-desktop) #window-naval #naval-start{border:1px solid #75d9ff!important;background:#091b24!important;color:#75d9ff!important}
+:is(.console-desktop,.pip-desktop) #window-game #game-overlay h2{color:#bd8aff!important}
+:is(.console-desktop,.pip-desktop) #window-game #solo-start{background:#191025!important;border:1px solid #bd8aff!important;color:#bd8aff!important}
+:is(.console-desktop,.pip-desktop) #window-naval .window-status{background:#080e10!important;color:#9bb8c2;border-top:1px solid #29414b}
+:is(.console-desktop,.pip-desktop) #window-game:not(.racing) .game-screen{height:150px;min-height:150px}
+:is(.console-desktop,.pip-desktop) #window-game .flight-options input,:is(.console-desktop,.pip-desktop) #window-game .flight-options select{margin:0}
+:is(.console-desktop,.pip-desktop) #window-game .flight-options .pilot-colors{margin:4px 0}
+:is(.console-desktop,.pip-desktop) #window-game .flight-options .mode-picker{margin:0}
+@media(max-width:700px), (max-width:950px) and (pointer:coarse){.console-desktop #window-game:not(.racing) .game-screen{height:130px;min-height:130px}}
+.console-desktop .desktop-header #chat-launcher>span{display:block!important}
+@media(max-width:700px), (max-width:950px) and (pointer:coarse){.console-desktop #window-naval:not([data-phase=setup]) .naval-content{display:flex;flex-direction:column}.console-desktop #window-naval:not([data-phase=setup]) .naval-online{order:5}.console-desktop #window-naval:not([data-phase=setup]) .naval-orders{margin:0;padding:10px 12px;min-height:0;flex:none}.console-desktop #window-naval:not([data-phase=setup]) .naval-weapons{padding:8px 12px;flex:none}.console-desktop #window-naval:not([data-phase=setup]) .naval-boards{flex:none;margin:0 auto}.console-desktop #window-naval:not([data-phase=setup]) .naval-log{order:6}}
+/* File tools share native windows, controls, keyboard navigation and PiP. */
+:is(.console-desktop,.pip-desktop) .tools-window .tools-body{flex:1;min-height:0;overflow:auto;padding:24px;background:#040706;color:#d0ded5;font:14px/1.6 ConsoleMono;container-type:inline-size}
+.tools-body h2{font:28px/1.2 ConsoleMono;color:var(--app-color);margin:0 0 12px}.tools-body h3{font:18px/1.4 ConsoleMono;overflow-wrap:anywhere}.tool-lead,.tool-note,.tool-retention,.tools-body small{color:#94ad9e}.tool-lead{margin:0 0 24px}.tool-note,.tool-retention{font-size:12px}.tool-retention{margin-top:24px}
+.tools-body label{display:flex;flex-direction:column;gap:8px;margin:14px 0}.tools-body input,.tools-body select{width:100%;min-width:0;max-width:100%;min-height:44px;background:#0a100c;color:#e1ebe5;border:1px solid #34503d;padding:10px;font:14px ConsoleMono}
+.tools-body select{white-space:nowrap;text-overflow:ellipsis}.tools-body input[type=range]{padding:0;accent-color:var(--app-color)}
+.tools-body button,.tools-body .tool-primary{min-height:44px;padding:12px 14px;font:14px/1.4 ConsoleMono;border:1px solid #34503d;background:#0b1710;color:#cde4d5;text-align:left;max-width:100%;overflow-wrap:anywhere}
+.tools-body .tool-primary{display:block;width:100%;color:var(--app-color);border-color:var(--app-color);text-decoration:none;margin-top:18px;background:#101710}.tools-body button:disabled{opacity:.4;cursor:wait}
+.tools-body .tool-drop{position:relative;border:1px dashed var(--app-color);padding:24px;text-align:center;color:var(--app-color);cursor:pointer;background:#0a100c;transition:background 180ms ease}
+.tool-drop input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;margin:0}.tool-drop.drag-over{background:#193324}.tool-drop:focus-within{outline:2px solid var(--app-color)}
+.tool-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.tool-grid[hidden],.tools-body [hidden]{display:none!important}.tool-grid label{min-width:0}.tool-grid small{font-size:11px}
+.tool-link{display:flex;gap:8px}.tool-link input{flex:1;min-width:0}.tool-link button{flex:none;font-size:12px}
+.tool-details{border-top:1px solid #294031;margin-top:24px}.tool-details summary{min-height:44px;padding:14px 0;cursor:pointer;color:var(--app-color)}
+.tool-status{overflow-wrap:anywhere;margin:20px 0 12px}.tool-progress progress{width:100%;height:8px;accent-color:var(--app-color)}.tool-progress button{margin-top:12px}
+.tool-result{border-top:1px solid var(--app-color);margin-top:24px;padding-top:4px}.tool-result p,#convert-name{overflow-wrap:anywhere}
+#tool-format-list p{display:grid;gap:6px;padding:12px 0;border-top:1px solid #203529}#tool-format-list span{font-size:12px;color:#9cbaaa;overflow-wrap:anywhere}
+@container(max-width:450px){.tool-link{flex-direction:column}.tool-grid{grid-template-columns:1fr;gap:0}.tool-link button{width:100%}.tools-body h2{font-size:24px}}
+@media(max-width:700px), (max-width:950px) and (pointer:coarse){.console-desktop .tools-window .tools-body{padding:18px 16px}}
+/* Phosphor terminal: light belongs to the glyphs, with a static screen texture. */
+:root{--console-green:#49f598;--console-muted:#58a778;--console-rule:#123c29;--phosphor-glow:0 0 2px #42ff9299,0 0 8px #32f58477,0 0 20px #25df6930}
+.console-desktop #app-catalog{background-color:#010b06;background-image:var(--phosphor-grain),radial-gradient(ellipse at 45% 35%,#082b172e,transparent 80%);border-color:#123c29;scrollbar-color:#205638 #010b06}
+.console-desktop #app-catalog :is(summary,button){text-shadow:var(--phosphor-glow)!important;box-shadow:none!important}
+.console-desktop .catalog-heading{color:#3b8f60;letter-spacing:1px}
+.console-desktop .catalog-group summary{border-bottom:0;font-size:1.15rem;gap:10px;min-height:50px}
+.console-desktop .catalog-group summary::before{content:'[+]';width:3ch;font-size:.88em;flex:none}
+.console-desktop .catalog-group[open] summary::before{content:'[−]'}
+.console-desktop .catalog-group summary span{color:#3b9562}
+.console-desktop .catalog-items{padding:4px 0 14px}
+.console-desktop .catalog-row{border:1px solid transparent;min-height:46px;margin:2px 0;transition:background-color 260ms ease,border-color 260ms ease}
+.console-desktop .catalog-row>button{background:transparent;color:#44db87;padding:10px 8px;line-height:1.35}
+.console-desktop .catalog-caret{width:14px}
+.console-desktop .catalog-row.selected{background:#43ec8b;border-color:#59ffa4;box-shadow:0 0 12px #32ed7933!important}
+.console-desktop #app-catalog .catalog-row.selected>button{color:#002e16;text-shadow:0 0 1px #002e1666!important}
+.console-desktop .catalog-row.selected>button:hover{color:#001c0d}
+.console-desktop .catalog-row:not(.selected):hover{background:#10372055}
+.console-desktop .catalog-row button[aria-current=true]::after{color:currentColor}
+.console-desktop #catalog-toggle{background:#04160c;color:#4bf89b;border-color:#205337;box-shadow:0 0 12px #32ed791f!important}
+.console-desktop #console-shell,.console-desktop #app-catalog,.console-desktop #catalog-toggle{transition:none!important}
+.console-desktop #console-shell.catalog-in-motion #app-catalog{visibility:visible!important;opacity:1;will-change:translate,opacity}
+.console-desktop .catalog-in-motion #app-workspace{will-change:translate,clip-path}
+:is(.console-desktop,.pip-desktop) :is(.utility-body,.tools-body,.sv-auth-wrap){background-color:#020d07!important;background-image:var(--phosphor-grain)!important}
+:is(.console-desktop,.pip-desktop) :is(.utility-body h2,.utility-body b,.utility-body button,.overview-tabs button,.sv-wordmark,.sv-strip,.tools-body h2,.tools-body summary){text-shadow:var(--phosphor-glow)!important}
+:is(.console-desktop,.pip-desktop) :is(.tools-body h2,.tools-body summary){text-shadow:0 0 3px color-mix(in srgb,var(--app-color) 55%,transparent),0 0 12px color-mix(in srgb,var(--app-color) 30%,transparent)!important}
+:is(.console-desktop,.pip-desktop) :is(.utility-body button,.overview-tabs button){box-shadow:none!important}
+:is(.console-desktop,.pip-desktop) :is(button,summary){transition:color 260ms ease,background-color 300ms ease,opacity 260ms ease!important}
+.console-desktop .sphere-stage .desktop-icon{transition:none!important}
+@media(max-width:700px), (max-width:950px) and (pointer:coarse){.console-desktop .catalog-group summary{font-size:1.05rem;min-height:44px}.console-desktop .catalog-items{padding-bottom:8px}.console-desktop .catalog-row>button{padding:9px 6px}}
+/* Keep the app's layout and session alive, but discard all covered console paint. */
+.console-desktop.game-fullscreen-on :is(.desktop-header,#app-catalog,#catalog-toggle,#console-dock,.taskbar){visibility:hidden!important;content-visibility:hidden;pointer-events:none!important}
+.console-desktop.game-fullscreen-on :is(.desktop-header,#app-catalog) *{animation-play-state:paused!important}
+.console-desktop.game-fullscreen-on #sphere-stage{display:none!important}
+.console-desktop.game-fullscreen-on .window:not(.game-fullscreen){visibility:hidden!important;content-visibility:hidden;pointer-events:none!important}
+.console-desktop .window.fullscreen-fallback{filter:url('#console-screen-pixels')!important}
+/* Snapshot interpolation commits layout once instead of reflowing fonts each frame. */
+::view-transition-group(root){animation:none;transform-origin:0 0}
+::view-transition-old(root),::view-transition-new(root){animation:none;mix-blend-mode:normal;transform-origin:0 0}
+.console-desktop .boot-content>b{display:inline-block}
+@media(prefers-reduced-motion:reduce){::view-transition-old(root),::view-transition-new(root){animation:none!important}.console-desktop #console-boot{transition:none}}
+::view-transition{pointer-events:none}
+
+/* A short staged boot: black panel -> header -> scene -> terminal wipe. */
+.console-desktop #console-boot{display:flex;align-items:center;justify-content:center;background:#000;transition:none;will-change:clip-path}
+.console-desktop #console-boot[hidden]{display:none}
+.console-desktop #console-boot .boot-content{width:auto;max-width:92vw}
+.console-desktop #console-boot .boot-content>b{display:inline-block;white-space:nowrap;opacity:0;transform-origin:0 0;font-size:clamp(20px,5vw,26px);line-height:1;letter-spacing:2px;will-change:transform,opacity}
+.console-desktop.console-booting :is(#console-shell,.desktop-header,.console-panel){pointer-events:none}
+.console-desktop.console-booting[data-boot-phase=waiting] :is(.desktop-header,#app-workspace,#app-catalog,#catalog-toggle,.console-panel),
+.console-desktop.console-booting[data-boot-phase=folding] :is(.desktop-header,#app-workspace,#app-catalog,#catalog-toggle,.console-panel){visibility:hidden!important}
+.console-desktop.console-booting[data-boot-phase=scene] :is(#app-catalog,#catalog-toggle){visibility:hidden!important;content-visibility:hidden}
+.console-desktop.console-booting .desktop-header h1::after{animation-play-state:paused!important}
+
+.console-desktop .window.window-opening{will-change:scale,translate,opacity}
+
+/* The messenger is an application; the guest hint is a direct entry to login. */
+.console-desktop .desktop-header #chat-launcher{border:1px solid #b84950!important;background:#14080a!important;padding:0 9px;height:32px;box-shadow:inset 0 0 10px #ff4b500a,0 0 8px #ff4b501c!important}
+.console-desktop .desktop-header #chat-launcher:hover,.console-desktop .desktop-header #chat-launcher[aria-expanded=true]{border-color:#ff777d!important;background:#2a0e13!important}
+.console-desktop .desktop-header #svyaz-signin-hint{font-size:12px;color:#ff9296;padding:0 3px;min-width:0;height:30px;white-space:nowrap;letter-spacing:0}
+.console-desktop #svyaz-signin-hint[hidden]{display:none!important}
+@media(max-width:700px), (max-width:950px) and (pointer:coarse){
+ .console-desktop .desktop-header.has-login-hint{grid-template-columns:56px minmax(0,1fr) 144px!important}
+ .console-desktop .desktop-header.has-login-hint h1{font-size:12px;letter-spacing:0}
+ .console-desktop .desktop-header #chat-launcher{height:30px;padding:0 4px;gap:3px}
+ .console-desktop .desktop-header #svyaz-signin-hint{font-size:9px;padding:0 2px;height:30px}
+}
+@media(max-width:360px){
+ .console-desktop .desktop-header.has-login-hint{grid-template-columns:52px minmax(0,1fr) 132px!important}
+ .console-desktop .desktop-header.has-login-hint h1{font-size:10px}
+ .console-desktop .desktop-header #svyaz-signin-hint{font-size:8px;padding:0 1px}
+ .console-desktop .desktop-header #chat-launcher{font-size:11px;padding:0 3px;min-width:0}
+}
+
+/* One short terminal POST, then a staggered downward reveal of the real controls. */
+.console-desktop #app-catalog{position:relative}
+/* Entire live buffer window accepts files; the overlay never steals pointer targets. */
+.console-desktop #window-buffer.buffer-drag-over{outline:2px solid #8cf5ba!important;outline-offset:-3px}
+.buffer-drop-overlay{display:none;position:absolute;inset:36px 0 24px;z-index:700;pointer-events:none;align-items:center;justify-content:center;flex-direction:column;gap:14px;background:#04160cf2;color:#a8ffcb;border:2px dashed #8cf5ba;font:14px ConsoleMono}
+.buffer-drop-overlay b{font-size:24px}.buffer-drag-over .buffer-drop-overlay{display:flex}
+:is(.console-desktop,.pip-desktop) #file-status{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:12px;padding:8px 0}
+:is(.console-desktop,.pip-desktop) #file-status a{display:flex;flex-direction:column;align-items:center;gap:9px;min-width:0;padding:14px 8px;background:#06150c;border:1px solid #254632;color:#c7f3d5;text-decoration:none;text-align:center;font:13px/1.4 ConsoleMono}
+#file-status a:hover{background:#103421!important;border-color:#8cf5ba!important}.buffer-file-name{overflow-wrap:anywhere;width:100%}#file-status a small{color:#8baa97;font-size:12px}
+.buffer-file-glyph{position:relative;display:block;width:44px;height:56px;color:#9ae8ba}.buffer-file-glyph svg{width:40px;height:50px;shape-rendering:crispEdges}.buffer-file-glyph b{white-space:nowrap;width:max-content;position:absolute;bottom:0;left:50%;translate:-50% 0;background:#0a2415;padding:1px 4px;font:11px ConsoleMono;border:1px solid currentColor}
+.buffer-file-glyph[data-kind=image]{color:#ffc178}.buffer-file-glyph[data-kind=video]{color:#c49bff}.buffer-file-glyph[data-kind=audio]{color:#89d8ff}.buffer-file-glyph[data-kind=archive]{color:#ffd56c}.buffer-file-glyph[data-kind=code]{color:#ff9eae}
+/* Brief feedback, then quiet: no idle glow animation or full-screen repaint loop. */
+.console-desktop .desktop-header h1::after{animation:none!important}
+.console-desktop :is(.catalog-row>button,.console-actions>button,.tools-body button,.utility-body button){transition:background-color 180ms,color 180ms,translate 180ms}
+.console-desktop :is(.catalog-row>button,.console-actions>button,.tools-body button,.utility-body button):active{translate:0 2px}
+.sphere-shaking :is(.desktop-header,#app-catalog,#catalog-toggle){animation:sphere-quake var(--sphere-period,300ms) linear infinite!important}
+@keyframes sphere-quake{0%,100%{translate:calc(var(--sphere-jitter,0px) * -.7) calc(var(--sphere-jitter,0px) * .3)}25%{translate:var(--sphere-jitter,0px) calc(var(--sphere-jitter,0px) * -.7)}50%{translate:calc(var(--sphere-jitter,0px) * -.9) calc(var(--sphere-jitter,0px) * -.5)}75%{translate:calc(var(--sphere-jitter,0px) * .5) var(--sphere-jitter,0px)}}
+.sphere-flight .console-focus-frame{visibility:hidden!important}
+@media(max-width:700px), (max-width:950px) and (pointer:coarse){
+ :root{--header-height:96px}
+ .console-desktop .desktop-header,.console-desktop .desktop-header.has-login-hint{height:96px!important;grid-template-columns:88px minmax(0,1fr)!important;grid-template-rows:40px 52px;padding:0 12px!important;gap:0!important}
+ .console-desktop .desktop-header h1,.console-desktop .desktop-header.has-login-hint h1{grid-row:1;grid-column:1/-1;font-size:18px!important;letter-spacing:2px!important;text-align:center;margin:0}
+ .console-zoom{grid-row:2;grid-column:1}.console-actions{grid-row:2;grid-column:2;justify-content:flex-end;gap:6px}
+ .console-desktop .desktop-header button,.console-desktop .desktop-header #chat-launcher,.console-desktop .desktop-header #svyaz-signin-hint{height:44px!important;min-width:40px;font-size:14px!important;padding:0 6px!important}
+ .console-desktop .desktop-header #svyaz-signin-hint{font-size:11px!important}
+ .console-desktop #console-shell{grid-template-rows:minmax(0,55fr) minmax(0,45fr)}
+ .console-desktop #catalog-toggle{top:55%;min-height:44px;width:30px}
+ .console-desktop.catalog-collapsed #console-shell{grid-template-rows:minmax(0,1fr) 0}
+ .console-desktop.catalog-collapsed #catalog-toggle{top:auto;bottom:0}
+ .console-desktop.has-open-windows #console-shell{grid-template-rows:minmax(0,1fr) 88px}
+ .console-desktop.has-open-windows #catalog-toggle{top:calc(100% - 88px)}
+ .console-desktop.has-open-windows.catalog-collapsed #console-shell{grid-template-rows:minmax(0,1fr) 0}
+ .console-desktop.has-open-windows.catalog-collapsed #catalog-toggle{top:auto;bottom:0}
+ .console-desktop #app-catalog{padding:12px 16px 20px;overscroll-behavior:contain}
+ .console-desktop .catalog-group summary{font-size:16px;min-height:44px}.console-desktop .catalog-row>button{font-size:15px;min-height:48px;padding:10px 8px}
+ .console-desktop.has-open-windows #catalog-groups{display:flex;gap:14px;min-width:0}.console-desktop.has-open-windows .catalog-group{min-width:240px}.console-desktop.has-open-windows #app-catalog{overflow:auto}
+ .console-desktop .window .titlebar{height:46px;min-height:46px;font-size:14px!important;padding:3px 8px;gap:4px}.console-desktop .titlebar>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}.console-desktop .window-controls{flex-shrink:0;gap:3px}.console-desktop .window-controls button{min-width:32px!important;min-height:38px!important}
+ .console-desktop .utility-body,.console-desktop .tools-window .tools-body{padding:16px;min-width:0;overscroll-behavior:contain}.console-desktop .utility-body :is(p,small){font-size:14px!important}
+ .console-desktop .buffer-connect{flex-wrap:wrap;gap:8px}.console-desktop .buffer-connect label{flex:1 0 100%}.console-desktop .buffer-connect button{flex:1;min-height:44px}.console-desktop #buffer-text{height:150px;font-size:16px}.console-desktop .upload-zone{padding:12px}.console-desktop .utility-intro{align-items:flex-start}.console-desktop .utility-intro svg{width:28px;height:28px}
+ .console-desktop :is(input,textarea,select){font-size:16px!important}.console-desktop .tool-grid{grid-template-columns:1fr}.console-desktop .tool-link{flex-direction:column}
+ 
+ 
+ .console-desktop .overview-tabs{gap:4px;padding:4px 8px}.console-desktop .overview-tabs button{font-size:13px!important;min-height:44px}.console-desktop .console-panel .console-resize{display:none}
+ .console-desktop .sphere-stage .desktop-icon{width:98px}.console-desktop .sphere-stage .desktop-icon span:last-child{font-size:12px!important}.console-desktop .sphere-stage .desktop-icon .node-symbol{font-size:24px!important}
+ .console-desktop #toast{font-size:14px;bottom:12px;right:12px;max-width:calc(100% - 24px)}
+}
+@media(max-width:700px) and (orientation:landscape){:root{--header-height:80px}.console-desktop .desktop-header,.console-desktop .desktop-header.has-login-hint{height:80px!important;grid-template-rows:28px 48px}.console-desktop.has-open-windows #console-shell{grid-template-rows:minmax(0,1fr) 48px}.console-desktop.has-open-windows #catalog-toggle{top:calc(100% - 48px)}}
+@media(prefers-reduced-motion:reduce){.sphere-shaking :is(.desktop-header,#app-catalog,#catalog-toggle){animation:none!important}}
+
+@media(max-width:700px), (max-width:950px) and (pointer:coarse){
+ .console-desktop #console-shell,.console-desktop.catalog-collapsed #console-shell{grid-template-columns:minmax(0,1fr)}
+ .console-desktop.has-open-windows #app-catalog{display:flex;align-items:center;padding:12px 16px;gap:12px;overflow-x:auto;overflow-y:hidden}
+ .console-desktop.has-open-windows #catalog-groups,.console-desktop.has-open-windows .catalog-group{display:contents}
+ .console-desktop.has-open-windows .catalog-group>summary{display:none}
+ .console-desktop.has-open-windows .catalog-items{display:flex!important;height:auto!important;opacity:1!important;gap:10px;padding:0}
+ .console-desktop.has-open-windows .catalog-row{flex-shrink:0;white-space:nowrap;min-width:160px;margin:0}
+ .console-desktop.has-open-windows .catalog-row>button{font-size:14px}
+}
+@media(max-width:950px) and (orientation:landscape) and (pointer:coarse){
+ :root{--header-height:48px}
+ .console-desktop .desktop-header,.console-desktop .desktop-header.has-login-hint{height:48px!important;grid-template-columns:88px minmax(0,1fr) 224px!important;grid-template-rows:48px!important}
+ .console-desktop .desktop-header h1{grid-column:2;grid-row:1;font-size:16px!important;letter-spacing:1px!important}.console-zoom{grid-column:1;grid-row:1}.console-actions{grid-column:3;grid-row:1}
+ .console-desktop #console-shell{grid-template-rows:minmax(0,70fr) minmax(0,30fr)}.console-desktop #catalog-toggle{top:70%}
+ .console-desktop.has-open-windows #console-shell{grid-template-rows:minmax(0,1fr) 56px}.console-desktop.has-open-windows #catalog-toggle{top:calc(100% - 56px)}
+ .console-desktop.catalog-collapsed #console-shell{grid-template-rows:minmax(0,1fr) 0}.console-desktop.catalog-collapsed #catalog-toggle{top:auto;bottom:0}
+}
+/* One-row header; screen controls live at the start of settings. */
+:root{--header-height:48px}
+.console-desktop .desktop-header,.console-desktop .desktop-header.has-login-hint{height:48px!important;display:flex!important;align-items:center;justify-content:space-between;padding:0 12px!important;gap:8px!important}
+.console-desktop .desktop-header h1,.console-desktop .desktop-header.has-login-hint h1{position:absolute;left:50%;translate:-50% 0;margin:0;white-space:nowrap;font-size:18px!important;letter-spacing:2px!important;pointer-events:none}
+.console-desktop .desktop-header #console-settings{width:44px;height:44px;flex:none}
+.console-desktop .desktop-header .console-actions{margin-left:auto;display:flex;align-items:center;gap:6px}
+.screen-settings{display:flex;flex-wrap:wrap;gap:8px;padding-bottom:14px;border-bottom:1px solid var(--console-rule);margin-bottom:16px}
+.screen-settings .console-zoom{display:flex;align-items:center;gap:8px;width:100%}.screen-settings .console-zoom>span{margin-right:auto;font-size:13px}.screen-settings output{min-width:48px;text-align:center;font-size:14px}
+.console-desktop .screen-settings button{min-width:40px;min-height:40px;color:#baf5c7;background:#09150d;border:1px solid #31593b;font:18px ConsoleMono}
+.console-desktop .screen-settings #site-fullscreen{margin:0;padding:8px;font-size:13px;width:100%}
+@media(max-width:700px), (max-width:950px) and (pointer:coarse){
+ .console-desktop .desktop-header,.console-desktop .desktop-header.has-login-hint{padding:0 6px!important}
+ .console-desktop .desktop-header h1,.console-desktop .desktop-header.has-login-hint h1{font-size:clamp(16px,4.2vw,18px)!important;letter-spacing:0!important}
+ .console-desktop .desktop-header .console-actions{gap:2px}
+ .console-desktop .desktop-header #chat-launcher{font-size:12px!important;min-width:62px;padding:0 4px!important;height:40px!important}
+ .console-desktop .desktop-header #svyaz-signin-hint{font-size:0!important;min-width:14px;width:14px;padding:0!important}.console-desktop .desktop-header #svyaz-signin-hint::after{content:'>';font-size:12px}
+}
+@media(orientation:landscape) and (max-width:950px){
+ :root{--catalog-size:32%}
+ .console-desktop #console-shell,.console-desktop.has-open-windows #console-shell{grid-template-columns:var(--catalog-size) minmax(0,1fr);grid-template-rows:minmax(0,1fr)}
+ .console-desktop #app-catalog,.console-desktop.has-open-windows #app-catalog{grid-column:1;grid-row:1;display:block;overflow:auto;padding:12px;border-top:0;border-right:1px solid var(--console-rule)}
+ .console-desktop #app-workspace{grid-column:2;grid-row:1}
+ .console-desktop #catalog-groups,.console-desktop.has-open-windows #catalog-groups,.console-desktop.has-open-windows .catalog-group{display:block;min-width:0}
+ .console-desktop.has-open-windows .catalog-group>summary{display:flex}
+ .console-desktop.has-open-windows .catalog-items{display:block!important;padding:4px 0}
+ .console-desktop.has-open-windows .catalog-group:not([open])>.catalog-items{display:none!important}
+ .console-desktop .catalog-row,.console-desktop.has-open-windows .catalog-row{white-space:normal;min-width:0}
+ .console-desktop #catalog-toggle,.console-desktop.has-open-windows #catalog-toggle{top:50%;bottom:auto;left:var(--catalog-size);transform:translate(-100%,-50%);width:26px;min-height:44px}
+ .console-desktop.catalog-collapsed #console-shell,.console-desktop.has-open-windows.catalog-collapsed #console-shell{grid-template-columns:0 minmax(0,1fr);grid-template-rows:minmax(0,1fr)}
+ .console-desktop.catalog-collapsed #catalog-toggle,.console-desktop.has-open-windows.catalog-collapsed #catalog-toggle{top:50%;bottom:auto;left:0;transform:translate(0,-50%)}
+ .console-desktop .catalog-group summary{font-size:14px}.console-desktop .catalog-row>button{font-size:13px}
+}
+.console-desktop #console-boot .boot-content{position:relative}.boot-post{position:absolute;top:calc(100% + 20px);left:0;right:-40px;display:flex;flex-direction:column;gap:8px;text-align:left;font:12px/1.5 ConsoleMono;color:#71b68b;white-space:nowrap}.boot-post>span:first-child{color:#a1ffbe}.boot-post-cursor{margin-left:4px;animation:boot-cursor 650ms steps(1) 4}
+@media(max-width:400px){.boot-post{font-size:11px;right:-20px}}
+
+@keyframes boot-cursor{50%{opacity:0}}
+/* A compact phosphor control panel: distinct pictograms, strong rows, quiet background. */
+.console-desktop #app-catalog{padding:20px 18px;background:#020906!important;background-image:none!important;border-right-color:#245238}
+.console-desktop .catalog-heading{display:flex;align-items:center;justify-content:space-between;margin:0 0 24px;padding:0 2px 14px;border-bottom:1px solid #1c3f2b;color:#a4ffc4;font:18px/1.3 ConsoleMono;letter-spacing:1px}
+.console-desktop .catalog-heading>span{color:inherit!important;font-size:inherit!important}.console-desktop .catalog-heading>b{font:12px ConsoleMono;color:#669679;letter-spacing:0}
+.console-desktop .catalog-group{margin:0 0 22px}.console-desktop .catalog-group:last-child{margin-bottom:0}
+.console-desktop .catalog-group summary{font:13px/1.4 ConsoleMono;letter-spacing:1px;min-height:36px;gap:8px;color:#72a285;padding:0 4px}
+.console-desktop .catalog-group summary::before{content:'+';width:12px;font-size:17px;color:#8bffb8;transition:translate 220ms}.console-desktop .catalog-group[open] summary::before{content:'−'}
+.console-desktop .catalog-group summary span{font-size:11px;color:#669679}
+.console-desktop .catalog-items{display:flex;flex-direction:column;gap:4px;padding:6px 0 0}
+.console-desktop .catalog-row{min-height:58px;margin:0;border:1px solid #142e20;background:#06130c;position:relative;transition:background-color 200ms,border-color 200ms}
+.console-desktop .catalog-row>button:first-child{gap:14px;padding:10px 12px;font:17px/1.25 ConsoleMono;color:#96eeb3}
+.catalog-app-name{min-width:0;overflow-wrap:normal;text-align:left}.catalog-app-icon{display:flex;align-items:center;justify-content:center;width:30px;flex:none;color:#5dc385;transition:translate 240ms cubic-bezier(.22,1,.36,1)}
+.app-pixel-icon{width:28px;height:30px;display:block;shape-rendering:crispEdges}
+.console-desktop .catalog-caret{margin-left:auto;flex:none;width:10px;opacity:0;translate:-5px 0;transition:translate 220ms,opacity 180ms}
+.console-desktop .catalog-row:is(:hover,:focus-within){background:#0d2a19;border-color:#4a9e68}
+.console-desktop .catalog-row:is(:hover,:focus-within) .catalog-app-icon{translate:2px 0;color:#c0ffd5}.console-desktop .catalog-row:is(:hover,:focus-within) .catalog-caret{opacity:1;translate:0 0}
+.console-desktop .catalog-row.selected{background:#83f5ac;border-color:#bdffd2;box-shadow:0 0 16px #53e99230!important}
+.console-desktop #app-catalog .catalog-row.selected>button,.console-desktop .catalog-row.selected .catalog-app-icon{color:#032711!important}
+.console-desktop .catalog-row.selected .catalog-caret{opacity:1;translate:0 0}.console-desktop .catalog-row .catalog-pip{width:34px;border-left:1px solid #153f2722}
+.console-desktop .catalog-row button[aria-current=true]::after{width:5px;height:5px;content:'';background:currentColor;flex:none}
+.console-desktop .sphere-stage .desktop-icon{background:transparent!important;padding:7px 5px!important;width:130px}
+.console-desktop .sphere-stage .desktop-icon .node-symbol{width:38px;height:42px;display:flex;justify-content:center;align-items:center;margin-bottom:6px}
+.console-desktop .sphere-stage .node-symbol .app-pixel-icon{width:34px;height:38px;filter:drop-shadow(0 0 3px currentColor)!important}
+.console-desktop .sphere-stage .desktop-icon span:last-child{font-size:14px!important;line-height:1.25;letter-spacing:.2px}
+.console-desktop .sphere-stage .desktop-icon.node-selected{background:#08050ed9!important;outline:1px solid var(--app-color);outline-offset:4px}
+.console-desktop .window>.titlebar{border-bottom:1px solid color-mix(in srgb,var(--app-color,#71ef8b) 35%,#000);background:#050a07!important}
+.console-desktop #window-settings .utility-body>h2,.console-desktop #window-settings .utility-body>.subtle{display:none}
+@media(max-width:700px), (max-width:950px) and (pointer:coarse){
+ .console-desktop #app-catalog{padding:12px}.console-desktop .catalog-heading{display:none}
+ .console-desktop .catalog-group{margin-bottom:14px}.console-desktop .catalog-group summary{font-size:12px;min-height:32px}
+ .console-desktop .catalog-row{min-height:52px}.console-desktop .catalog-row>button:first-child{font-size:15px;padding:8px 10px;gap:12px}.catalog-app-icon{width:26px}.app-pixel-icon{width:24px;height:26px}
+ .console-desktop .sphere-stage .desktop-icon{width:104px}.console-desktop .sphere-stage .desktop-icon span:last-child{font-size:12px!important}.console-desktop .sphere-stage .desktop-icon .node-symbol{width:30px;height:32px;margin-bottom:3px}.console-desktop .sphere-stage .node-symbol .app-pixel-icon{width:28px;height:30px}
+ .console-desktop.has-open-windows .catalog-row{min-width:170px}.console-desktop.has-open-windows .catalog-items{gap:8px}
+}
+@media(max-width:950px) and (orientation:landscape){.console-desktop #app-catalog{padding:12px}.console-desktop.has-open-windows .catalog-row{min-width:0}.console-desktop .catalog-row>button:first-child{font-size:13px;gap:8px;padding:8px}.catalog-app-icon{width:24px}}
+@media(prefers-reduced-motion:reduce){.catalog-app-icon,.console-desktop .catalog-caret{transition:none!important}}
+
+/* Service panels share type and spacing, but have independent geometry. */
+:root{--panel-unit:.76923077}
+.console-desktop .console-panel{position:fixed!important;bottom:auto!important;z-index:7500!important;border:1px solid #31593b!important;background:#050b08!important;transform-origin:top right;box-shadow:0 8px 28px #000a,0 0 16px #71ef8b18!important}
+.console-desktop #window-settings{left:8px!important;right:auto!important;top:calc(var(--header-height) + 8px)!important;width:min(calc(310px * var(--panel-unit)),calc(100% - 16px))!important;height:auto!important;max-height:calc(var(--viewport-height,100dvh) - var(--header-height) - 16px)!important;transform-origin:top left;overflow:hidden}
+.console-desktop #window-svyaz{left:var(--panel-x)!important;right:auto!important;top:var(--panel-y)!important;width:var(--panel-w)!important;height:var(--panel-h)!important;max-width:none!important;max-height:none!important}
+.console-desktop .console-panel>.titlebar{height:calc(36px * var(--panel-unit))!important;min-height:calc(36px * var(--panel-unit))!important;padding:0 calc(10px * var(--panel-unit));font-size:calc(15px * var(--panel-unit))!important;flex-shrink:0;color:#c4f5d4!important;background:#09150e!important}
+.console-desktop .console-panel .window-controls{gap:3px}
+.console-desktop .console-panel .window-controls button{width:calc(32px * var(--panel-unit));height:calc(32px * var(--panel-unit));min-width:0;min-height:0;font-size:calc(18px * var(--panel-unit))!important;border:0!important;background:transparent!important}
+.console-desktop #window-settings .utility-body{padding:calc(8px * var(--panel-unit)) calc(12px * var(--panel-unit));overflow:auto;min-height:0;font-size:calc(14px * var(--panel-unit))}
+.console-desktop #window-settings .screen-settings{display:flex;flex-direction:column;gap:0;padding:0;margin:0;border:0}
+.console-desktop #window-settings :is(.console-zoom,.settings-fullscreen,.setting){display:flex;align-items:center;justify-content:space-between;gap:6px;min-height:calc(44px * var(--panel-unit));padding:0;margin:0;border:0}
+.console-desktop #window-settings :is(.console-zoom>span,.settings-fullscreen>span,.setting b){font:inherit!important;text-transform:none;letter-spacing:0;text-shadow:none!important}
+.console-desktop #window-settings .console-zoom>span{font-size:0!important}.console-desktop #window-settings .console-zoom>span:after{content:'Масштаб';font-size:calc(14px * var(--panel-unit))}
+.console-desktop #window-settings :is(button,summary){font-size:calc(14px * var(--panel-unit))!important;text-shadow:none!important;box-shadow:none!important}
+.console-desktop #window-settings .screen-settings button{width:calc(32px * var(--panel-unit));min-width:calc(32px * var(--panel-unit));min-height:calc(36px * var(--panel-unit));padding:0;border:1px solid #264b33;background:#0c1c12}
+.console-desktop #window-settings output{min-width:calc(44px * var(--panel-unit));font-size:calc(13px * var(--panel-unit))}
+.console-desktop #window-settings #site-fullscreen{width:calc(60px * var(--panel-unit));margin:0;padding:0}
+.console-desktop #window-settings .setting input{appearance:none;-webkit-appearance:none;flex:none;width:calc(36px * var(--panel-unit));height:calc(20px * var(--panel-unit));margin:0;border:1px solid #3c6650;background:#101c15;position:relative}
+.console-desktop #window-settings .setting input:before{content:'';position:absolute;left:2px;top:2px;bottom:2px;width:calc(12px * var(--panel-unit));background:#6b8675;transition:transform 180ms ease,background 180ms ease}
+.console-desktop #window-settings .setting input:checked{background:#153b25}.console-desktop #window-settings .setting input:checked:before{background:#a5ffc6;transform:translateX(calc(16px * var(--panel-unit)))}
+.settings-footer{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;padding-top:4px;border-top:1px solid #1d3426;position:relative;flex-wrap:wrap}
+.console-desktop #window-settings .settings-footer button,.console-input-help summary{background:transparent;border:0;color:#8baa96;min-height:calc(36px * var(--panel-unit));padding:4px 0;margin:0;display:flex;align-items:center;cursor:pointer}
+.console-input-help{display:contents}.console-input-help p{order:2;flex:1 0 100%;margin:0;padding:6px 0;line-height:1.7;color:#9fc6ad;font-size:calc(13px * var(--panel-unit))}
+.console-input-help:not([open]) p{display:none}
+:is(.console-desktop,.pip-desktop) #window-svyaz .overview-tabs{height:calc(40px * var(--panel-unit));min-height:calc(40px * var(--panel-unit));padding:0 calc(12px * var(--panel-unit));gap:calc(20px * var(--panel-unit));background:#050b08;border-bottom:1px solid #203b29}
+:is(.console-desktop,.pip-desktop) #window-svyaz .overview-tabs button{font-size:calc(14px * var(--panel-unit))!important;letter-spacing:0;padding:0 2px;min-height:0;flex:none;margin:0;text-shadow:none!important}
+:is(.console-desktop,.pip-desktop) #window-svyaz :is(#svyaz-root,#svyaz-chat){min-height:0;flex:1;background:#050b08!important;overflow:auto}
+:is(.console-desktop,.pip-desktop) #window-svyaz .sv-auth-wrap{padding:calc(14px * var(--panel-unit));gap:12px;display:block;min-height:0}
+:is(.console-desktop,.pip-desktop) #window-svyaz .sv-auth-card{width:100%;margin:0;padding:0;border:0!important;background:transparent!important}
+:is(.console-desktop,.pip-desktop) #window-svyaz .sv-form{padding:0;gap:calc(12px * var(--panel-unit));font-size:calc(13px * var(--panel-unit))}
+:is(.console-desktop,.pip-desktop) #window-svyaz .sv-form label{gap:calc(6px * var(--panel-unit));font-size:calc(13px * var(--panel-unit));color:#a6cbb3}
+:is(.console-desktop,.pip-desktop) #window-svyaz .sv-form input{min-height:calc(40px * var(--panel-unit));padding:calc(8px * var(--panel-unit));font-size:calc(16px * var(--panel-unit))!important;background:#0b1810!important;border:1px solid #35533f!important;color:#d5f8df!important}
+:is(.console-desktop,.pip-desktop) #window-svyaz .sv-form button{min-height:calc(38px * var(--panel-unit));font-size:calc(14px * var(--panel-unit))!important;border:0!important;background:#10291a!important;color:#c7fbd8!important;text-shadow:none!important}
+:is(.console-desktop,.pip-desktop) #window-svyaz .sv-form .sv-primary{background:#85edaa!important;color:#062710!important}
+:is(.console-desktop,.pip-desktop) #window-svyaz .sv-auth-links{display:flex;justify-content:space-between;gap:8px}:is(.console-desktop,.pip-desktop) #window-svyaz .sv-auth-links button{background:none!important;padding:0;font-size:calc(12px * var(--panel-unit))!important}
+:is(.console-desktop,.pip-desktop) #window-svyaz .sv-error{margin:0;padding:8px 0;font-size:calc(13px * var(--panel-unit));line-height:1.5;flex-shrink:0}:is(.console-desktop,.pip-desktop) #window-svyaz .sv-error:empty{display:none}
+:is(.console-desktop,.pip-desktop) #window-svyaz .sv-strip{padding:0 0 12px;background:none!important;border:0!important;font-size:calc(14px * var(--panel-unit))}
+.sv-profile-identity{display:grid;gap:6px;margin-bottom:12px}.sv-profile-identity b{font-size:calc(18px * var(--panel-unit))}.sv-profile-identity span{font-size:calc(13px * var(--panel-unit));color:#94b19e}
+.sv-profile-edit summary{padding:8px 0;font-size:calc(14px * var(--panel-unit));cursor:pointer}.sv-profile-edit .sv-form{padding-top:8px!important}
+:is(.console-desktop,.pip-desktop) #window-svyaz .sv-logout{margin:10px 0 16px;padding:5px 0;background:none;border:0;color:#92ac9a;font-size:calc(13px * var(--panel-unit))}
+:is(.console-desktop,.pip-desktop) #window-svyaz #svyaz-chat{overflow:hidden;display:flex;flex-direction:column}
+:is(.console-desktop,.pip-desktop) #window-svyaz #svyaz-chat[hidden]{display:none!important}
+:is(.console-desktop,.pip-desktop) #window-svyaz :is(.sv-topline,.sv-bottom){background:#08120c!important;border:0!important}
+:is(.console-desktop,.pip-desktop) #window-svyaz .sv-topline{height:calc(40px * var(--panel-unit));min-height:0;padding:4px 8px}
+:is(.console-desktop,.pip-desktop) #window-svyaz .sv-identity{font-size:calc(13px * var(--panel-unit))!important}:is(.console-desktop,.pip-desktop) #window-svyaz .sv-identity small{display:none}
+:is(.console-desktop,.pip-desktop) #window-svyaz .sv-bottom span{border:0;font-size:calc(10px * var(--panel-unit))!important}:is(.console-desktop,.pip-desktop) #window-svyaz .sv-bottom span:last-child{display:none}
+:is(.console-desktop,.pip-desktop) #window-svyaz .sv-shell{display:grid;grid-template-columns:minmax(0,1fr);padding:0;margin:0;gap:0;min-height:0;flex:1;background:#050b08!important;border:0!important}
+:is(.console-desktop,.pip-desktop) #window-svyaz .sv-shell:not(.sv-has-dialog) .sv-chat,:is(.console-desktop,.pip-desktop) #window-svyaz .sv-shell.sv-has-dialog .sv-contacts{display:none}
+:is(.console-desktop,.pip-desktop) #window-svyaz .sv-back{display:block}
+:is(.console-desktop,.pip-desktop) #window-svyaz[data-wide=true] .sv-shell{grid-template-columns:calc(210px * var(--panel-unit)) minmax(0,1fr)}
+:is(.console-desktop,.pip-desktop) #window-svyaz[data-wide=true] .sv-shell .sv-contacts,:is(.console-desktop,.pip-desktop) #window-svyaz[data-wide=true] .sv-shell .sv-chat{display:flex}
+:is(.console-desktop,.pip-desktop) #window-svyaz[data-wide=true] .sv-back{display:none}
+:is(.console-desktop,.pip-desktop) #window-svyaz :is(.sv-contacts,.sv-chat){min-width:0;min-height:0;border:0!important;background:#050b08!important}
+:is(.console-desktop,.pip-desktop) #window-svyaz .sv-contact{min-height:calc(54px * var(--panel-unit));padding:calc(8px * var(--panel-unit))!important}
+:is(.console-desktop,.pip-desktop) #window-svyaz .sv-contact strong{font-size:calc(14px * var(--panel-unit))!important}:is(.console-desktop,.pip-desktop) #window-svyaz .sv-contact small{font-size:calc(12px * var(--panel-unit))!important}
+:is(.console-desktop,.pip-desktop) #window-svyaz .sv-log{background:#030805!important;min-height:0;flex:1;padding:8px}
+:is(.console-desktop,.pip-desktop) #window-svyaz .sv-message p{font-size:calc(15px * var(--panel-unit))!important;line-height:1.5;background:#0d1b13!important;border:0!important;color:#d2eddb!important}
+:is(.console-desktop,.pip-desktop) #window-svyaz .sv-message.mine p{background:#163223!important}
+:is(.console-desktop,.pip-desktop) #window-svyaz :is(.sv-chat-head,.sv-compose){background:#09150e!important;border:0!important;flex-shrink:0}
+:is(.console-desktop,.pip-desktop) #window-svyaz .sv-compose textarea{font-size:calc(16px * var(--panel-unit))!important;min-height:36px}
+
+/* Grid alignment keeps the handle attached to the real divider at every scale. */
+.console-desktop #console-shell>#catalog-toggle{grid-column:1;grid-row:1;position:relative!important;inset:auto!important;transform:none!important;align-self:center;justify-self:end;width:28px;height:48px;min-height:0;margin:0;border:1px solid #31593b;font-size:26px;line-height:1;z-index:5}
+.console-desktop.catalog-collapsed #console-shell>#catalog-toggle{grid-column:2;justify-self:start}
+@media(max-width:700px), (max-width:950px) and (pointer:coarse){:root{--panel-unit:1}}
+@media(orientation:portrait) and (max-width:700px), (orientation:portrait) and (max-width:950px) and (pointer:coarse){
+ .console-desktop #console-shell>#catalog-toggle{grid-column:1;grid-row:2;align-self:start;justify-self:center;width:52px;height:28px;font-size:26px}
+ .console-desktop.catalog-collapsed #console-shell>#catalog-toggle{grid-column:1;grid-row:1;align-self:end;justify-self:center}
+ .console-desktop.has-open-windows .catalog-items{flex-direction:row}
+ .console-desktop #app-catalog{padding-top:32px}
+ .console-desktop.has-open-windows #app-catalog{padding-top:28px;padding-bottom:4px}
+}
+@media(max-width:950px) and (orientation:landscape){.console-desktop.has-open-windows .catalog-items{flex-direction:column}}
+.console-desktop #window-svyaz:fullscreen,.console-desktop #window-svyaz.fullscreen-fallback{inset:0!important;width:100%!important;height:var(--viewport-height,100dvh)!important}
+
+.console-desktop .console-panel .window-controls button svg{width:16px;height:16px;display:block;flex:none}
+:is(.console-desktop,.pip-desktop) #window-svyaz>.titlebar>span>.svyaz-app-icon{display:block!important;width:18px;height:18px;margin-right:6px;fill:none!important}
+:is(.console-desktop,.pip-desktop) #window-svyaz>.titlebar{font-size:calc(16px * var(--panel-unit))!important}
+:is(.console-desktop,.pip-desktop) #window-svyaz :is(.sv-auth-wrap,.sv-profile-edit summary,.sv-profile-identity,.sv-stats-body){color:#c4e8d0!important}
+:is(.console-desktop,.pip-desktop) #window-svyaz #svyaz-chat :is(button,input,textarea){border:1px solid #294b35!important;color:#c4e8d0!important;background:#0b1a11!important;box-shadow:none!important}
+:is(.console-desktop,.pip-desktop) #window-svyaz #svyaz-chat button:is(:hover,:focus-visible){background:#163c24!important;border-color:#74c88f!important}
+:is(.console-desktop,.pip-desktop) #window-svyaz #svyaz-chat :is(.sv-search,.social-tabs,.social-toolbar){background:#07110b!important;border:0!important;padding:calc(6px * var(--panel-unit));gap:4px}
+:is(.console-desktop,.pip-desktop) #window-svyaz #svyaz-chat .social-tabs button{font-size:calc(13px * var(--panel-unit))!important;min-height:calc(34px * var(--panel-unit))}
+:is(.console-desktop,.pip-desktop) #window-svyaz #svyaz-chat .social-tabs button[aria-pressed=true]{background:#19462a!important}
+:is(.console-desktop,.pip-desktop) #window-svyaz #svyaz-chat :is(.sv-avatar,.sv-contact-avatar){background:#132b1c!important;color:#b8f6cd!important;border:0!important;font-size:calc(15px * var(--panel-unit))!important}
+:is(.console-desktop,.pip-desktop) #window-svyaz #svyaz-chat .sv-contact{background:transparent!important;border:0!important}
+:is(.console-desktop,.pip-desktop) #window-svyaz #svyaz-chat .sv-contact[aria-current=true]{background:#143620!important;outline:none}
+:is(.console-desktop,.pip-desktop) #window-svyaz #svyaz-chat .sv-contact b{background:#8de9ab;color:#082b13}
+:is(.console-desktop,.pip-desktop) #window-svyaz #svyaz-chat .sv-message{border:0!important;background:transparent!important}
+:is(.console-desktop,.pip-desktop) #window-svyaz #svyaz-chat .sv-message p{border:0!important}
+:is(.console-desktop,.pip-desktop) #window-svyaz #svyaz-chat :is(.sv-message footer,.sv-peer small,.sv-contact small,.sv-contact-meta){color:#8db49b!important}
+:is(.console-desktop,.pip-desktop) #window-svyaz #svyaz-chat .sv-search input{font-size:calc(16px * var(--panel-unit))!important;padding:6px;min-width:0}
+:is(.console-desktop,.pip-desktop) #window-svyaz .sv-peer strong{font-size:calc(15px * var(--panel-unit))!important}
+:is(.console-desktop,.pip-desktop) #window-svyaz .sv-peer small{font-size:calc(12px * var(--panel-unit))!important}
+:is(.console-desktop,.pip-desktop) #window-svyaz .sv-auth-links button{font-size:calc(14px * var(--panel-unit))!important}
+.console-desktop #window-settings .utility-body{font-size:calc(16px * var(--panel-unit))}
+.console-desktop #window-settings .console-zoom>span:after{font-size:calc(16px * var(--panel-unit))}
+
+.pip-desktop{--panel-unit:1}
+.console-desktop .catalog-row>button{background:transparent}
+.console-desktop .window-controls button svg,.pip-desktop .window-controls button svg{width:16px;height:16px;display:block}
+:is(.console-desktop,.pip-desktop) #window-svyaz .sv-options>summary{background:#0b1a11!important;border:1px solid #294b35!important;color:#c4e8d0!important}
+.console-desktop .catalog-group summary{font-size:14px;letter-spacing:0}
+.console-desktop .catalog-group summary span{font-size:12px;letter-spacing:0}
+@media(max-width:700px){.console-desktop .desktop-header #chat-launcher{padding-right:6px!important}}
+
+/* Readability contract: menus never shrink text to make controls fit.
+   This layer wins over legacy !important sizes without changing the pixel filter. */
+:root{--ui-text-min:max(18px,calc(18px / var(--ui-scale,1)));--ui-text-body:max(20px,calc(20px / var(--ui-scale,1)));--ui-text-title:max(22px,calc(22px / var(--ui-scale,1)));--ui-control-height:44px}
+@layer readable-ui{
+ :is(.console-desktop,.pip-desktop) .window :is(button,input,select,textarea,label,p,small,summary,output,li,dt,dd,td,th,legend,figcaption,span,strong,b,a,time,footer),
+ :is(.console-desktop,.pip-desktop) :is(.game-sound-panel,.window-status,.sv-strip,.sv-error,.sv-list-note,.sv-stats-body,.console-input-help,.tool-status,.meme-root,.loading-label,.social-pop,.social-picker,.voice-panel){font-size:var(--ui-text-min)!important;line-height:1.4!important}
+ :is(.console-desktop,.pip-desktop) .window :is(textarea,.sv-message p,.tool-lead,.meme-section>b),
+ :is(.console-desktop,.pip-desktop) .window>.titlebar{font-size:var(--ui-text-body)!important}
+ :is(.console-desktop,.pip-desktop) .window :is(h3,h4){font-size:var(--ui-text-title)!important}
+ :is(.console-desktop,.pip-desktop) #window-settings .console-zoom>span{font-size:0!important}
+ :is(.console-desktop,.pip-desktop) #window-settings .console-zoom>span:after{font-size:var(--ui-text-min)!important}
+ :is(.console-desktop,.pip-desktop) .window button:not(.window-controls button):not(.naval-cell):not(.pulse-pad){min-height:var(--ui-control-height)!important;white-space:normal!important}
+ :is(.console-desktop,.pip-desktop) .window :is(label,p,small,summary){overflow-wrap:break-word}
+}
+.console-desktop #window-settings{width:min(340px,calc(100% - 16px))!important}
+.console-desktop #window-settings :is(.setting,.console-zoom,.settings-fullscreen){min-height:48px;gap:10px}
+.console-desktop #window-settings .setting>span{min-width:0}
+.console-desktop #window-settings .screen-settings button{min-width:36px;min-height:40px}
+.console-desktop #window-settings output{min-width:60px}
+.console-desktop #window-settings #site-fullscreen{width:72px}
+:is(.console-desktop,.pip-desktop) .console-panel>.titlebar{min-height:42px!important;height:42px!important}
+:is(.console-desktop,.pip-desktop) #window-svyaz .overview-tabs{height:auto;min-height:48px;flex-shrink:0}
+:is(.console-desktop,.pip-desktop) #window-svyaz .sv-auth-links{flex-wrap:wrap;gap:6px 12px}
+:is(.console-desktop,.pip-desktop) #window-svyaz .sv-form input{min-height:44px}
+:is(.console-desktop,.pip-desktop) #window-svyaz .sv-form label{gap:8px}
+:is(.console-desktop,.pip-desktop) #window-svyaz .sv-topline{height:auto;min-height:46px}
+:is(.console-desktop,.pip-desktop) #window-svyaz .sv-contact{min-height:70px}
+:is(.console-desktop,.pip-desktop) #window-svyaz .sv-chat-head{flex-wrap:wrap;min-height:52px}
+:is(.console-desktop,.pip-desktop) #window-svyaz .sv-peer{flex:1;min-width:120px}
+:is(.console-desktop,.pip-desktop) #window-svyaz .sv-peer-actions{margin-left:auto}
+:is(.console-desktop,.pip-desktop) #window-svyaz .sv-bottom{min-height:30px}
+:is(.console-desktop,.pip-desktop) #window-svyaz[data-wide=true] .sv-shell{grid-template-columns:230px minmax(0,1fr)}
+:is(.console-desktop,.pip-desktop) .game-sound-panel{width:280px!important;max-width:calc(100vw - 28px);padding:16px!important}
+:is(.console-desktop,.pip-desktop) #window-game:not(.racing) .game-screen{height:auto;min-height:0}
+:is(.console-desktop,.pip-desktop) #window-game:not(.racing) .game-overlay{position:relative;inset:auto;min-height:180px}
+:is(.console-desktop,.pip-desktop) #window-game:not(.racing) #race-canvas{position:absolute;inset:0}
+:is(.console-desktop,.pip-desktop) :is(.game-toolbar,.naval-toolbar){height:auto;min-height:44px;flex-wrap:wrap;gap:8px}
+:is(.console-desktop,.pip-desktop) .window-status{height:auto;min-height:30px;flex-shrink:0;white-space:normal}
+:is(.console-desktop,.pip-desktop) .console-task>button{font-size:var(--ui-text-min);min-height:40px}
+.console-desktop #app-catalog :is(.catalog-group summary,.catalog-group summary span,.catalog-row>button:first-child){font-size:var(--ui-text-min)!important}
+.console-desktop .catalog-row{min-height:58px}
+.console-desktop .desktop-header #chat-launcher{font-size:18px!important}
+@media(max-width:700px), (max-width:950px) and (pointer:coarse){
+ .console-desktop .desktop-header,.console-desktop .desktop-header.has-login-hint{gap:2px!important}
+ .console-desktop .desktop-header h1,.console-desktop .desktop-header.has-login-hint h1{position:relative;left:auto;translate:none;flex:1;min-width:0;font-size:18px!important;text-align:center}
+ .console-desktop .desktop-header .console-actions{flex:none;margin-left:0}
+ .console-desktop .desktop-header #chat-launcher{min-width:86px}
+}
+@media(max-width:360px){
+ .console-desktop .desktop-header h1,.console-desktop .desktop-header.has-login-hint h1{font-size:16px!important}
+ .console-desktop .desktop-header #svyaz-signin-hint{display:none}
+}
+@layer readable-ui{
+ :is(.console-desktop,.pip-desktop) .window :is(.room-info>b,#pulse-room-code){font-size:max(28px,var(--ui-text-title))!important}
+ :is(.console-desktop,.pip-desktop) .window :is(#pulse-result strong,.record-value,.loading-symbol){font-size:var(--ui-text-title)!important}
+}
+
+/* Page links and room invitations share the existing readable control scale. */
+:is(.console-desktop,.pip-desktop) .app-link-panel{position:absolute;z-index:900;right:10px;top:54px;width:min(420px,calc(100% - 20px));max-height:calc(100% - 64px);overflow:auto;padding:16px;background:#07110c;border:1px solid var(--app-color,#71ef8b);box-shadow:0 6px 20px #000b;color:#d8f5e1;box-sizing:border-box;font:var(--ui-text-min,18px)/1.45 ConsoleMono}
+.app-link-heading{display:flex;align-items:center;justify-content:space-between;gap:12px}.app-link-heading strong{min-width:0;overflow-wrap:anywhere}.app-link-heading button{flex:none;width:44px}.app-link-panel label{display:grid;gap:6px;margin:12px 0}.app-link-panel input{width:100%;min-width:0;box-sizing:border-box;background:#020604;color:#c8f6d7;border:1px solid #34533e;padding:8px}.app-link-panel p{margin:12px 0;color:#a6c8b2}.app-link-actions{display:flex;flex-wrap:wrap;gap:10px}.app-link-actions a,.app-link-actions button{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:6px 12px;background:#102218;color:#c8f6d7;border:1px solid #34533e;text-decoration:none}.app-link-panel [role=status]{display:block;margin-top:8px}.session-invitation{flex:none;display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:10px 12px;background:#0c2015;border-bottom:1px solid #34533e;color:#c8f6d7}.session-invitation>span{flex:1 1 160px;overflow-wrap:anywhere}.session-invitation button{padding:6px 10px}.app-link-panel,.session-invitation{animation:app-link-reveal .22s ease-out}@keyframes app-link-reveal{from{opacity:0;translate:0 -5px}to{opacity:1;translate:0 0}}.reduced-motion .app-link-panel,.reduced-motion .session-invitation{animation:none}@media(prefers-reduced-motion:reduce){.app-link-panel,.session-invitation{animation:none}}
+
+:is(.console-desktop,.pip-desktop) .app-link-heading button{background:#102218;color:#c8f6d7;border:1px solid #34533e;}
+
+@property --sphere-jitter{syntax:'<length>';inherits:true;initial-value:0px}
+.console-desktop{transition:--sphere-jitter 350ms ease-out}
+#sphere-speed{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);z-index:95;pointer-events:none;color:#8e76a5;font:18px/1.3 ConsoleMono;white-space:nowrap;font-variant-numeric:tabular-nums}
+@media(prefers-reduced-motion:reduce){.console-desktop{transition:none}}

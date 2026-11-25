@@ -1,0 +1,8 @@
+export class NavalOnline{
+ constructor(onState,onStatus){this.onState=onState;this.onStatus=onStatus;this.session=null;this.source=null;this.generation=0;this.connected=false;try{const s=JSON.parse(sessionStorage.getItem('makson_naval_room'));if(s?.token&&/^\d{3}$/.test(s.code)){this.session=s;this.connect();}}catch{}}
+ async request(action,data={}){const response=await fetch('/api/naval/'+action,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...this.session,...data}),signal:AbortSignal.timeout(8000)});const result=await response.json();if(!response.ok){const error=Error(result.error||'Нет ответа сервера.');error.status=response.status;throw error;}return result;}
+ save(){try{if(this.session)sessionStorage.setItem('makson_naval_room',JSON.stringify(this.session));else sessionStorage.removeItem('makson_naval_room');}catch{}}
+ async enter(action,data){if(this.session)throw Error('Сначала выйди из текущей комнаты.');this.session=await this.request(action,data);this.save();this.connect();}
+ connect(){this.source?.close();const generation=++this.generation;this.onStatus('Подключение…',false);const s=this.source=new EventSource('/api/naval/events?'+new URLSearchParams({code:this.session.code,token:this.session.token}));s.onmessage=e=>{if(generation!==this.generation)return;this.connected=true;this.onState(JSON.parse(e.data));this.onStatus('Подключено',true);};s.onerror=()=>{if(generation!==this.generation)return;this.connected=false;this.onStatus('Связь потеряна. Переподключение…',false);};}
+ async leave(){const old=this.session;this.generation++;this.source?.close();this.source=null;this.session=null;this.connected=false;this.save();if(old)try{await this.request('leave',old);}catch{}}
+}

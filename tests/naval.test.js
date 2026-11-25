@@ -1,0 +1,6 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {FLEET,emptyBoard,randomBoard,placeShip,fire,chooseTarget} from '../naval-core.js';
+test('fleets fit the grid, contain 20 decks and never touch',()=>{for(let n=0;n<30;n++){const b=randomBoard();assert.deepEqual(b.ships.map(s=>s.cells.length),FLEET);assert.equal(new Set(b.ships.flatMap(s=>s.cells)).size,20);for(let a=0;a<10;a++)for(let c=a+1;c<10;c++)for(const i of b.ships[a].cells)for(const j of b.ships[c].cells)assert.ok(Math.abs(i%10-j%10)>1||Math.abs(Math.floor(i/10)-Math.floor(j/10))>1);}});
+test('placement boundaries, repeat fire and sinking',()=>{const b=emptyBoard();assert.equal(placeShip(b,9,4,false),false);assert.equal(placeShip(b,0,2,false),true);assert.equal(placeShip(b,12,1,false),false);assert.equal(placeShip(b,99,1,false),true);assert.equal(fire(b,0).sunk,false);assert.equal(fire(b,0),null);assert.equal(fire(b,1).sunk,true);assert.equal(b.shots[12],'water');assert.equal(fire(b,99).won,true);});
+test('AI completes games using shot history without repeats',()=>{for(let n=0;n<10;n++){const b=randomBoard();let won=false,count=0;while(!won&&count<100){const target=chooseTarget(b.shots);assert.notEqual(target,null);assert.equal(b.shots[target],null);won=fire(b,target).won;count++;}assert.ok(won);}});

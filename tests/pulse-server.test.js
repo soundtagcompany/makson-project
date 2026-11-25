@@ -1,0 +1,21 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {spawn} from 'node:child_process';import {setTimeout as wait} from 'node:timers/promises';
+test('four-player pulse: lobby, private composition, cooldown, reconnect, elimination, rematch',async()=>{
+ const port=29000+Math.floor(Math.random()*1000),base='http://127.0.0.1:'+port,child=spawn(process.execPath,['server.js'],{env:{...process.env,PORT:String(port)},windowsHide:true,stdio:['ignore','pipe','pipe']}),streams=[];
+ const post=async(route,data={})=>{const r=await fetch(base+'/api/pulse/'+route,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});return {status:r.status,data:await r.json()};};
+ const connect=async(session)=>{const ac=new AbortController();streams.push(ac);const r=await fetch(base+'/api/pulse/events?'+new URLSearchParams(session),{signal:ac.signal});assert.equal(r.status,200);const reader=r.body.getReader();(async()=>{try{while(!(await reader.read()).done){}}catch{}})();return ac;};
+ try{await new Promise((resolve,reject)=>{child.stdout.once('data',resolve);child.once('error',reject);});
+ const a=(await post('create')).data,sessions=[a];for(let i=0;i<3;i++)sessions.push((await post('join',{code:a.code})).data);
+ assert.equal((await post('join',{code:a.code})).status,409);assert.equal((await post('state',a)).data.state,null);assert.equal((await post('start',sessions[1])).status,403);assert.equal((await post('state',{...a,token:'wrong'})).status,403);
+ for(const s of sessions)await connect(s);assert.equal((await post('start',a)).status,200);let state=(await post('state',a)).data.state;assert.equal(state.players.length,4);assert.ok(state.announcement);assert.equal('counts' in state,false);assert.equal('deck' in state,false);
+ const actor=sessions[state.turn],command={kind:'inject',target:state.turn};let payload={...actor,revision:state.revision,requestId:'early',command};assert.equal((await post('action',payload)).status,400);
+ await wait(state.availableIn+100);state=(await post('state',a)).data.state;assert.equal(state.announcement,null);payload={...actor,revision:state.revision,requestId:'once',command};const first=await post('action',payload);assert.equal(first.status,200);assert.equal((await post('action',payload)).data.revision,first.data.revision);assert.equal((await post('action',{...payload,requestId:'stale'})).status,409);
+ streams[0].abort();await connect(a);assert.equal((await post('state',a)).data.state.revision,first.data.revision);
+ const before=(await post('state',a)).data.state;await post('leave',sessions[3]);state=(await post('state',a)).data.state;assert.equal(state.phase,'playing');assert.equal(state.players[3].hp,0);assert.equal(state.revision,before.revision+1);
+ await post('leave',sessions[2]);assert.equal((await post('state',a)).data.state.phase,'playing');await post('leave',sessions[1]);assert.equal((await post('state',a)).data.state.winner,0);assert.equal((await fetch(base+'/pulse-server.js')).status,404);
+ for(let i=1;i<=5;i++){const r=await fetch(base+`/pulse-music/track-${i}.mp3`,{headers:{Range:'bytes=0-31'}});assert.equal(r.status,206);assert.equal((await r.arrayBuffer()).byteLength,32);}
+ const c=(await post('create')).data,d=(await post('join',{code:c.code})).data;await connect(c);await connect(d);await post('start',c);let v=(await post('state',c)).data.state;const firstSeat=v.turn;await wait(v.availableIn+60);
+ // Self-injection is legal even when lethal. Publicly revealed types never affect the chosen target.
+ for(let i=0;i<25&&v.phase==='playing';i++){const session=[c,d][v.turn],p=v.players[v.turn];let cmd=p.offer?{kind:'offer',index:-1}:{kind:'inject',target:v.turn};const r=await post('action',{...session,revision:v.revision,requestId:'end-'+i,command:cmd});assert.equal(r.status,200,JSON.stringify(r.data));v=(await post('state',c)).data.state;if(v.phase==='playing')await wait(v.availableIn+40);}
+ assert.equal(v.phase,'finished');await post('rematch',c);await post('rematch',d);v=(await post('state',c)).data.state;assert.equal(v.phase,'playing');assert.equal(v.turn,1-firstSeat);assert.equal(v.revision,0);await post('leave',c);await post('leave',d);await post('leave',a);
+ }finally{for(const s of streams)s.abort();child.kill();}
+});

@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><meta name="theme-color" content="#292d27"><title>СДВГПОЛИЯ — частная собственность</title><link rel="stylesheet" href="./style.css"><script type="importmap">{"imports":{"three":"./vendor/three.module.js"}}</script></head>
+<body><script>if(window.parent!==window)document.body.classList.add("embedded");</script>
+ <header class="desktop-bar"><span class="program-icon">С</span><b>СДВГПОЛИЯ</b><div class="window-controls"><button id="sound" title="Включить звук" aria-label="Звук">♪</button><button id="fullscreen" title="Полный экран" aria-label="Полный экран">⛶</button><button id="home" title="Главное меню" aria-label="Главное меню">⌂</button></div></header>
+ <main>
+  <section id="table" aria-label="Игровое поле"><div id="scene"></div><button id="reset-camera" class="camera-button" title="Показать всё поле">↖ ВСЁ ПОЛЕ</button><button id="follow-camera" class="camera-button" aria-pressed="true">◉ АВТОКАМЕРА</button><div id="dice-result"></div><article id="watch-card" hidden aria-live="polite"></article><div id="roll-banner" role="status" hidden></div><div id="arrival-banner" role="status" hidden></div></section>
+  <aside id="sidebar" hidden><div id="turn-panel"></div><div id="players"></div><div id="inventory-panel"></div><div id="offers-panel" hidden></div><div id="interaction-panel" hidden></div><div id="room-strip"></div><div class="sidebar-bottom"><button id="trade-open">⇄ ОБМЕН</button><button id="rules-open">ПРАВИЛА</button><button id="log-open">ЖУРНАЛ</button></div></aside>
+ </main>
+ <section id="welcome" class="welcome-layer" inert><div class="welcome-paper">
+ <header class="board-menu-heading"><h1>СДВГПОЛИЯ</h1><p>Покупай улицы. Торгуйся. Строй свою империю.</p></header>
+ <div class="board-menu-columns"><div class="board-identity"><label class="field-label" for="name">ТВОЁ ИМЯ</label><input id="name" maxlength="22" placeholder="Твой ник" autocomplete="nickname"><div class="field-label">ТВОЯ ФИГУРКА</div><div id="piece-picker" class="piece-picker"></div></div>
+ <div class="menu-actions"><div class="local-setup"><label class="field-label" for="local-count">МЕСТ ЗА СТОЛОМ</label><select id="local-count"><option value="2">2 игрока</option><option value="3">3 игрока</option><option value="4" selected>4 игрока</option><option value="5">5 игроков</option><option value="6">6 игроков</option></select><button id="local" class="primary">ИГРАТЬ ЗА ОДНИМ ЭКРАНОМ →</button><p class="menu-note">Игроков и компьютер выберешь на следующем шаге.</p></div>
+ <button id="resume" hidden>ПРОДОЛЖИТЬ ПАРТИЮ →</button>
+ <details class="board-menu-fold"><summary>С ДРУЗЬЯМИ ПО СЕТИ</summary><button id="create">СОЗДАТЬ КОМНАТУ</button><div class="join-line"><input id="code" inputmode="numeric" maxlength="4" placeholder="КОД" aria-label="Код комнаты"><button id="join">ВОЙТИ</button></div><button type="button" data-invite>ПРИГЛАСИТЬ ДРУЗЕЙ</button></details>
+ </div></div></div></section>
+
+ <div id="lobby" class="overlay" hidden></div>
+ <div id="event-popup" hidden></div>
+ <div id="money-layer" aria-live="polite" aria-atomic="false"></div>
+ <div id="modal" class="overlay" hidden role="dialog" aria-modal="true"></div>
+ <div id="toast" role="status"></div>
+ <span id="connection" hidden></span>
+ <script type="module" src="./app.js"></script>
+</body></html>
