@@ -1165,3 +1165,15 @@ html,body{font-synthesis:none}
   height:44px;min-height:44px;background:transparent!important;border:0;
  }
 }
+
+/* Keep the message field usable in a short touch viewport (e.g. a shown keyboard). */
+@media(max-width:950px) and (pointer:coarse){
+ .console-desktop #window-svyaz{container:svyaz-viewport / size}
+}
+@container svyaz-viewport (max-height:252px){
+ .console-desktop #window-svyaz[data-wide=false]:has(#svyaz-chat:not([hidden]) .sv-has-dialog) .overview-tabs{display:none}
+ .console-desktop #window-svyaz #svyaz-chat:has(.sv-has-dialog) :is(.sv-topline,.sv-bottom){display:none}
+ .console-desktop #window-svyaz #svyaz-chat .sv-chat-head{min-height:44px;padding:2px 6px;gap:4px}
+ .console-desktop #window-svyaz #svyaz-chat .sv-log{padding-block:2px}
+ .console-desktop #window-svyaz #svyaz-chat .sv-compose{padding:3px 6px}
+}
