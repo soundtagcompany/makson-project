@@ -59,18 +59,20 @@ export function mountConsole(){
  $('reset-settings').textContent='Сбросить';footer.append($('reset-settings'));
  const hint=document.createElement('details');hint.className='console-input-help';hint.innerHTML='<summary>Управление</summary><p>Стрелки — выбор<br>Enter — открыть · Esc — назад<br>F6 — каталог<br>Геймпад: стик / крестовина, A — выбрать, B — назад, Start — каталог.</p>';footer.append(hint);$('window-settings').querySelector('.utility-body').append(footer);
  const full=document.createElement('button');full.id='site-fullscreen';full.className='xp-button';full.setAttribute('aria-label','Сайт на весь экран устройства');full.textContent='Вкл.';const fullRow=document.createElement('div');fullRow.className='settings-fullscreen';fullRow.innerHTML='<span>Полный экран</span>';fullRow.append(full);screenControls.append(fullRow);
- const syncToggle=()=>{const portrait=matchMedia('(max-width:700px), (max-width:950px) and (pointer:coarse)').matches&&matchMedia('(orientation:portrait)').matches,collapsed=document.body.classList.contains('catalog-collapsed');$('catalog-toggle').textContent=portrait?(collapsed?'⌃':'⌄'):(collapsed?'›':'‹');};
+ const syncToggle=()=>{const compact=compactCatalog(),collapsed=document.body.classList.contains('catalog-collapsed');$('catalog-toggle').textContent=compact?(collapsed?'⌃':'⌄'):(collapsed?'›':'‹');};
  addEventListener('resize',syncToggle);document.addEventListener('catalogchange',syncToggle);syncToggle();
 }
+// Compact layout is a drawer rather than a resizing desktop sidebar.
+const compactCatalog=()=>matchMedia('(max-width:700px), (max-width:950px) and (pointer:coarse)').matches;
 let catalogMotion=null;
 export function setCatalogCollapsed(value){
  const catalog=$('app-catalog'),workspace=$('app-workspace'),toggle=$('catalog-toggle'),shell=$('console-shell');
  const changed=document.body.classList.contains('catalog-collapsed')!==value;
- const moving=changed&&callbacks?.storage.get('settings',{}).motion!==false&&!matchMedia('(prefers-reduced-motion: reduce)').matches;
+ const moving=changed&&!compactCatalog()&&callbacks?.storage.get('settings',{}).motion!==false&&!matchMedia('(prefers-reduced-motion: reduce)').matches;
  const before=moving?[catalog,workspace,toggle].map(el=>el.getBoundingClientRect()):null;
  catalogMotion?.();catalogMotion=null;
  document.body.classList.toggle('catalog-collapsed',value);catalog.inert=value;
- toggle.setAttribute('aria-expanded',String(!value));toggle.setAttribute('aria-label',value?'Раскрыть каталог':'Свернуть каталог');toggle.textContent=value?'›':'‹';
+ toggle.setAttribute('aria-expanded',String(!value));toggle.setAttribute('aria-label',value?'Раскрыть каталог':'Свернуть каталог');toggle.textContent=compactCatalog()?(value?'⌃':'⌄'):(value?'›':'‹');
  if(moving){
   // Commit the pane layout once. Only compositor motion follows, so the sphere canvas
   // and live games are not resized and repainted on every animation frame.
@@ -101,9 +103,10 @@ export function bindConsole(api){
  $('catalog-groups').addEventListener('click',e=>{
   const pip=e.target.closest('[data-pip-app]');if(pip){api.open(pip.dataset.pipApp);api.pip($('window-'+pip.dataset.pipApp));return;}
   const button=e.target.closest('[data-select-app]');if(!button)return;const id=button.dataset.selectApp;
+  if(compactCatalog()){selectApp('');api.open(id);setCatalogCollapsed(true);return;}
   if(selected===id)api.open(id);else{api.preview();selectApp(id);}
  });
- $('sphere-stage').addEventListener('click',e=>{const b=e.target.closest('[data-sphere-app]');if(b){const id=b.dataset.sphereApp;if(selected===id)api.open(id);else selectApp(id);}});
+ $('sphere-stage').addEventListener('click',e=>{const b=e.target.closest('[data-sphere-app]');if(b){const id=b.dataset.sphereApp;if(compactCatalog()){selectApp('');api.open(id);setCatalogCollapsed(true);return;}if(selected===id)api.open(id);else selectApp(id);}});
  document.addEventListener('desktopfullscreenchange',()=>{if(document.body.classList.contains('game-fullscreen-on')){catalogMotion?.();catalogMotion=null;}});
  $('catalog-toggle').onclick=()=>setCatalogCollapsed(!document.body.classList.contains('catalog-collapsed'));
  document.addEventListener('click',e=>{
