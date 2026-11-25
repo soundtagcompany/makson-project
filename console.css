@@ -1316,3 +1316,167 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
  :is(.console-desktop,.pip-desktop) #window-naval{--crt-tint:rgba(6,24,31,.27)}
  :is(.console-desktop,.pip-desktop) #window-meme{--crt-tint:rgba(30,8,20,.23)}
 }
+
+/* The screen's pixel grid belongs to the controls, not to the wallpaper. */
+:is(.console-desktop,.pip-desktop){
+ --chrome-pixel:var(--screen-dot,3px);
+ --chrome-two:calc(2 * var(--chrome-pixel));
+ --chrome-step:polygon(
+  0 var(--chrome-two),var(--chrome-pixel) var(--chrome-two),
+  var(--chrome-pixel) var(--chrome-pixel),var(--chrome-two) var(--chrome-pixel),var(--chrome-two) 0,
+  calc(100% - var(--chrome-two)) 0,calc(100% - var(--chrome-two)) var(--chrome-pixel),
+  calc(100% - var(--chrome-pixel)) var(--chrome-pixel),calc(100% - var(--chrome-pixel)) var(--chrome-two),100% var(--chrome-two),
+  100% calc(100% - var(--chrome-two)),calc(100% - var(--chrome-pixel)) calc(100% - var(--chrome-two)),
+  calc(100% - var(--chrome-pixel)) calc(100% - var(--chrome-pixel)),calc(100% - var(--chrome-two)) calc(100% - var(--chrome-pixel)),calc(100% - var(--chrome-two)) 100%,
+  var(--chrome-two) 100%,var(--chrome-two) calc(100% - var(--chrome-pixel)),var(--chrome-pixel) calc(100% - var(--chrome-pixel)),
+  var(--chrome-pixel) calc(100% - var(--chrome-two)),0 calc(100% - var(--chrome-two)));
+ --chrome-lit:inset 0 3px color-mix(in srgb,currentColor 24%,transparent),inset 3px 0 color-mix(in srgb,currentColor 14%,transparent),inset 0 -3px #0005;
+}
+@media not all and (forced-colors:active){
+ .console-desktop #app-catalog .catalog-row,
+ .console-desktop :is(#console-settings,#chat-launcher),
+ :is(.console-desktop,.pip-desktop) .window .window-controls>button,
+ :is(.console-desktop,.pip-desktop) .window :is(.sv-primary,.tool-action,.xp-button,.meme-primary,.launch-button,.edit-tabs>button,.meme-toolbar>button),
+ :is(.console-desktop,.pip-desktop) #window-svyaz :is(.sv-form input,.sv-auth-links>button,.sv-compose textarea,.sv-compose-row>button){
+  clip-path:var(--chrome-step);
+  box-shadow:var(--chrome-lit)!important;
+ }
+ .console-desktop #app-catalog .catalog-row:not(.selected){color:#6bbd88}
+ .console-desktop #app-catalog .catalog-row.selected{color:#073d22}
+ .console-desktop #app-catalog .catalog-row:focus-within{outline:2px solid #b4facc;outline-offset:-4px}
+ .console-desktop :is(#console-settings,#chat-launcher):focus-visible,
+ :is(.console-desktop,.pip-desktop) .window .window-controls>button:focus-visible,
+ :is(.console-desktop,.pip-desktop) .window :is(.sv-primary,.tool-action,.xp-button,.meme-primary,.launch-button,.edit-tabs>button,.meme-toolbar>button):focus-visible,
+ :is(.console-desktop,.pip-desktop) #window-svyaz :is(.sv-form input,.sv-auth-links>button,.sv-compose textarea,.sv-compose-row>button):focus-visible{
+  outline:2px solid currentColor!important;outline-offset:-5px!important;
+ }
+ :is(.console-desktop,.pip-desktop) .window>.titlebar{
+  border-bottom-width:3px!important;border-bottom-style:solid!important;
+  box-shadow:inset 0 3px color-mix(in srgb,currentColor 18%,transparent)!important;
+ }
+ /* Square-pixel icons are separate from accessible control names. */
+ :is(.console-desktop,.pip-desktop) .window .window-controls>button:is([data-action=close],[data-action=minimize]){
+  font-size:0!important;
+ }
+ :is(.console-desktop,.pip-desktop) .window .window-controls>button:is([data-action=close],[data-action=minimize])>svg{display:none}
+ :is(.console-desktop,.pip-desktop) .window .window-controls>button:is([data-action=close],[data-action=minimize])::after{
+  content:'';display:block;width:15px;height:15px;flex:none;background:currentColor;
+ }
+ :is(.console-desktop,.pip-desktop) .window .window-controls>button[data-action=minimize]::after{
+  clip-path:inset(9px 0 3px);
+ }
+ :is(.console-desktop,.pip-desktop) .window .window-controls>button[data-action=close]::after{
+  clip-path:polygon(0 0,3px 0,3px 3px,6px 3px,6px 6px,9px 6px,9px 3px,12px 3px,12px 0,15px 0,15px 3px,12px 3px,12px 6px,9px 6px,9px 9px,12px 9px,12px 12px,15px 12px,15px 15px,12px 15px,12px 12px,9px 12px,9px 9px,6px 9px,6px 12px,3px 12px,3px 15px,0 15px,0 12px,3px 12px,3px 9px,6px 9px,6px 6px,3px 6px,3px 3px,0 3px);
+ }
+}
+
+/* One invisible screen coordinate system; flex text and media stay native. */
+:root{
+ --screen-dot:3px;
+ --screen-small:calc(2 * var(--screen-dot));
+ --screen-gap:calc(3 * var(--screen-dot));
+ --screen-pad:calc(4 * var(--screen-dot));
+ --screen-gutter:calc(6 * var(--screen-dot));
+ --console-unit:var(--screen-gap);
+ --console-space-2:var(--screen-gutter);
+ --console-space-3:calc(9 * var(--screen-dot));
+}
+body.console-desktop{--header-height:calc(16 * var(--screen-dot));--terminal-step:var(--screen-gap)}
+.console-desktop :is(.desktop-header,.desktop-header.has-login-hint){
+ height:var(--header-height)!important;padding-inline:var(--screen-pad);border-bottom-width:var(--screen-dot);
+}
+.console-desktop #app-catalog{
+ padding:var(--screen-pad);border-right-width:var(--screen-dot);
+}
+.console-desktop #app-catalog .catalog-group{margin-block-end:var(--screen-gutter)}
+.console-desktop #app-catalog .catalog-group summary{min-height:calc(12 * var(--screen-dot));padding-inline:var(--screen-gap)}
+.console-desktop #app-catalog .catalog-items{gap:var(--screen-gap);padding-block-start:var(--screen-gap);padding-block-end:var(--screen-small)}
+.console-desktop #app-catalog .catalog-row{min-height:calc(18 * var(--screen-dot));box-sizing:border-box}
+.console-desktop #app-catalog .catalog-row>button:first-child{gap:var(--screen-pad);padding:var(--screen-gap)}
+.console-desktop #app-catalog .catalog-app-icon{
+ width:calc(8 * var(--screen-dot));height:calc(8 * var(--screen-dot));flex-shrink:0;
+}
+.console-desktop #app-catalog .app-pixel-icon{
+ width:calc(8 * var(--screen-dot));height:calc(8 * var(--screen-dot));
+}
+:is(.console-desktop,.pip-desktop) .window>.titlebar{
+ min-height:calc(16 * var(--screen-dot));height:calc(16 * var(--screen-dot));padding-inline:var(--screen-pad);
+}
+:is(.console-desktop,.pip-desktop) .window .window-controls{gap:var(--screen-small)}
+:is(.console-desktop,.pip-desktop) .window :is(.utility-body,.tools-body){padding:var(--screen-gutter)}
+:is(.console-desktop,.pip-desktop) #window-svyaz .overview-tabs{gap:var(--screen-gap);padding-inline:var(--screen-pad);min-height:calc(15 * var(--screen-dot))}
+:is(.console-desktop,.pip-desktop) #window-svyaz #svyaz-chat :is(.sv-chat-head,.sv-compose){
+ padding-inline:var(--screen-gap);
+}
+:is(.console-desktop,.pip-desktop) #window-svyaz .sv-form{gap:var(--screen-pad)}
+:is(.console-desktop,.pip-desktop) #window-svyaz .sv-form :is(input,button){min-height:calc(15 * var(--screen-dot))}
+@media(min-width:951px){
+ body.console-desktop{--header-height:calc(21 * var(--screen-dot))}
+ .console-desktop #app-catalog{padding:var(--screen-gutter) calc(8 * var(--screen-dot)) var(--screen-gutter) var(--screen-gutter)}
+ .console-desktop #app-catalog .catalog-row{min-height:calc(21 * var(--screen-dot))}
+}
+@supports(width:round(down,10px,3px)){
+ /* Only tiny viewport remainder pixels are left outside the workspace. */
+ .console-desktop :is(.desktop-header,#console-shell){right:auto;width:round(down,100%,var(--screen-dot))}
+ .console-desktop #console-shell{height:round(down,calc(var(--viewport-height,100dvh) - var(--header-height)),var(--screen-dot))}
+ @media(orientation:portrait) and (max-width:950px) and (pointer:coarse){
+  .console-desktop:not(.catalog-collapsed):not(.has-open-windows) #console-shell:not(:has(>#catalog-shade)){
+   grid-template-rows:round(nearest,55%,var(--screen-dot)) minmax(0,1fr);
+  }
+ }
+ @media(min-width:951px), (orientation:landscape) and (max-width:950px){
+  .console-desktop:not(.catalog-collapsed) #console-shell:not(:has(>#catalog-shade)){
+   grid-template-columns:round(nearest,var(--catalog-size,34%),var(--screen-dot)) minmax(0,1fr);
+  }
+ }
+}
+.console-desktop #app-catalog .catalog-group summary{border-block-width:0}
+.console-desktop #app-catalog .catalog-row{border-width:var(--screen-dot)}
+.console-desktop #app-catalog .app-pixel-icon>path{stroke-width:var(--screen-dot);vector-effect:non-scaling-stroke}
+@media(orientation:portrait) and (max-width:950px) and (pointer:coarse){
+ .console-desktop #app-catalog{border-top-width:var(--screen-dot)}
+}
+@supports(width:round(down,10px,3px)){
+ .console-desktop:not(.has-open-windows) #app-catalog .catalog-row{width:round(down,100%,var(--screen-dot))}
+}
+
+/* 8×8 sprites painted as exactly eight logical screen pixels across. */
+@supports (mask-image:url("")){
+ @media not all and (forced-colors:active){
+  .console-desktop #app-catalog .catalog-row .catalog-app-icon{
+   display:grid;place-items:center;color:inherit;
+  }
+  .console-desktop #app-catalog .catalog-app-icon>.app-pixel-icon,
+  .console-desktop .desktop-header #chat-launcher>.svyaz-app-icon,
+  .console-desktop #console-settings>svg,
+  :is(.console-desktop,.pip-desktop) #window-svyaz>.titlebar>span>.svyaz-app-icon,
+  :is(.console-desktop,.pip-desktop) .window .window-controls>button[data-action=maximize]>svg{display:none!important}
+  .console-desktop #app-catalog .catalog-app-icon::before,
+  .console-desktop :is(#chat-launcher,#console-settings)::before,
+  :is(.console-desktop,.pip-desktop) #window-svyaz>.titlebar>span::before,
+  :is(.console-desktop,.pip-desktop) .window .window-controls>button[data-action=maximize]::before{
+   content:"";display:block;flex:none;inline-size:calc(8 * var(--screen-dot));block-size:calc(8 * var(--screen-dot));
+   background-color:currentColor;mask:var(--pixel-sprite) center / 100% 100% no-repeat;
+  }
+  .console-desktop :is(#chat-launcher,#console-settings)::before,
+  :is(.console-desktop,.pip-desktop) #window-svyaz>.titlebar>span::before,
+  :is(.console-desktop,.pip-desktop) .window .window-controls>button[data-action=maximize]::before{
+   inline-size:calc(6 * var(--screen-dot));block-size:calc(6 * var(--screen-dot));
+  }
+  :is(.console-desktop,.pip-desktop) .window .window-controls>button[data-action=maximize]{font-size:0!important}
+  :is(.console-desktop,.pip-desktop) #window-svyaz>.titlebar>span::before{margin-inline-end:calc(2 * var(--screen-dot))}
+  .console-desktop #app-catalog [data-select-app=editor]{--pixel-sprite:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%208%208%22%20shape-rendering%3D%22crispEdges%22%3E%3Cpath%20fill%3D%22white%22%20d%3D%22M0%200h1v1h-1ZM1%200h1v1h-1ZM5%200h1v1h-1ZM6%200h1v1h-1ZM0%201h1v1h-1ZM1%201h1v1h-1ZM2%201h1v1h-1ZM4%201h1v1h-1ZM5%201h1v1h-1ZM6%201h1v1h-1ZM2%202h1v1h-1ZM3%202h1v1h-1ZM4%202h1v1h-1ZM3%203h1v1h-1ZM2%204h1v1h-1ZM3%204h1v1h-1ZM4%204h1v1h-1ZM0%205h1v1h-1ZM1%205h1v1h-1ZM3%205h1v1h-1ZM5%205h1v1h-1ZM6%205h1v1h-1ZM0%206h1v1h-1ZM1%206h1v1h-1ZM5%206h1v1h-1ZM6%206h1v1h-1Z%22%2F%3E%3C%2Fsvg%3E")}
+  .console-desktop #app-catalog [data-select-app=convert]{--pixel-sprite:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%208%208%22%20shape-rendering%3D%22crispEdges%22%3E%3Cpath%20fill%3D%22white%22%20d%3D%22M5%200h1v1h-1ZM5%201h1v1h-1ZM6%201h1v1h-1ZM0%202h1v1h-1ZM1%202h1v1h-1ZM2%202h1v1h-1ZM3%202h1v1h-1ZM4%202h1v1h-1ZM5%202h1v1h-1ZM6%202h1v1h-1ZM7%202h1v1h-1ZM5%203h1v1h-1ZM6%203h1v1h-1ZM1%204h1v1h-1ZM2%204h1v1h-1ZM0%205h1v1h-1ZM1%205h1v1h-1ZM2%205h1v1h-1ZM3%205h1v1h-1ZM4%205h1v1h-1ZM5%205h1v1h-1ZM6%205h1v1h-1ZM7%205h1v1h-1ZM1%206h1v1h-1ZM2%206h1v1h-1ZM2%207h1v1h-1Z%22%2F%3E%3C%2Fsvg%3E")}
+  .console-desktop #app-catalog [data-select-app=download]{--pixel-sprite:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%208%208%22%20shape-rendering%3D%22crispEdges%22%3E%3Cpath%20fill%3D%22white%22%20d%3D%22M3%200h1v1h-1ZM4%200h1v1h-1ZM3%201h1v1h-1ZM4%201h1v1h-1ZM0%202h1v1h-1ZM3%202h1v1h-1ZM4%202h1v1h-1ZM7%202h1v1h-1ZM0%203h1v1h-1ZM2%203h1v1h-1ZM3%203h1v1h-1ZM4%203h1v1h-1ZM5%203h1v1h-1ZM7%203h1v1h-1ZM0%204h1v1h-1ZM3%204h1v1h-1ZM4%204h1v1h-1ZM7%204h1v1h-1ZM0%205h1v1h-1ZM7%205h1v1h-1ZM0%206h1v1h-1ZM1%206h1v1h-1ZM2%206h1v1h-1ZM3%206h1v1h-1ZM4%206h1v1h-1ZM5%206h1v1h-1ZM6%206h1v1h-1ZM7%206h1v1h-1Z%22%2F%3E%3C%2Fsvg%3E")}
+  .console-desktop #app-catalog [data-select-app=meme]{--pixel-sprite:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%208%208%22%20shape-rendering%3D%22crispEdges%22%3E%3Cpath%20fill%3D%22white%22%20d%3D%22M0%200h1v1h-1ZM1%200h1v1h-1ZM2%200h1v1h-1ZM3%200h1v1h-1ZM4%200h1v1h-1ZM5%200h1v1h-1ZM6%200h1v1h-1ZM7%200h1v1h-1ZM0%201h1v1h-1ZM7%201h1v1h-1ZM0%202h1v1h-1ZM2%202h1v1h-1ZM5%202h1v1h-1ZM7%202h1v1h-1ZM0%203h1v1h-1ZM7%203h1v1h-1ZM0%204h1v1h-1ZM2%204h1v1h-1ZM5%204h1v1h-1ZM7%204h1v1h-1ZM0%205h1v1h-1ZM3%205h1v1h-1ZM4%205h1v1h-1ZM7%205h1v1h-1ZM0%206h1v1h-1ZM1%206h1v1h-1ZM2%206h1v1h-1ZM3%206h1v1h-1ZM4%206h1v1h-1ZM5%206h1v1h-1ZM6%206h1v1h-1ZM7%206h1v1h-1Z%22%2F%3E%3C%2Fsvg%3E")}
+  .console-desktop #app-catalog [data-select-app=buffer]{--pixel-sprite:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%208%208%22%20shape-rendering%3D%22crispEdges%22%3E%3Cpath%20fill%3D%22white%22%20d%3D%22M2%200h1v1h-1ZM3%200h1v1h-1ZM4%200h1v1h-1ZM0%201h1v1h-1ZM1%201h1v1h-1ZM2%201h1v1h-1ZM3%201h1v1h-1ZM4%201h1v1h-1ZM5%201h1v1h-1ZM6%201h1v1h-1ZM0%202h1v1h-1ZM6%202h1v1h-1ZM0%203h1v1h-1ZM2%203h1v1h-1ZM3%203h1v1h-1ZM4%203h1v1h-1ZM6%203h1v1h-1ZM0%204h1v1h-1ZM2%204h1v1h-1ZM6%204h1v1h-1ZM0%205h1v1h-1ZM2%205h1v1h-1ZM3%205h1v1h-1ZM4%205h1v1h-1ZM6%205h1v1h-1ZM0%206h1v1h-1ZM6%206h1v1h-1ZM0%207h1v1h-1ZM1%207h1v1h-1ZM2%207h1v1h-1ZM3%207h1v1h-1ZM4%207h1v1h-1ZM5%207h1v1h-1ZM6%207h1v1h-1Z%22%2F%3E%3C%2Fsvg%3E")}
+  .console-desktop #app-catalog [data-select-app=game]{--pixel-sprite:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%208%208%22%20shape-rendering%3D%22crispEdges%22%3E%3Cpath%20fill%3D%22white%22%20d%3D%22M3%200h1v1h-1ZM4%200h1v1h-1ZM2%201h1v1h-1ZM5%201h1v1h-1ZM2%202h1v1h-1ZM3%202h1v1h-1ZM5%202h1v1h-1ZM1%203h1v1h-1ZM2%203h1v1h-1ZM5%203h1v1h-1ZM6%203h1v1h-1ZM1%204h1v1h-1ZM2%204h1v1h-1ZM3%204h1v1h-1ZM4%204h1v1h-1ZM5%204h1v1h-1ZM6%204h1v1h-1ZM0%205h1v1h-1ZM2%205h1v1h-1ZM3%205h1v1h-1ZM4%205h1v1h-1ZM5%205h1v1h-1ZM7%205h1v1h-1ZM3%206h1v1h-1ZM4%206h1v1h-1ZM2%207h1v1h-1ZM5%207h1v1h-1Z%22%2F%3E%3C%2Fsvg%3E")}
+  .console-desktop #app-catalog [data-select-app=importopoly]{--pixel-sprite:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%208%208%22%20shape-rendering%3D%22crispEdges%22%3E%3Cpath%20fill%3D%22white%22%20d%3D%22M0%200h1v1h-1ZM1%200h1v1h-1ZM2%200h1v1h-1ZM3%200h1v1h-1ZM4%200h1v1h-1ZM5%200h1v1h-1ZM6%200h1v1h-1ZM7%200h1v1h-1ZM0%201h1v1h-1ZM3%201h1v1h-1ZM7%201h1v1h-1ZM0%202h1v1h-1ZM2%202h1v1h-1ZM3%202h1v1h-1ZM4%202h1v1h-1ZM7%202h1v1h-1ZM0%203h1v1h-1ZM3%203h1v1h-1ZM7%203h1v1h-1ZM0%204h1v1h-1ZM4%204h1v1h-1ZM5%204h1v1h-1ZM7%204h1v1h-1ZM0%205h1v1h-1ZM1%205h1v1h-1ZM4%205h1v1h-1ZM5%205h1v1h-1ZM7%205h1v1h-1ZM0%206h1v1h-1ZM1%206h1v1h-1ZM7%206h1v1h-1ZM0%207h1v1h-1ZM1%207h1v1h-1ZM2%207h1v1h-1ZM3%207h1v1h-1ZM4%207h1v1h-1ZM5%207h1v1h-1ZM6%207h1v1h-1ZM7%207h1v1h-1Z%22%2F%3E%3C%2Fsvg%3E")}
+  .console-desktop #app-catalog [data-select-app=pulse]{--pixel-sprite:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%208%208%22%20shape-rendering%3D%22crispEdges%22%3E%3Cpath%20fill%3D%22white%22%20d%3D%22M3%201h1v1h-1ZM2%202h1v1h-1ZM3%202h1v1h-1ZM4%202h1v1h-1ZM0%203h1v1h-1ZM1%203h1v1h-1ZM2%203h1v1h-1ZM4%203h1v1h-1ZM5%203h1v1h-1ZM6%203h1v1h-1ZM7%203h1v1h-1ZM4%204h1v1h-1ZM5%204h1v1h-1ZM4%205h1v1h-1Z%22%2F%3E%3C%2Fsvg%3E")}
+  .console-desktop #app-catalog [data-select-app=naval]{--pixel-sprite:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%208%208%22%20shape-rendering%3D%22crispEdges%22%3E%3Cpath%20fill%3D%22white%22%20d%3D%22M3%200h1v1h-1ZM3%201h1v1h-1ZM4%201h1v1h-1ZM5%201h1v1h-1ZM3%202h1v1h-1ZM1%203h1v1h-1ZM2%203h1v1h-1ZM3%203h1v1h-1ZM4%203h1v1h-1ZM0%204h1v1h-1ZM1%204h1v1h-1ZM2%204h1v1h-1ZM3%204h1v1h-1ZM4%204h1v1h-1ZM5%204h1v1h-1ZM6%204h1v1h-1ZM7%204h1v1h-1ZM1%205h1v1h-1ZM2%205h1v1h-1ZM3%205h1v1h-1ZM4%205h1v1h-1ZM5%205h1v1h-1ZM6%205h1v1h-1ZM0%207h1v1h-1ZM1%207h1v1h-1ZM3%207h1v1h-1ZM4%207h1v1h-1ZM6%207h1v1h-1ZM7%207h1v1h-1Z%22%2F%3E%3C%2Fsvg%3E")}
+  .console-desktop #chat-launcher,
+  :is(.console-desktop,.pip-desktop) #window-svyaz>.titlebar>span{--pixel-sprite:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%206%206%22%20shape-rendering%3D%22crispEdges%22%3E%3Cpath%20fill%3D%22white%22%20d%3D%22M0%200h1v1h-1ZM1%200h1v1h-1ZM2%200h1v1h-1ZM3%200h1v1h-1ZM4%200h1v1h-1ZM5%200h1v1h-1ZM0%201h1v1h-1ZM5%201h1v1h-1ZM0%202h1v1h-1ZM2%202h1v1h-1ZM3%202h1v1h-1ZM5%202h1v1h-1ZM0%203h1v1h-1ZM1%203h1v1h-1ZM2%203h1v1h-1ZM3%203h1v1h-1ZM4%203h1v1h-1ZM5%203h1v1h-1ZM0%204h1v1h-1ZM1%204h1v1h-1ZM0%205h1v1h-1Z%22%2F%3E%3C%2Fsvg%3E")}
+  .console-desktop #console-settings{--pixel-sprite:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%206%206%22%20shape-rendering%3D%22crispEdges%22%3E%3Cpath%20fill%3D%22white%22%20d%3D%22M1%200h1v1h-1ZM2%200h1v1h-1ZM3%200h1v1h-1ZM4%200h1v1h-1ZM0%201h1v1h-1ZM1%201h1v1h-1ZM4%201h1v1h-1ZM5%201h1v1h-1ZM0%202h1v1h-1ZM2%202h1v1h-1ZM3%202h1v1h-1ZM5%202h1v1h-1ZM0%203h1v1h-1ZM2%203h1v1h-1ZM3%203h1v1h-1ZM5%203h1v1h-1ZM0%204h1v1h-1ZM1%204h1v1h-1ZM4%204h1v1h-1ZM5%204h1v1h-1ZM1%205h1v1h-1ZM2%205h1v1h-1ZM3%205h1v1h-1ZM4%205h1v1h-1Z%22%2F%3E%3C%2Fsvg%3E")}
+  :is(.console-desktop,.pip-desktop) .window .window-controls>button[data-action=maximize]{--pixel-sprite:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%206%206%22%20shape-rendering%3D%22crispEdges%22%3E%3Cpath%20fill%3D%22white%22%20d%3D%22M0%200h1v1h-1ZM1%200h1v1h-1ZM4%200h1v1h-1ZM5%200h1v1h-1ZM0%201h1v1h-1ZM5%201h1v1h-1ZM0%204h1v1h-1ZM5%204h1v1h-1ZM0%205h1v1h-1ZM1%205h1v1h-1ZM4%205h1v1h-1ZM5%205h1v1h-1Z%22%2F%3E%3C%2Fsvg%3E")}
+ }
+}
