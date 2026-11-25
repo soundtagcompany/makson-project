@@ -169,11 +169,24 @@ async function submit(e){
  try{
  if(!csrf){const s=await api('session');csrf=s.csrf;}
  if(form.classList.contains('sv-compose')){
- const field=form.elements.message,text=field.value.trim(),id=dialog,photo=photos.get(id);if(!text&&!photo)return;
+ const field=form.elements.message,submitted=field.value,text=submitted.trim(),id=dialog,owner=user?.id,photo=photos.get(id);if(!text&&!photo)return;
  if(!pendingSend||pendingSend.dialog!==id||pendingSend.body!==text||pendingSend.photoKey!==photo?.key)pendingSend={dialog:id,body:text,nonce:crypto.randomUUID(),photoKey:photo?.key};
  let payload=pendingSend;if(photo){payload=new FormData();payload.set('dialog',id);payload.set('body',text);payload.set('nonce',pendingSend.nonce);payload.set('photo',photo.file,'photo.jpg');}
- form.classList.add('sv-sending');const result=await api(photo?'send-photo':'send',payload);pendingSend=null;photos.clear(id,photo?.key);drafts.delete(id);
- if(dialog===id){field.value='';field.style.height='';if(!messages.some(m=>m.id===result.message.id))messages.push(result.message);renderMessages(true);photos.draw();field.focus();}await refreshDialogs();
+ form.classList.add('sv-sending');const result=await api(photo?'send-photo':'send',payload);
+ if(user?.id!==owner)return;
+ pendingSend=null;if(photo)photos.clear(id,photo.key);
+ const current=dialog===id?root.querySelector('[name=message]'):null;
+ // Only the submitted draft belongs to this response. Typing may have continued meanwhile.
+ if((current?.value??drafts.get(id)??submitted)===submitted){
+  drafts.delete(id);
+  if(current){current.value='';current.style.height='';}
+ }
+ if(dialog===id){
+  if(!messages.some(m=>m.id===result.message.id))messages.push(result.message);
+  renderMessages(true);photos.draw();
+  if(visible()&&current===field&&[field,button].includes(field.ownerDocument.activeElement))field.focus();
+ }
+ await refreshDialogs();
  }else{
  const kind=form.dataset.form,data=Object.fromEntries(new FormData(form));
  if(['verify','reset'].includes(kind))Object.assign(data,{uid:link?.uid,token:link?.token});
@@ -209,6 +222,8 @@ async function clicked(e){
 root.addEventListener('click',clicked);accountRoot.addEventListener('click',clicked);
 root.addEventListener('input',e=>{if(e.target.name==='message'){saveDraft();e.target.style.height='auto';e.target.style.height=Math.min(100,e.target.scrollHeight)+'px';}if(e.target.name==='search')searchDirectory(e.target.value);});
 root.addEventListener('keydown',e=>{if(e.target.name==='message'&&e.key==='Enter'&&!e.shiftKey&&!e.isComposing&&matchMedia('(pointer:fine)').matches){e.preventDefault();e.target.form.requestSubmit();}});
+// A response to a tap made before closing must not change the reopened window.
+document.addEventListener('windowhide',event=>{if(event.detail==='svyaz')openRequest++;});
 for(const event of ['windowfocus','windowhide','visibilitychange','settingschange'])document.addEventListener(event,schedule);
 document.addEventListener('recordschange',()=>{if(user)loadStats();});
 addEventListener('online',schedule);
