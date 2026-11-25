@@ -113,4 +113,12 @@ setInterval(()=>{
   }for(const [ip,v]of limits)if(now-v.start>60000)limits.delete(ip);
 },1000).unref();
 await restoreAudioAssets();
-server.listen(port,host,()=>{console.log(`Максон: http://localhost:${port}`);if(host==='0.0.0.0')for(const list of Object.values(networkInterfaces()))for(const n of list||[])if(n.family==='IPv4'&&!n.internal)console.log(`Телефон в том же Wi-Fi: http://${n.address}:${port}`);});
+server.listen(port,host,()=>{
+  console.log(`Максон: http://localhost:${port}`);
+  if(host!=='0.0.0.0')return;
+  let interfaces;
+  // LAN hints are optional: some sandboxes allow listening but not interface enumeration.
+  try{interfaces=networkInterfaces();}catch{return;}
+  for(const list of Object.values(interfaces))for(const n of list||[])
+    if(n.family==='IPv4'&&!n.internal)console.log(`Телефон в том же Wi-Fi: http://${n.address}:${port}`);
+});

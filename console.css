@@ -170,9 +170,6 @@ body.console-desktop,body.pip-desktop{--blur-strength:0;--glow-strength:0;--disp
 @keyframes boot-blink{50%{opacity:.2}}
 @media(prefers-reduced-motion:reduce){.console-desktop #console-boot{transition:none}.boot-content *{animation:none!important}}
 /* Whole-screen sampling, including DOM artwork, iframes and media. */
-html.console-pixel-screen{filter:url('#console-screen-pixels')!important;background:#000}
-.console-pixel-defs{position:absolute!important;width:0!important;height:0!important;overflow:hidden!important;pointer-events:none!important}
-.console-desktop .window:fullscreen,.pip-desktop .window:fullscreen{filter:url('#console-screen-pixels')!important}
 :root{--console-ease:cubic-bezier(.2,.75,.2,1);font-size:18px}
 /* Smooth response comes from a single travelling frame, not many jumping outlines. */
 :is(.console-desktop,.pip-desktop) :is(button,summary){transition:color 220ms ease,background-color 260ms ease,opacity 220ms ease!important;translate:none}
@@ -329,7 +326,7 @@ html,body{font-synthesis:none}
 @media(max-width:700px), (max-width:950px) and (pointer:coarse){.console-desktop .tools-window .tools-body{padding:18px 16px}}
 /* Phosphor terminal: light belongs to the glyphs, with a static screen texture. */
 :root{--console-green:#49f598;--console-muted:#58a778;--console-rule:#123c29;--phosphor-glow:0 0 2px #42ff9299,0 0 8px #32f58477,0 0 20px #25df6930}
-.console-desktop #app-catalog{background-color:#010b06;background-image:var(--phosphor-grain),radial-gradient(ellipse at 45% 35%,#082b172e,transparent 80%);border-color:#123c29;scrollbar-color:#205638 #010b06}
+.console-desktop #app-catalog{background-color:#010b06;background-image:radial-gradient(ellipse at 45% 35%,#082b172e,transparent 80%);border-color:#123c29;scrollbar-color:#205638 #010b06}
 .console-desktop #app-catalog :is(summary,button){text-shadow:var(--phosphor-glow)!important;box-shadow:none!important}
 .console-desktop .catalog-heading{color:#3b8f60;letter-spacing:1px}
 .console-desktop .catalog-group summary{border-bottom:0;font-size:1.15rem;gap:10px;min-height:50px}
@@ -349,7 +346,7 @@ html,body{font-synthesis:none}
 .console-desktop #console-shell,.console-desktop #app-catalog,.console-desktop #catalog-toggle{transition:none!important}
 .console-desktop #console-shell.catalog-in-motion #app-catalog{visibility:visible!important;opacity:1;will-change:translate,opacity}
 .console-desktop .catalog-in-motion #app-workspace{will-change:translate,clip-path}
-:is(.console-desktop,.pip-desktop) :is(.utility-body,.tools-body,.sv-auth-wrap){background-color:#020d07!important;background-image:var(--phosphor-grain)!important}
+:is(.console-desktop,.pip-desktop) :is(.utility-body,.tools-body,.sv-auth-wrap){background-color:#020d07!important;background-image:none!important}
 :is(.console-desktop,.pip-desktop) :is(.utility-body h2,.utility-body b,.utility-body button,.overview-tabs button,.sv-wordmark,.sv-strip,.tools-body h2,.tools-body summary){text-shadow:var(--phosphor-glow)!important}
 :is(.console-desktop,.pip-desktop) :is(.tools-body h2,.tools-body summary){text-shadow:0 0 3px color-mix(in srgb,var(--app-color) 55%,transparent),0 0 12px color-mix(in srgb,var(--app-color) 30%,transparent)!important}
 :is(.console-desktop,.pip-desktop) :is(.utility-body button,.overview-tabs button){box-shadow:none!important}
@@ -361,7 +358,6 @@ html,body{font-synthesis:none}
 .console-desktop.game-fullscreen-on :is(.desktop-header,#app-catalog) *{animation-play-state:paused!important}
 .console-desktop.game-fullscreen-on #sphere-stage{display:none!important}
 .console-desktop.game-fullscreen-on .window:not(.game-fullscreen){visibility:hidden!important;content-visibility:hidden;pointer-events:none!important}
-.console-desktop .window.fullscreen-fallback{filter:url('#console-screen-pixels')!important}
 /* Snapshot interpolation commits layout once instead of reflowing fonts each frame. */
 ::view-transition-group(root){animation:none;transform-origin:0 0}
 ::view-transition-old(root),::view-transition-new(root){animation:none;mix-blend-mode:normal;transform-origin:0 0}
@@ -606,7 +602,9 @@ html,body{font-synthesis:none}
 @media(max-width:700px), (max-width:950px) and (pointer:coarse){:root{--panel-unit:1}}
 @media(orientation:portrait) and (max-width:700px), (orientation:portrait) and (max-width:950px) and (pointer:coarse){
  .console-desktop #console-shell>#catalog-toggle{grid-column:1;grid-row:2;align-self:start;justify-self:center;width:52px;height:28px;font-size:26px}
- .console-desktop.catalog-collapsed #console-shell>#catalog-toggle{grid-column:1;grid-row:1;align-self:end;justify-self:center}
+ /* A collapsed catalog owns a footer row instead of covering app controls. */
+ .console-desktop.catalog-collapsed #console-shell,.console-desktop.has-open-windows.catalog-collapsed #console-shell{grid-template-rows:minmax(0,1fr) 32px}
+ .console-desktop.catalog-collapsed #console-shell>#catalog-toggle{grid-column:1;grid-row:2;align-self:center;justify-self:center}
  .console-desktop.has-open-windows .catalog-items{flex-direction:row}
  .console-desktop #app-catalog{padding-top:32px}
  .console-desktop.has-open-windows #app-catalog{padding-top:28px;padding-bottom:4px}
@@ -646,7 +644,7 @@ html,body{font-synthesis:none}
 @media(max-width:700px){.console-desktop .desktop-header #chat-launcher{padding-right:6px!important}}
 
 /* Readability contract: menus never shrink text to make controls fit.
-   This layer wins over legacy !important sizes without changing the pixel filter. */
+   This layer wins over legacy !important sizes without changing the artwork. */
 :root{--ui-text-min:max(18px,calc(18px / var(--ui-scale,1)));--ui-text-body:max(20px,calc(20px / var(--ui-scale,1)));--ui-text-title:max(22px,calc(22px / var(--ui-scale,1)));--ui-control-height:44px}
 @layer readable-ui{
  :is(.console-desktop,.pip-desktop) .window :is(button,input,select,textarea,label,p,small,summary,output,li,dt,dd,td,th,legend,figcaption,span,strong,b,a,time,footer),
@@ -712,3 +710,41 @@ html,body{font-synthesis:none}
 .console-desktop{transition:--sphere-jitter 350ms ease-out}
 #sphere-speed{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);z-index:95;pointer-events:none;color:#8e76a5;font:18px/1.3 ConsoleMono;white-space:nowrap;font-variant-numeric:tabular-nums}
 @media(prefers-reduced-motion:reduce){.console-desktop{transition:none}}
+
+
+/* The 8px layout unit is distinct from the 2px artwork pixel. Keep text and
+   controls out of the raster effect, even in fullscreen and picture-in-picture. */
+:root{
+ --console-unit:8px;
+ --console-space-2:calc(var(--console-unit) * 2);
+ --console-space-3:calc(var(--console-unit) * 3);
+ --console-grid-size:calc(var(--console-unit) * 4);
+}
+.console-desktop .desktop-header{padding-inline:var(--console-space-2)}
+.console-desktop #app-catalog{padding:var(--console-space-2)}
+.console-desktop .catalog-heading{margin-bottom:var(--console-space-2);padding:0 0 var(--console-unit)}
+.console-desktop .catalog-group{margin-bottom:var(--console-space-2)}
+.console-desktop .catalog-items{gap:var(--console-unit);padding-top:var(--console-unit)}
+.console-desktop .catalog-row{min-height:56px}
+.console-desktop .catalog-row>button:first-child{gap:var(--console-unit);padding:var(--console-unit)}
+.console-desktop .catalog-app-name{overflow-wrap:anywhere}
+:is(.console-desktop,.pip-desktop) .window>.titlebar{
+ min-height:48px;height:48px;padding-inline:var(--console-space-2);
+}
+:is(.console-desktop,.pip-desktop) .window .window-controls{gap:var(--console-unit)}
+:is(.console-desktop,.pip-desktop) :is(.utility-body,.tools-body){padding:var(--console-space-3)}
+/* A sparse 2×2 grid marker is backdrop only. Games retain their own canvas. */
+.console-desktop #sphere-stage::before{
+ display:block!important;content:'';position:absolute;inset:0;pointer-events:none;
+ z-index:1;opacity:.32;
+ background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32' shape-rendering='crispEdges'%3E%3Cpath fill='%23775ba0' d='M0 0h2v2H0z'/%3E%3C/svg%3E");
+ background-size:var(--console-grid-size) var(--console-grid-size);
+}
+.console-desktop .sphere-stage .desktop-icons{z-index:2}
+.console-desktop #app-catalog :is(summary,button){text-shadow:none!important}
+:is(.console-desktop,.pip-desktop) :is(.utility-body h2,.utility-body b,.utility-body button,.overview-tabs button,.sv-wordmark,.sv-strip,.tools-body h2,.tools-body summary){text-shadow:none!important}
+@media(max-width:700px), (max-width:950px) and (pointer:coarse){
+ .console-desktop .desktop-header{padding-inline:var(--console-unit)}
+ .console-desktop #app-catalog{padding:var(--console-unit)}
+ :is(.console-desktop,.pip-desktop) :is(.utility-body,.tools-body){padding:var(--console-space-2)}
+}

@@ -83,7 +83,7 @@ export function stepPlayer(p,input,dt,track,mode='sprint') {
       if(item.type==='phase')p.phase=5;
     }else if(d<radius&&p.invincible===0&&p.phase===0){
       p.shield=mode==='chill'?cfg.shields:p.shield-1;p.hits++;p.speed*=.55;p.invincible=1.15;p.combo=0;
-      if(p.shield<=0)p.dead=true;
+      if(p.shield<=0){p.dead=true;break;}
     }else if(d>=radius&&d<radius+28&&old.z<item.z&&next.z>=item.z&&!p.dodged.includes(item.id)){
       p.dodged.push(item.id);p.nearMisses++;p.combo=Math.min(9,p.combo+1);p.comboTimer=4;p.score+=50*p.combo;p.boost=Math.min(100,p.boost+7);
     }

@@ -1,8 +1,7 @@
-// One sampled screen surface and one moving focus frame per document.
-// DOM, forms, live canvases and video remain native; no screenshots or DOM cloning.
+// One moving focus frame per document. Text, forms and video render at native resolution.
+// Only the decorative canvas and pixel icons provide low-resolution artwork.
 export function attachConsoleEffects(settings){
  const reduced=()=>!settings.motion||matchMedia('(prefers-reduced-motion: reduce)').matches;
- installPhosphor();
  installConsoleLife(settings);
  let audio=null,noise=null,lastSwitch=-1,lastClick=-1;
  function unlock(){
@@ -36,43 +35,8 @@ export function attachConsoleEffects(settings){
  }
  document.addEventListener('console-ui-sound',e=>{unlock();tickSound(e.detail);});
  const docs=new WeakSet();
- function installPixel(doc){
-  if(doc.getElementById('console-screen-pixels'))return;
-  const ns='http://www.w3.org/2000/svg',defs=doc.createElementNS(ns,'svg');defs.setAttribute('width','0');defs.setAttribute('height','0');defs.classList.add('console-pixel-defs');defs.setAttribute('aria-hidden','true');
-  // Sample one point per 2 CSS pixels, including Retina screens. A two-physical-pixel
-  // map interpolates on phones and leaves their text almost at native resolution.
-  const density=Math.max(1,doc.defaultView.devicePixelRatio||1),size=Math.round(2*density);
-  const tile=doc.createElement('canvas');tile.width=tile.height=size;const ctx=tile.getContext('2d'),data=ctx.createImageData(size,size);
-  for(let y=0;y<size;y++)for(let x=0;x<size;x++)data.data.set([Math.round(255*(.5+(Math.floor((size-1)/2)-x)/size)),Math.round(255*(.5+(Math.floor((size-1)/2)-y)/size)),128,255],(y*size+x)*4);ctx.putImageData(data,0,0);
-  const map=tile.toDataURL(),average=density>1?'<feGaussianBlur in="SourceGraphic" stdDeviation=".45" result="averaged"/>':'<feConvolveMatrix in="SourceGraphic" order="2 2" kernelMatrix="1 1 1 1" divisor="4" targetX="1" targetY="1" result="averaged"/>'; 
-  defs.innerHTML=`<defs><filter id="console-screen-pixels" x="0" y="0" width="100%" height="100%" primitiveUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feImage href="${map}" x="0" y="0" width="2" height="2" preserveAspectRatio="none" result="sample-map"/><feTile in="sample-map" result="sample-grid"/>${average}<feDisplacementMap in="averaged" in2="sample-grid" scale="2" xChannelSelector="R" yChannelSelector="G" result="screen-sampled"/><feMerge result="screen-output"><feMergeNode in="screen-sampled"/></feMerge></filter></defs>`;
-  defs.querySelector('feImage').setAttributeNS('http://www.w3.org/1999/xlink','xlink:href',map);
-  doc.body.append(defs);doc.documentElement.classList.add('console-pixel-screen');doc.documentElement.style.setProperty('filter','url("#console-screen-pixels")','important');
-  // Composite the original pixels only inside explicitly marked media rectangles.
-  // The screen filter still samples every UI control, including in fullscreen/PiP.
-  const filter=defs.querySelector('filter'),merge=filter.querySelector('feMerge'),regions=[],observed=new WeakSet();let exemptFrame=0,settleUntil=0;
-  const observer=new doc.defaultView.ResizeObserver(refreshExempt);
-  function refreshExempt(){if(!exemptFrame&&!doc.hidden)exemptFrame=doc.defaultView.requestAnimationFrame(updateExempt);}
-  function updateExempt(now){
-   exemptFrame=0;const surface=doc.fullscreenElement||doc.webkitFullscreenElement||doc.querySelector('.window.fullscreen-fallback')||doc.documentElement;
-   const base=surface===doc.documentElement?{x:0,y:0,width:0}:surface.getBoundingClientRect(),scale=surface===doc.documentElement?1:(base.width/surface.offsetWidth||1);
-   const elements=[...doc.querySelectorAll('[data-pixel-exempt]')].filter(el=>!el.closest('[hidden]')&&el.getClientRects().length);
-   for(let i=0;i<Math.max(elements.length,regions.length);i++){
-    let region=regions[i];if(!region){const crop=doc.createElementNS(ns,'feOffset');crop.setAttribute('in','SourceGraphic');crop.setAttribute('dx','0');crop.setAttribute('dy','0');crop.setAttribute('result','pristine-media-'+i);filter.insertBefore(crop,merge);const node=doc.createElementNS(ns,'feMergeNode');node.setAttribute('in','pristine-media-'+i);merge.append(node);regions.push(region=crop);}
-    const el=elements[i];if(el&&!observed.has(el)){observed.add(el);observer.observe(el);}
-    const r=el?.getBoundingClientRect();const rect=r?{x:(r.x-base.x)/scale,y:(r.y-base.y)/scale,width:r.width/scale,height:r.height/scale}:{x:0,y:0,width:0,height:0};
-    for(const [key,value]of Object.entries(rect)){const next=String(Math.max(key==='width'||key==='height'?0:-100000,value));if(region.getAttribute(key)!==next)region.setAttribute(key,next);}
-   }
-   if(now<settleUntil)refreshExempt();
-  }
-  const settle=()=>{settleUntil=doc.defaultView.performance.now()+550;refreshExempt();};
-  for(const event of ['console-pixel-exempt-change','windowfocus','windowhide','desktopfullscreenchange','console-pip-ready'])doc.addEventListener(event,settle);
-  doc.addEventListener('scroll',refreshExempt,true);doc.defaultView.addEventListener('resize',settle);doc.addEventListener('visibilitychange',refreshExempt);
-  refreshExempt();
-
- }
- function setup(doc,{pixel=false}={}){
-  if(docs.has(doc))return;docs.add(doc);if(pixel)installPixel(doc);
+ function setup(doc){
+  if(docs.has(doc))return;docs.add(doc);
   const view=doc.defaultView,ring=doc.createElement('div');ring.className='console-focus-frame';ring.setAttribute('aria-hidden','true');doc.body.append(ring);
   // The embedded board has its own style sheet; its frame uses these same geometry rules.
   const style=doc.createElement('style');style.textContent='.console-focus-frame{position:fixed;left:0;top:0;z-index:2147483646;box-sizing:border-box;pointer-events:none!important;margin:0;border:1px solid currentColor;border-radius:2px!important;color:#45f293;opacity:0;background:#42ff9210;transition:opacity 260ms ease,color 280ms ease;box-shadow:0 0 9px #40ff9255,inset 0 0 10px #40ff920a!important;contain:strict;will-change:transform,opacity}.console-focus-frame.is-visible{opacity:.8}';doc.head.append(style);
@@ -132,19 +96,11 @@ export function attachConsoleEffects(settings){
    animation.finished.then(()=>{if(folds.get(details)?.animation!==animation)return;details.open=opening;animation.cancel();content.style.overflow='';folds.delete(details);layoutUntil=performance.now()+250;wake();}).catch(()=>{});
   },true);
  }
- setup(document,{pixel:true});
- document.addEventListener('console-pip-ready',e=>{setup(e.detail,{pixel:true});e.detail.defaultView.requestAnimationFrame(()=>e.detail.dispatchEvent(new Event('console-pixel-exempt-change')));});
+ setup(document);
+ document.addEventListener('console-pip-ready',e=>setup(e.detail));
  const board=document.getElementById('importopoly-frame');board?.addEventListener('load',()=>{try{setup(board.contentDocument);}catch{}});
  document.addEventListener('settingschange',()=>{if(!settings.sound&&audio?.state==='running')audio.suspend().catch(()=>{});});
  return {sound:kind=>{unlock();tickSound(kind);}};
-}
-
-// One tiny, deterministic texture is generated once; it never animates or runs a filter.
-function installPhosphor(){
- if(document.documentElement.style.getPropertyValue('--phosphor-grain'))return;
- const tile=document.createElement('canvas');tile.width=tile.height=128;const ctx=tile.getContext('2d'),image=ctx.createImageData(128,128);let seed=479;
- for(let i=0;i<image.data.length;i+=4){seed=(seed*16807)%2147483647;image.data.set([15,100,53,Math.floor(seed/2147483647*24)],i);}
- ctx.putImageData(image,0,0);document.documentElement.style.setProperty('--phosphor-grain',`url("${tile.toDataURL()}")`);
 }
 
 // Temporary choreography: live nodes stay in place and all transforms are disposable.
