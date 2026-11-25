@@ -733,13 +733,6 @@ html,body{font-synthesis:none}
 }
 :is(.console-desktop,.pip-desktop) .window .window-controls{gap:var(--console-unit)}
 :is(.console-desktop,.pip-desktop) :is(.utility-body,.tools-body){padding:var(--console-space-3)}
-/* A sparse 2×2 grid marker is backdrop only. Games retain their own canvas. */
-.console-desktop #sphere-stage::before{
- display:block!important;content:'';position:absolute;inset:0;pointer-events:none;
- z-index:1;opacity:.32;
- background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32' shape-rendering='crispEdges'%3E%3Cpath fill='%23775ba0' d='M0 0h2v2H0z'/%3E%3C/svg%3E");
- background-size:var(--console-grid-size) var(--console-grid-size);
-}
 .console-desktop .sphere-stage .desktop-icons{z-index:2}
 .console-desktop #app-catalog :is(summary,button){text-shadow:none!important}
 :is(.console-desktop,.pip-desktop) :is(.utility-body h2,.utility-body b,.utility-body button,.overview-tabs button,.sv-wordmark,.sv-strip,.tools-body h2,.tools-body summary){text-shadow:none!important}
@@ -759,7 +752,7 @@ html,body{font-synthesis:none}
 @font-face{font-family:MaksonPixel;src:url('fonts/PixelifySans.ttf') format('truetype');font-weight:400 700;font-display:swap}
 @font-face{font-family:MaksonPixel;src:url('data:font/woff;base64,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') format('woff');font-weight:400 700;font-display:swap;unicode-range:U+041E-041F}
 
-/* Desktop terminal: an 8px layout unit with a visible 32px workspace lattice. */
+/* Desktop terminal: an invisible 8px layout grid. Only artwork renders as pixels. */
 @media(min-width:951px){
  body.console-desktop{
   --terminal-step:8px;--terminal-grid:calc(var(--terminal-step) * 4);
@@ -810,15 +803,6 @@ html,body{font-synthesis:none}
  }
  .console-desktop #console-shell>#catalog-toggle{
   width:24px;height:48px;box-shadow:none!important;
- }
- .console-desktop #sphere-stage::before{
-  width:auto;height:auto;aspect-ratio:auto;transform:none;
-  background-image:
-   url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' shape-rendering='crispEdges'%3E%3Cpath fill='%23573d70' d='M0 0h3v3H0z'/%3E%3C/svg%3E"),
-   linear-gradient(90deg,#21182e 1px,transparent 1px),
-   linear-gradient(#21182e 1px,transparent 1px);
-  background-size:var(--terminal-grid) var(--terminal-grid);
-  opacity:.56;
  }
  .console-desktop .sphere-stage .desktop-icon span:last-child{
   background:#05030a;color:#eddeff;padding:2px 4px;
