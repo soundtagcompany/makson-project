@@ -748,3 +748,9 @@ html,body{font-synthesis:none}
  .console-desktop #app-catalog{padding:var(--console-unit)}
  :is(.console-desktop,.pip-desktop) :is(.utility-body,.tools-body){padding:var(--console-space-2)}
 }
+
+/* Keep the keyboard ring inside the result button, clear of the scroller edge. */
+:is(.console-desktop,.pip-desktop) .tools-body .tool-result a:focus-visible{
+ outline:2px solid currentColor!important;
+ outline-offset:-4px!important;
+}
