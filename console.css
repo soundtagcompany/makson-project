@@ -754,3 +754,79 @@ html,body{font-synthesis:none}
  outline:2px solid currentColor!important;
  outline-offset:-4px!important;
 }
+
+/* Bundled Pixelify Sans and its two-glyph Cyrillic supplement (SIL OFL 1.1). */
+@font-face{font-family:MaksonPixel;src:url('fonts/PixelifySans.ttf') format('truetype');font-weight:400 700;font-display:swap}
+@font-face{font-family:MaksonPixel;src:url('data:font/woff;base64,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') format('woff');font-weight:400 700;font-display:swap;unicode-range:U+041E-041F}
+
+/* Desktop terminal: an 8px layout unit with a visible 32px workspace lattice. */
+@media(min-width:951px){
+ body.console-desktop{
+  --terminal-step:8px;--terminal-grid:calc(var(--terminal-step) * 4);
+  --terminal-gutter:calc(var(--terminal-step) * 2);
+  --catalog-size:calc(var(--terminal-grid) * 9);
+  --header-height:calc(var(--terminal-step) * 7);
+ }
+ .console-desktop .desktop-header,.console-desktop .desktop-header.has-login-hint{
+  height:var(--header-height)!important;padding-inline:var(--terminal-gutter);
+  border-bottom:1px solid #573237;box-shadow:none!important;
+ }
+ .console-desktop .desktop-header h1,.console-desktop .desktop-header.has-login-hint h1{
+  font:600 24px/1 MaksonPixel,ConsoleMono,monospace!important;
+  letter-spacing:.05em!important;color:#ff6c73;text-shadow:none!important;
+ }
+ .console-desktop .desktop-header h1::after{content:none}
+ .console-desktop .desktop-header :is(#chat-launcher,#console-settings){
+  min-height:40px;box-shadow:none!important;
+ }
+ .console-desktop .desktop-header #chat-launcher span{
+  font:600 18px/1 MaksonPixel,ConsoleMono,monospace!important;
+ }
+ .console-desktop #app-catalog{
+  padding:var(--terminal-gutter) 24px var(--terminal-gutter) var(--terminal-gutter);border-right:1px solid #385547;
+ }
+ .console-desktop #app-catalog .catalog-group{margin:0 0 var(--terminal-gutter)}
+ .console-desktop #app-catalog .catalog-group:last-child{margin:0}
+ .console-desktop #app-catalog .catalog-group summary{
+  min-height:var(--terminal-grid);padding:0 var(--terminal-step);
+  font:600 17px/1 MaksonPixel,ConsoleMono,monospace!important;
+  letter-spacing:.04em;color:#a0cbb0;
+ }
+ .console-desktop #app-catalog .catalog-group summary span{
+  font:600 16px/1 MaksonPixel,ConsoleMono,monospace!important;
+  color:#9fc8af;
+ }
+ .console-desktop #app-catalog .catalog-items{
+  gap:var(--terminal-step);padding:var(--terminal-step) 0 0;
+ }
+ .console-desktop #app-catalog .catalog-row{min-height:calc(var(--terminal-step) * 6);box-sizing:border-box}
+ .console-desktop #app-catalog .catalog-row>button:first-child{gap:var(--terminal-step);padding:0 var(--terminal-step)}
+ .console-desktop #app-catalog .catalog-app-name{
+  font:600 20px/1.15 MaksonPixel,ConsoleMono,monospace!important;
+ }
+ .console-desktop #app-catalog .catalog-app-icon{width:24px}
+ .console-desktop :is(#app-catalog,.sphere-stage) .app-pixel-icon,.console-desktop .sphere-stage .node-symbol .app-pixel-icon{
+  width:24px;height:24px;filter:none!important;shape-rendering:crispEdges;
+ }
+ .console-desktop #console-shell>#catalog-toggle{
+  width:24px;height:48px;box-shadow:none!important;
+ }
+ .console-desktop #sphere-stage::before{
+  width:auto;height:auto;aspect-ratio:auto;transform:none;
+  background-image:
+   url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' shape-rendering='crispEdges'%3E%3Cpath fill='%23573d70' d='M0 0h3v3H0z'/%3E%3C/svg%3E"),
+   linear-gradient(90deg,#21182e 1px,transparent 1px),
+   linear-gradient(#21182e 1px,transparent 1px);
+  background-size:var(--terminal-grid) var(--terminal-grid);
+  opacity:.56;
+ }
+ .console-desktop .sphere-stage .desktop-icon span:last-child{
+  background:#05030a;color:#eddeff;padding:2px 4px;
+  font:600 16px/1.1 MaksonPixel,ConsoleMono,monospace!important;text-shadow:none!important;
+ }
+ .console-desktop #app-workspace>.window>.titlebar>span{
+  font-family:MaksonPixel,ConsoleMono,monospace!important;font-weight:600;
+  text-shadow:none!important;
+ }
+ .console-desktop #app-workspace>.window :is(.utility-body,.tools-body){padding:var(--terminal-gutter)}
+}
