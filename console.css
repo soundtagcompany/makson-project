@@ -1800,3 +1800,76 @@ body.console-desktop{--header-height:calc(16 * var(--screen-dot));--terminal-ste
   .console-desktop #window-svyaz:has(>#svyaz-root:not([hidden]))>.titlebar>span::before{display:none}
  }
 }
+/* A zoomed landscape phone may be "wide" in viewport pixels but not in layout pixels. */
+@media (orientation:landscape) and (max-width:950px) and (max-height:480px) and (pointer:coarse){
+ @container (max-width:505px){
+  .console-desktop #window-svyaz[data-wide=true] .sv-shell{grid-template-columns:minmax(0,1fr)}
+  .console-desktop #window-svyaz[data-wide=true] .sv-shell:not(.sv-has-dialog)>.sv-chat,
+  .console-desktop #window-svyaz[data-wide=true] .sv-has-dialog>.sv-contacts{display:none}
+  .console-desktop #window-svyaz[data-wide=true] .sv-has-dialog .sv-back{display:block}
+  .console-desktop #window-svyaz:has(#svyaz-chat:not([hidden]) .sv-has-dialog)>#overview-tabs,
+  .console-desktop #window-svyaz #svyaz-chat:has(.sv-has-dialog) :is(.sv-topline,.sv-bottom){display:none}
+  .console-desktop #window-svyaz #svyaz-chat .sv-has-dialog .sv-compose{
+   padding-block:2px;row-gap:2px;
+  }
+ }
+}
+
+@media (orientation:landscape) and (max-width:950px) and (max-height:480px) and (pointer:coarse){
+ @container(max-width:505px){
+  .console-desktop #window-svyaz[data-wide=true] #svyaz-chat .sv-shell.sv-has-dialog{
+   grid-template-rows:minmax(0,1fr);overflow:clip;
+  }
+  .console-desktop #window-svyaz[data-wide=true] #svyaz-chat:has(.sv-has-dialog){overflow:clip;--ui-control-height:var(--sv-touch-hit)}
+  .console-desktop #window-svyaz[data-wide=true] #svyaz-chat .sv-chat-head{
+   min-height:0;padding:2px 4px;align-items:center;gap:4px;
+  }
+  .console-desktop #window-svyaz[data-wide=true] #svyaz-chat .sv-chat-head :is(.sv-back,[data-social],.sv-options>summary,.sv-peer-actions>*){
+   min-height:calc(44px / var(--ui-scale,1));padding-block:0;line-height:1.1;
+  }
+  .console-desktop #window-svyaz[data-wide=true] #svyaz-chat .sv-chat-head .sv-peer strong{
+   line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .console-desktop #window-svyaz[data-wide=true] #svyaz-chat .sv-log{padding:2px 6px}
+ }
+}
+
+@media (orientation:landscape) and (max-width:950px) and (max-height:480px) and (pointer:coarse){
+ @container(max-width:505px){
+  .console-desktop #window-svyaz[data-wide=true] #svyaz-chat .sv-chat-head :is(.sv-peer-avatar,.sv-peer small){
+   display:none;
+  }
+  .console-desktop #window-svyaz[data-wide=true] #svyaz-chat .sv-chat-head .sv-peer-actions>[data-social]{
+   max-width:13ch;white-space:nowrap;text-overflow:ellipsis;overflow:hidden;padding-inline:4px;
+  }
+  .console-desktop #window-svyaz[data-wide=true] #svyaz-chat .sv-has-dialog .sv-compose-row>button{
+   min-height:var(--sv-touch-hit)!important;
+  }
+  .console-desktop #window-svyaz[data-wide=true] #svyaz-chat .sv-has-dialog .sv-compose textarea{
+   min-height:var(--sv-touch-hit)!important;padding-block:2px;line-height:1.2;
+   max-height:calc(88px / var(--ui-scale,1));
+  }
+ }
+}
+
+@media (orientation:landscape) and (max-width:950px) and (max-height:480px) and (pointer:coarse){
+ @container(max-width:505px){
+  .console-desktop #window-svyaz[data-wide=true]:has(#svyaz-chat:not([hidden]) .sv-has-dialog)>.titlebar{
+   height:calc(var(--sv-touch-hit) + 4px)!important;
+   min-height:calc(var(--sv-touch-hit) + 4px)!important;
+  }
+  .console-desktop #window-svyaz[data-wide=true]:has(#svyaz-chat:not([hidden]) .sv-has-dialog)>.titlebar .window-controls>button{
+   width:var(--sv-touch-hit);height:var(--sv-touch-hit);
+   min-width:var(--sv-touch-hit)!important;min-height:var(--sv-touch-hit)!important;
+  }
+  .console-desktop #window-svyaz[data-wide=true] #svyaz-chat .sv-chat-head :is(.sv-back,button,.sv-options>summary){
+   height:var(--sv-touch-hit);min-height:var(--sv-touch-hit)!important;
+  }
+  .console-desktop #window-svyaz[data-wide=true] #svyaz-chat .sv-has-dialog .sv-compose-row>button{
+   height:var(--sv-touch-hit);
+  }
+  .console-desktop #window-svyaz[data-wide=true] #svyaz-chat .sv-has-dialog .sv-compose textarea{
+   height:var(--sv-touch-hit);
+  }
+ }
+}
