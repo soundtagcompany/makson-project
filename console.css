@@ -1930,3 +1930,34 @@ body.console-desktop{--header-height:calc(16 * var(--screen-dot));--terminal-ste
   width:var(--ui-control-height);height:var(--ui-control-height);padding:0;
  }
 }
+
+/* Keep catalog rows readable when the mobile zoom leaves the list a narrow column. */
+@media(orientation:landscape) and (max-width:950px) and (pointer:coarse){
+ .console-desktop:not(.catalog-collapsed) #app-catalog{
+  padding-inline:6px calc(var(--catalog-handle-width) + 4px);
+ }
+ @container catalog-list (max-width:148px){
+  .console-desktop #console-shell #app-catalog .catalog-group summary{
+   display:flex;gap:3px;padding-inline:3px;min-height:34px;white-space:nowrap;flex-wrap:nowrap;
+  }
+  .console-desktop #console-shell #app-catalog .catalog-group summary::before{
+   position:static;flex:0 0 auto;inline-size:1ch;margin:0;
+  }
+  .console-desktop #console-shell #app-catalog .catalog-group summary span{margin:0 0 0 auto}
+  .console-desktop #console-shell #app-catalog .catalog-group summary,
+  .console-desktop #console-shell #app-catalog .catalog-group summary span{
+   font-size:9px!important;
+  }
+  .console-desktop #app-catalog .catalog-items{gap:4px;padding-block-start:5px}
+  .console-desktop #app-catalog .catalog-row{min-height:32px}
+  .console-desktop #app-catalog .catalog-row>button:first-child{
+   padding:5px 3px;min-height:32px;
+  }
+  .console-desktop #app-catalog .catalog-row :is(.catalog-app-icon,.catalog-caret){
+   display:none!important;
+  }
+  .console-desktop #app-catalog .catalog-row .catalog-app-name{
+   min-width:0;font-size:10px!important;overflow-wrap:anywhere;word-break:normal;
+  }
+ }
+}
