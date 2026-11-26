@@ -2463,3 +2463,51 @@ html[data-makson-pixel-screen] {filter:none!important}
 @media (pointer:coarse) and (max-width:950px) and (max-height:500px) and (orientation:landscape){
  .console-desktop #window-convert #convert-tool{padding-inline-start:calc(52px / var(--ui-scale,1))}
 }
+
+/* Short phone screens: prioritize the URL and submit, keep every option available. */
+@media (max-width:950px) and (pointer:coarse){
+ .console-desktop #window-download #download-tool{
+  --download-type:clamp(9px,calc(15px / var(--ui-scale,1)),15px);
+  --ui-text-min:var(--download-type);
+  --ui-control-height:calc(44px / var(--ui-scale,1));
+  padding:calc(12px / var(--ui-scale,1));
+ }
+ .console-desktop #window-download #download-tool>h2{
+  position:absolute;width:1px;height:1px;padding:0;margin:-1px;
+  overflow:hidden;clip-path:inset(50%);white-space:nowrap;
+ }
+ .console-desktop #window-download #download-tool .tool-lead{
+  --ui-text-body:var(--download-type);
+  margin:0 0 calc(10px / var(--ui-scale,1));color:#c6d0c2;
+ }
+ .console-desktop #window-download #download-link-form{
+  display:grid;gap:calc(7px / var(--ui-scale,1));margin:0;
+ }
+ .console-desktop #window-download #download-link-form>.tool-link{
+  display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);
+  gap:calc(6px / var(--ui-scale,1));
+ }
+ .console-desktop #window-download #download-link-form .tool-link>*{
+  width:100%;min-width:0;margin:0;min-height:var(--ui-control-height);
+  padding:calc(7px / var(--ui-scale,1));
+ }
+ .console-desktop #window-download #download-url{
+  --ui-text-min:clamp(9px,calc(16px / var(--ui-scale,1)),16px);
+ }
+ .console-desktop #window-download #download-link-form button{font-size:var(--download-type)!important;padding:calc(6px / var(--ui-scale,1)) calc(8px / var(--ui-scale,1));text-align:center;justify-content:center;min-height:var(--ui-control-height)}
+ .console-desktop #window-download #download-tool .tool-progress{margin:calc(12px / var(--ui-scale,1)) 0}
+}
+@media (pointer:coarse) and (max-width:950px) and (max-height:500px) and (orientation:landscape){
+ .console-desktop #window-download #download-tool{padding-inline-start:calc(52px / var(--ui-scale,1));padding-block-start:calc(6px / var(--ui-scale,1))}
+ .console-desktop #window-download #download-tool .tool-lead{margin-block-end:calc(2px / var(--ui-scale,1))}
+}
+@media (pointer:coarse) and (max-width:950px) and (min-width:560px) and (max-height:500px) and (orientation:landscape){
+ .console-desktop #window-download #download-link-form{
+  grid-template-columns:minmax(0,1fr) minmax(0,.46fr);
+  align-items:stretch;gap:calc(4px / var(--ui-scale,1));
+ }
+ .console-desktop #window-download #download-link-form>label{grid-column:1/-1}
+ .console-desktop #window-download #download-link-form>button{
+  margin:0;min-width:0;
+ }
+}
