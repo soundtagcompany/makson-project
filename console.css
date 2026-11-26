@@ -2566,3 +2566,25 @@ html[data-makson-pixel-screen] {filter:none!important}
   grid-column:2;grid-row:1;flex-wrap:nowrap;
  }
 }
+
+/* Make the outer Board controls one row; do not alter the embedded game. */
+@media (orientation:landscape) and (min-width:620px) and (max-width:950px) and (max-height:500px) and (pointer:coarse){
+ .console-desktop #console-shell #app-workspace #window-importopoly>.titlebar{
+  display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;
+  height:auto!important;min-height:0;
+  padding:calc(5px / var(--ui-scale,1)) calc(10px / var(--ui-scale,1));
+  gap:calc(8px / var(--ui-scale,1));
+ }
+ .console-desktop #console-shell #app-workspace #window-importopoly>.titlebar>span{
+  min-width:0;white-space:nowrap;
+ }
+ .console-desktop #console-shell #app-workspace #window-importopoly>.titlebar>.window-controls{
+  flex-wrap:nowrap;justify-content:flex-end;gap:calc(8px / var(--ui-scale,1));
+ }
+ .console-desktop #console-shell #app-workspace #window-importopoly>.titlebar>.window-controls>button,
+ .console-desktop #console-shell #app-workspace #window-importopoly>.titlebar>.window-controls .game-sound-control>button{
+  width:calc(44px / var(--ui-scale,1));height:calc(44px / var(--ui-scale,1));
+  min-width:calc(44px / var(--ui-scale,1))!important;min-height:calc(44px / var(--ui-scale,1))!important;
+  padding:0;
+ }
+}
