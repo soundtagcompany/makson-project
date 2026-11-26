@@ -2238,3 +2238,15 @@ html[data-makson-pixel-screen] {filter:none!important}
     .console-desktop #window-settings .console-zoom output {min-width:0}
   }
 }
+
+/* The embedded game already has a responsive viewport and its own type scale.
+   Do not apply the enclosing console's magnification to its viewport twice. */
+ .console-desktop #window-importopoly > #importopoly-frame {
+   zoom:calc(1 / var(--ui-scale,1));
+ }
+@media(max-width:950px) and (pointer:coarse) {
+  .console-desktop #window-importopoly > .titlebar .window-controls>button {
+    min-width:calc(44px / var(--ui-scale,1))!important;
+    min-height:calc(44px / var(--ui-scale,1))!important;
+  }
+}
