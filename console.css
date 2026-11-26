@@ -2175,3 +2175,66 @@ html[data-makson-pixel-screen] {filter:none!important}
     .console-desktop .sphere-stage .desktop-icon[data-sphere-app] .node-symbol>.app-pixel-icon {display:none}
   }
 }
+
+/* Keep global controls available on short touch screens at enlarged UI scale. */
+@media (max-width: 950px) and (pointer: coarse) and (orientation: landscape) and (max-height: 500px) {
+  .console-desktop #window-settings > .titlebar {
+    height: auto !important;
+    min-height: 32px !important;
+  }
+  .console-desktop #window-settings > .utility-body {
+    padding: 4px 10px;
+  }
+  @container (min-width:270px) {
+    .console-desktop #window-settings .screen-settings {
+      display: grid;
+      grid-template-columns: minmax(0,1.2fr) minmax(0,1fr);
+      gap: 12px;
+    }
+    .console-desktop #window-settings .console-zoom {
+      display: grid;
+      grid-template-columns: auto minmax(0,1fr) auto;
+      gap: 4px;
+    }
+    .console-desktop #window-settings .console-zoom > span {
+      grid-column: 1 / -1;
+      margin: 0;
+    }
+    .console-desktop #window-settings .console-zoom output { min-width: 0 }
+    .console-desktop #window-settings :is(.settings-fullscreen,.setting) {
+      min-height: 30px;
+      gap: 5px;
+    }
+    .console-desktop #window-settings .settings-fullscreen > span {
+      white-space: normal;
+    }
+    .console-desktop #window-settings #site-fullscreen {
+      width: auto;
+      padding-inline: 5px;
+    }
+  }
+}
+
+/* At high UI zoom, keep the wordmark within its slot between touch controls. */
+@media (max-width:950px) and (pointer:coarse) {
+  @container (max-width:270px) {
+    .console-desktop .desktop-header h1,
+    .console-desktop .desktop-header.has-login-hint h1 {
+      white-space:normal;
+      text-wrap:balance;
+      line-height:1.02!important;
+    }
+  }
+  @container (min-width:206px) and (max-width:244px) {
+    .console-desktop #window-settings .console-zoom {
+      display:grid;
+      grid-template-columns:auto minmax(0,1fr) auto;
+      column-gap:4px;
+    }
+    .console-desktop #window-settings .console-zoom>span {
+      grid-column:1/-1;
+      margin:0;
+    }
+    .console-desktop #window-settings .console-zoom output {min-width:0}
+  }
+}
