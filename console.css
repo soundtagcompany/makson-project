@@ -1383,3 +1383,66 @@ body.console-desktop{--header-height:calc(16 * var(--screen-dot));--terminal-ste
   background:#0b1a10!important;color:#c4f5ce!important;border:1px solid #42624a!important;box-shadow:none;text-shadow:none;
  }
 }
+
+/* Keep live telemetry inside the flight area, independently of desktop zoom. */
+@media (max-width:480px), (max-width:960px) and (max-height:500px){
+ .console-desktop #window-game.racing .game-screen{
+  --flight-inset:calc(6px / var(--ui-scale,1));
+  --flight-gap:calc(4px / var(--ui-scale,1));
+  --flight-telemetry:calc(14px / var(--ui-scale,1));
+ }
+ .console-desktop #window-game.racing :is(.game-hud,.flight-stats,.boost-meter){
+  left:var(--flight-inset);right:var(--flight-inset);gap:var(--flight-gap);
+  --ui-text-min:var(--flight-telemetry);text-shadow:none;
+ }
+ .console-desktop #window-game.racing .game-hud{
+  top:var(--flight-inset);display:grid;grid-template-columns:minmax(0,1.75fr) minmax(0,1fr) minmax(0,1fr);align-items:stretch;
+ }
+ .console-desktop #window-game.racing .game-hud>div{
+  min-width:0;padding:var(--flight-gap);text-align:center;background:#071613f5;border:1px solid #427162;box-shadow:none;
+ }
+ .console-desktop #window-game.racing .game-hud small{margin:0;letter-spacing:0;color:#b1d1c2}
+ .console-desktop #window-game.racing .game-hud b{white-space:nowrap;color:#e8fff0;text-shadow:none}
+ .console-desktop #window-game.racing .flight-stats{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.35fr) minmax(0,1.4fr);bottom:calc(30px / var(--ui-scale,1))}
+ .console-desktop #window-game.racing .flight-stats span{
+  padding:0 var(--flight-gap);min-width:0;white-space:nowrap;text-align:center;
+  background:#071613f5;border:1px solid #427162;color:#e8fff0;
+ }
+ .console-desktop #window-game.racing .boost-meter{bottom:var(--flight-inset);letter-spacing:0;color:#d5f2e2}
+ .console-desktop #window-game.racing .boost-meter kbd,.console-desktop #window-game.racing .touch-hint{display:none}
+}
+@media (max-width:480px), (max-width:960px) and (max-height:500px){
+ .console-desktop #window-game.racing .flight-touch{z-index:2}
+ .console-desktop #window-game.racing :is(.flight-nitro,.flight-stick){
+  bottom:50%;transform:translateY(50%);width:calc(60px / var(--ui-scale,1));height:calc(60px / var(--ui-scale,1));
+ }
+ .console-desktop #window-game.racing .flight-nitro{left:calc(16px / var(--ui-scale,1))}
+ .console-desktop #window-game.racing .flight-stick{right:calc(16px / var(--ui-scale,1))}
+ .console-desktop #window-game.racing .flight-stick i{
+  inset:30%;width:auto;height:auto;
+ }
+ .console-desktop #window-game.racing .flight-nitro b{font-size:calc(23px / var(--ui-scale,1))}
+ .console-desktop #window-game.racing .flight-touch span{--ui-text-min:calc(10px / var(--ui-scale,1))}
+}
+@media (min-width:700px) and (max-width:960px) and (max-height:500px){
+ .console-desktop #window-game.racing .game-hud{right:auto;width:min(46%,calc(315px / var(--ui-scale,1)))}
+ .console-desktop #window-game.racing .flight-stats{
+  left:auto;top:var(--flight-inset);bottom:auto;width:min(46%,calc(315px / var(--ui-scale,1)));
+ }
+ .console-desktop #window-game.racing .boost-meter{left:auto;width:min(46%,calc(315px / var(--ui-scale,1)))}
+}
+@media (min-width:481px) and (max-width:960px) and (max-height:360px){
+ .console-desktop #window-game.racing{
+  --short-race-target:calc(44px / var(--ui-scale,1));
+ }
+ .console-desktop #window-game.racing>.titlebar{
+  height:var(--short-race-target)!important;min-height:var(--short-race-target)!important;padding-block:0;
+ }
+ .console-desktop #window-game.racing>.titlebar .window-controls button{
+  width:var(--short-race-target);height:var(--short-race-target);
+  min-width:var(--short-race-target)!important;min-height:var(--short-race-target)!important;
+ }
+ .console-desktop #window-game.racing .game-toolbar{
+  --ui-control-height:var(--short-race-target);padding-block:2px;
+ }
+}
