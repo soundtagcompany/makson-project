@@ -962,7 +962,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
  transform:scaleX(-1);
 }
 .console-desktop #catalog-toggle[aria-expanded=false]::before{transform:none}
-@media(max-width:700px), (max-width:950px) and (pointer:coarse){
+@media(orientation:portrait) and (max-width:700px), (orientation:portrait) and (max-width:950px) and (pointer:coarse){
  .console-desktop #catalog-toggle::before{transform:rotate(90deg)}
  .console-desktop #catalog-toggle[aria-expanded=false]::before{transform:rotate(-90deg)}
  .console-desktop #console-shell>#catalog-toggle:has(.catalog-toggle-title){justify-content:flex-start}
