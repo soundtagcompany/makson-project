@@ -1751,3 +1751,52 @@ body.console-desktop{--header-height:calc(16 * var(--screen-dot));--terminal-ste
 }
 
 .console-desktop #window-buffer .field-heading label{color:#ccebd2}
+
+/* Keep chat chrome to one row and leave the short touch viewport for the form. */
+@media (max-width:700px), (max-width:950px) and (pointer:coarse){
+ .console-desktop #window-svyaz{
+  --sv-touch-hit:calc(44px / var(--ui-scale,1));
+ }
+ .console-desktop #window-svyaz:has(>#svyaz-root:not([hidden]))>.titlebar{
+  display:flex;flex-wrap:nowrap;align-items:center;gap:2px;
+  height:auto!important;min-height:var(--sv-touch-hit)!important;padding:2px 3px;
+ }
+ .console-desktop #window-svyaz:has(>#svyaz-root:not([hidden]))>.titlebar>span{
+  flex:1 1 auto;min-width:0;min-height:0;padding-inline-end:0;
+  overflow:hidden;white-space:nowrap;
+ }
+ .console-desktop #window-svyaz:has(>#svyaz-root:not([hidden]))>.titlebar>.window-controls{
+  display:flex;position:static;flex:0 0 auto;flex-wrap:nowrap;gap:1px;
+ }
+ .console-desktop #window-svyaz:has(>#svyaz-root:not([hidden]))>.titlebar>.window-controls>button{
+  position:static!important;inset:auto;width:var(--sv-touch-hit);height:var(--sv-touch-hit);
+  min-width:var(--sv-touch-hit)!important;min-height:var(--sv-touch-hit)!important;
+ }
+ .console-desktop #window-svyaz:has(>#svyaz-root:not([hidden]))>#overview-tabs{
+  position:static;inset:auto;height:auto!important;min-height:0!important;padding-block:0;
+ }
+ .console-desktop #window-svyaz:has(>#svyaz-root:not([hidden]))>#overview-tabs>button{
+  height:var(--sv-touch-hit);min-height:var(--sv-touch-hit)!important;padding-block:0;
+ }
+ .console-desktop #window-svyaz #svyaz-root .sv-auth-wrap{
+  padding-block:clamp(6px,2vh,14px);
+ }
+}
+@media (orientation:landscape) and (min-width:600px) and (max-width:950px) and (max-height:480px) and (pointer:coarse){
+ .console-desktop #window-svyaz #svyaz-root .sv-form[data-form=login]{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:var(--screen-pad);
+ }
+ .console-desktop #window-svyaz #svyaz-root .sv-form[data-form=login]>:not(label){grid-column:1/-1}
+ .console-desktop #window-svyaz #svyaz-root .sv-form[data-form=login] input{
+  min-width:0;min-height:var(--sv-touch-hit)!important;
+ }
+}
+@media (max-width:700px), (max-width:950px) and (pointer:coarse){
+ @container (max-width:218px){
+  .console-desktop #window-svyaz:has(>#svyaz-root:not([hidden]))>.titlebar>span{
+   font-size:min(19px,calc(21px / var(--ui-scale,1)))!important;
+   text-overflow:ellipsis;
+  }
+  .console-desktop #window-svyaz:has(>#svyaz-root:not([hidden]))>.titlebar>span::before{display:none}
+ }
+}
