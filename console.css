@@ -1722,3 +1722,19 @@ body.console-desktop{--header-height:calc(16 * var(--screen-dot));--terminal-ste
   inset-inline:0;width:max-content;margin-inline:auto;translate:none;
  }
 }
+
+/* Match the category counter and caption to the same matrix step as the app names. */
+@media not all and (forced-colors:active){
+ .console-desktop #console-shell #app-catalog .catalog-group summary,
+ .console-desktop #console-shell #app-catalog .catalog-group summary span{
+  font-size:var(--shell-matrix-size)!important;
+ }
+ @media(orientation:landscape) and (max-width:950px) and (pointer:coarse){
+  @container catalog-list (max-width:110px){
+   .console-desktop #console-shell #app-catalog .catalog-group summary,
+   .console-desktop #console-shell #app-catalog .catalog-group summary span{
+    font-size:clamp(10px,calc(18px / var(--ui-scale,1)),15px)!important;
+   }
+  }
+ }
+}
