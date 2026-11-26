@@ -2527,3 +2527,26 @@ html[data-makson-pixel-screen] {filter:none!important}
   outline:2px solid #b4facc;outline-offset:-4px;
  }
 }
+
+/* The disclosure stays native and keyboard-operable; only its glyph changes. */
+@supports (mask-image:url("x")){
+@media (forced-colors:none){
+ .console-desktop #console-shell #app-catalog .catalog-group>summary::before{
+  content:"";display:inline-block;flex:0 0 auto;
+  inline-size:clamp(8px,calc(14px / var(--ui-scale,1)),14px);
+  block-size:clamp(8px,calc(14px / var(--ui-scale,1)),14px);
+  background:#96eeb3;
+  mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8' shape-rendering='crispEdges'%3E%3Cpath d='M0 1h3v1h5v6H0zm1 2v4h6V3z' fill-rule='evenodd'/%3E%3C/svg%3E") center/contain no-repeat;
+ }
+ .console-desktop #console-shell #app-catalog .catalog-group[open]>summary::before{
+  content:"";
+  mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8' shape-rendering='crispEdges'%3E%3Cpath d='M0 1h3v1h4v2h1v4H0zm1 2v2h1V4h4V3zm2 2-1 2h5V5z' fill-rule='evenodd'/%3E%3C/svg%3E");
+ }
+}
+@media (forced-colors:none) and (orientation:landscape) and (max-width:950px) and (pointer:coarse){
+ @container catalog-list (max-width:148px){
+  .console-desktop #console-shell #app-catalog .catalog-group>summary{gap:1px}
+  .console-desktop #console-shell #app-catalog .catalog-group>summary::before{inline-size:1ch;block-size:1ch}
+ }
+}
+}
