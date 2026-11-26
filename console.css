@@ -1573,3 +1573,13 @@ body.console-desktop{--header-height:calc(16 * var(--screen-dot));--terminal-ste
   }
  }
 }
+
+/* With an app open on a portrait phone, all catalog entries share one swipe lane. */
+@media(orientation:portrait) and (max-width:700px), (orientation:portrait) and (max-width:950px) and (pointer:coarse){
+ .console-desktop.has-open-windows #app-catalog{
+  flex-direction:row;overscroll-behavior-x:contain;
+ }
+ .console-desktop.has-open-windows #app-catalog .catalog-items{
+  flex:0 0 auto;
+ }
+}
