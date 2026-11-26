@@ -361,6 +361,60 @@ function attachScreenPreference(initial){
  document.getElementById("reset-settings")?.addEventListener("click",()=>{if(requested)set(false);});
 }
 
+// Probe real SVG pixels rather than relying on CSS.supports or guessing
+// from an iPhone label. Apple ports can choose a different rendering path.
+async function chooseDisplacementEncoding(physical){
+ const defaultEncoding=null, size=physical*12, height=physical*4;
+ const tile=document.createElement("canvas");tile.width=tile.height=physical;
+ const miniature=document.createElement("canvas");miniature.width=size;miniature.height=height;
+ const tileContext=tile.getContext("2d"), output=miniature.getContext("2d",{willReadFrequently:true});
+ if(!tileContext||!output)return defaultEncoding;
+ const palette=["#f00","#00f","#0f0","#ff0","#000","#f0f","#0ff"];
+ let stripes="";
+ for(let x=0;x<size;x++)stripes+=`<rect x="${x}" width="1" height="${height}" fill="${palette[x%palette.length]}"/>`;
+ const score=async neg=>{
+  const data=tileContext.createImageData(physical,physical);
+  fillDisplacementTile(data,physical,neg);
+  tileContext.putImageData(data,0,0);
+  const src=`<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${height}"><defs><filter id="probe" x="0" y="0" width="${size}" height="${height}" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feImage href="${tile.toDataURL()}" x="0" y="0" width="${physical}" height="${physical}" result="matrix"/><feTile in="matrix" result="grid"/><feDisplacementMap in="SourceGraphic" in2="grid" scale="${physical}" xChannelSelector="R" yChannelSelector="G"/></filter></defs><g style="filter:url(#probe)">${stripes}</g></svg>`;
+  const img=new Image();
+  await new Promise((resolve,reject)=>{
+   const timer=setTimeout(reject,900);
+   img.onload=()=>{clearTimeout(timer);resolve();};
+   img.onerror=()=>{clearTimeout(timer);reject();};
+   img.src="data:image/svg+xml,"+encodeURIComponent(src);
+  });
+  output.clearRect(0,0,size,height);output.drawImage(img,0,0);
+  const values=output.getImageData(0,physical*2,size,1).data;
+  let uniform=0;const visible=new Set();
+  for(let x=physical;x<size-physical;x+=physical){
+   const k=x*4, sample=Array.from(values.slice(k,k+4)).join();
+   if(values[k+3]!==255)continue;
+   visible.add(sample);
+   if(Array.from({length:physical},(_,i)=>sample===Array.from(values.slice(k+4*i,k+4*i+4)).join()).every(Boolean))uniform++;
+  }
+  return visible.size>2?uniform:0;
+ };
+ try{
+  // The scratch canvas is reused sequentially; these images never enter the page.
+  const standard=await score(false), signed=await score(true);
+  if(Math.max(standard,signed)!==10||standard===signed)return defaultEncoding;
+  return signed>standard;
+ }catch{return defaultEncoding;}
+}
+
+function fillDisplacementTile(bytes,physical,negativeBias){
+ const center=Math.floor(physical/2);
+ const offset=i=>{
+  const delta=center-i;
+  const signed=negativeBias&&delta<0?delta-1:delta;
+  return Math.round(255*(.5+signed/physical));
+ };
+ for(let y=0;y<physical;y++)for(let x=0;x<physical;x++){
+  bytes.data.set([offset(x),offset(y),128,255],4*(y*physical+x));
+ }
+}
+
 function installWholeScreenRaster(){
  const root=document.documentElement, ns="http://www.w3.org/2000/svg", step=2;
  const ios=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
@@ -387,6 +441,7 @@ function installWholeScreenRaster(){
  style.textContent='html[data-makson-pixel-screen]{filter:url("#makson-screen-raster")}';
  document.head.append(style);document.body.append(svg);
  let factor=0, frame=0, pendingImage=null, densityWatch=null, usable=false, enabled=true;
+ let negativeBias=mobileWebKit, calibrated=!mobileWebKit;
  const apply=()=>{
   if(enabled&&usable&&!forced.matches&&!contrast.matches&&!document.fullscreenElement)
    root.setAttribute("data-makson-pixel-screen","");
@@ -398,25 +453,15 @@ function installWholeScreenRaster(){
   const physical=Math.max(2,Math.round(dpr*step)), pitch=physical/dpr;
   filter.setAttribute("width",Math.ceil(innerWidth/pitch)*pitch);
   filter.setAttribute("height",Math.ceil(innerHeight/pitch)*pitch);
+  if(!calibrated)return;
   if(dpr===factor)return;
   factor=dpr;
   densityWatch?.removeEventListener("change",schedule);
   densityWatch=matchMedia(`(resolution: ${dpr}dppx)`);
   densityWatch.addEventListener("change",schedule,{once:true});
   surface.width=surface.height=physical;
-  const bytes=ctx.createImageData(physical,physical), center=Math.floor(physical/2);
-  // Encode integer device-pixel offsets, not half-texel offsets. The latter
-  // introduce a second sample and make every other dot visibly softer.
-  const offset=i=>{
-   const delta=center-i;
-   // WebKit's software renderer truncates negative displacement towards zero
-   // after adding 0.5. Bias only the negative samples back into the same cell.
-   const signed=mobileWebKit&&delta<0?delta-1:delta;
-   return Math.round(255*(.5+signed/physical));
-  };
-  for(let y=0;y<physical;y++)for(let x=0;x<physical;x++){
-   bytes.data.set([offset(x),offset(y),128,255],4*(y*physical+x));
-  }
+  const bytes=ctx.createImageData(physical,physical);
+  fillDisplacementTile(bytes,physical,negativeBias);
   ctx.putImageData(bytes,0,0);
   const url=surface.toDataURL();
   const image=new Image();pendingImage=image;
@@ -435,6 +480,11 @@ function installWholeScreenRaster(){
  addEventListener("resize",schedule,{passive:true});
  document.addEventListener("fullscreenchange",apply);
  for(const preference of [forced,contrast])preference.addEventListener("change",apply);
- sync();
+ if(mobileWebKit){
+  chooseDisplacementEncoding(Math.max(2,Math.round((window.devicePixelRatio||1)*step))).then(choice=>{
+   if(choice!==null)negativeBias=choice;
+   calibrated=true;schedule();
+  });
+ }else sync();
  return value=>{enabled=value;apply();};
 }
