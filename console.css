@@ -1356,3 +1356,30 @@ body.console-desktop{--header-height:calc(16 * var(--screen-dot));--terminal-ste
   }
  }
 }
+
+/* Leave a usable flight area on short and narrow touch screens at large UI scales. */
+@media (max-width:480px), (max-width:960px) and (max-height:500px){
+ .console-desktop #window-game .game-toolbar{
+  min-height:0;gap:4px;padding:4px 6px;
+ }
+ .console-desktop #window-game:not(.racing):has(#exit-race[hidden]):not(:has(#room-info:not([hidden]))) .game-toolbar{display:none}
+ .console-desktop #window-game.racing .game-toolbar>span{display:none}
+ .console-desktop #window-game .game-toolbar>div{
+  width:min(100%,420px);display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:4px;
+ }
+ .console-desktop #window-game .game-toolbar button{
+  min-width:0;--ui-text-min:max(14px,calc(18px / var(--ui-scale,1)));min-height:max(26px,calc(44px / var(--ui-scale,1)));
+  padding:2px 4px;white-space:normal;overflow-wrap:anywhere;
+ }
+ .console-desktop #window-game .window-status{display:none}
+ .console-desktop #window-game.racing:has(#resume-game:not([hidden])) #pause-game{display:none}
+ .console-desktop #window-game.racing:has(#resume-game:not([hidden])) #exit-race{grid-column:2}
+ .console-desktop #window-game.racing:has(#resume-game:not([hidden])) :is(.game-hud,.flight-stats,.boost-meter,.flight-touch,.touch-hint){visibility:hidden}
+ .console-desktop #window-game.racing #game-overlay:has(#resume-game:not([hidden])){padding:4px;gap:4px}
+ .console-desktop #window-game.racing #game-overlay:has(#resume-game:not([hidden])) :is(h2,.lobby-ship,#game-overlay-text){display:none}
+ .console-desktop #window-game.racing #resume-game{
+  max-width:100%;min-height:max(26px,calc(44px / var(--ui-scale,1)));
+  padding:3px 12px;white-space:normal;
+  background:#0b1a10!important;color:#c4f5ce!important;border:1px solid #42624a!important;box-shadow:none;text-shadow:none;
+ }
+}
