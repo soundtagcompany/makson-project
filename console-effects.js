@@ -1,9 +1,9 @@
-// Native interactive UI, with a shared low-resolution display pass when supported.
-// Keep focused editable fields, live video and fullscreen output unfiltered.
+// One moving focus frame per document. Text, forms and video render at native resolution.
+// Only the decorative canvas and pixel icons provide low-resolution artwork.
 export function attachConsoleEffects(settings){
  const reduced=()=>!settings.motion||matchMedia('(prefers-reduced-motion: reduce)').matches;
  installConsoleLife(settings);
- if(new URLSearchParams(location.search).get("native")!=="1")installWholeScreenRaster();
+ // Keep experimental resampling disabled: it removes strokes from native text.
  let audio=null,noise=null,lastSwitch=-1,lastClick=-1;
  function unlock(){
   if(!settings.sound)return;
@@ -377,7 +377,7 @@ async function chooseDisplacementEncoding(physical){
  try{
   // The scratch canvas is reused sequentially; these images never enter the page.
   const standard=await score(false), signed=await score(true);
-  if(Math.max(standard,signed)!==10)return defaultEncoding;
+  if(Math.max(standard,signed)!==10||standard===signed)return defaultEncoding;
   return signed>standard;
  }catch{return defaultEncoding;}
 }
@@ -395,12 +395,10 @@ function fillDisplacementTile(bytes,physical,negativeBias){
 }
 
 function installWholeScreenRaster(){
- const root=document.documentElement, ns="http://www.w3.org/2000/svg";
- const handset=matchMedia("(max-width:950px) and (pointer:coarse)");
- const targetStep=()=>handset.matches?2:3;
+ const root=document.documentElement, ns="http://www.w3.org/2000/svg", step=2;
  const ios=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
  const chromium=/Chrom(?:e|ium)\/|Edg\/|OPR\//.test(navigator.userAgent);
- const appleWebKit=ios||(/AppleWebKit/.test(navigator.userAgent)&&!chromium);
+ const mobileWebKit=ios&&!chromium;
  const forced=matchMedia("(forced-colors: active)"), contrast=matchMedia("(prefers-contrast: more)");
  if(!CSS.supports("filter","url(#makson-screen-raster)"))return;
  const create=(tag,attrs={})=>{
@@ -412,44 +410,31 @@ function installWholeScreenRaster(){
   style:"position:absolute;width:0;height:0;overflow:hidden;pointer-events:none"});
  const filter=create("filter",{id:"makson-screen-raster",filterUnits:"userSpaceOnUse",
   x:0,y:0,"color-interpolation-filters":"sRGB"});
- const tile=create("feImage",{x:0,y:0,width:2,height:2,preserveAspectRatio:"none",result:"matrix"});
- const displacement=create("feDisplacementMap",{in:"SourceGraphic",in2:"grid",scale:2,xChannelSelector:"R",yChannelSelector:"G"});
- filter.append(tile,create("feTile",{in:"matrix",result:"grid"}),displacement);
+ const tile=create("feImage",{x:0,y:0,width:step,height:step,preserveAspectRatio:"none",result:"matrix"});
+ const displacement=create("feDisplacementMap",{in:"videoSignal",in2:"grid",scale:step,xChannelSelector:"R",yChannelSelector:"G"});
+ filter.append(create("feGaussianBlur",{in:"SourceGraphic",stdDeviation:".30",edgeMode:"duplicate",result:"videoSignal"}),tile,create("feTile",{in:"matrix",result:"grid"}),displacement);
  svg.append(filter);
  const surface=document.createElement("canvas"), ctx=surface.getContext("2d");
  if(!ctx)return;
  const style=document.createElement("style");
- style.textContent=`html[data-makson-native-raster]{filter:url("#makson-screen-raster")}
- html[data-makson-native-raster] .console-desktop :is(h1,h2,h3,h4,h5,p,label,button,input,select,textarea,summary,small,span){-webkit-text-stroke:.50px currentColor}
- html[data-makson-native-raster] .console-desktop :is(.window :is(p,label,small,.tool-action,.xp-button,summary),.window .window-status){-webkit-text-stroke:.78px currentColor}
- html[data-makson-native-raster] .console-desktop :is(.window-controls>button,.window :is(input,select,textarea,.tool-action,.xp-button),#catalog-toggle){
-  outline:2px solid color-mix(in srgb,currentColor 28%,transparent);
-  outline-offset:-2px;
- }
- html[data-makson-native-raster] .console-desktop :is(button,summary,input,select,textarea):focus-visible{
-  outline:2px solid currentColor;outline-offset:-3px
- }`;
+ style.textContent='html[data-makson-pixel-screen]{filter:url("#makson-screen-raster")}';
  document.head.append(style);document.body.append(svg);
- let factor=0, lastStep=0, frame=0, pendingImage=null, densityWatch=null, usable=false;
- let negativeBias=false, calibrated=!appleWebKit;
- const editOrMedia=()=>{
-  if(document.activeElement?.matches('input:not([type=checkbox]):not([type=radio]),textarea,[contenteditable=true]'))return true;
-  return [...document.querySelectorAll('video')].some(v=>v.readyState>0&&v.getClientRects().length&&!v.closest('[hidden]'));
- };
+ let factor=0, frame=0, pendingImage=null, densityWatch=null, usable=false;
+ let negativeBias=mobileWebKit, calibrated=!mobileWebKit;
  const apply=()=>{
-  if(usable&&innerWidth*innerHeight*(devicePixelRatio||1)**2<12000000&&!forced.matches&&!contrast.matches&&!document.fullscreenElement&&!document.webkitFullscreenElement&&!editOrMedia())
-   root.setAttribute("data-makson-native-raster","");
-  else root.removeAttribute("data-makson-native-raster");
+  if(usable&&!forced.matches&&!contrast.matches&&!document.fullscreenElement)
+   root.setAttribute("data-makson-pixel-screen","");
+  else root.removeAttribute("data-makson-pixel-screen");
  };
  const sync=()=>{
   frame=0;
-  const dpr=window.devicePixelRatio||1, step=targetStep();
+  const dpr=window.devicePixelRatio||1;
   const physical=Math.max(2,Math.round(dpr*step)), pitch=physical/dpr;
   filter.setAttribute("width",Math.ceil(innerWidth/pitch)*pitch);
   filter.setAttribute("height",Math.ceil(innerHeight/pitch)*pitch);
   if(!calibrated)return;
-  if(dpr===factor&&step===lastStep){apply();return;}
-  factor=dpr;lastStep=step;
+  if(dpr===factor)return;
+  factor=dpr;
   densityWatch?.removeEventListener("change",schedule);
   densityWatch=matchMedia(`(resolution: ${dpr}dppx)`);
   densityWatch.addEventListener("change",schedule,{once:true});
@@ -472,15 +457,12 @@ function installWholeScreenRaster(){
  };
  const schedule=()=>{if(!frame)frame=requestAnimationFrame(sync);};
  addEventListener("resize",schedule,{passive:true});
- handset.addEventListener("change",schedule);
  document.addEventListener("fullscreenchange",apply);
- for(const event of ["focusin","focusout","windowfocus","windowhide","loadedmetadata","emptied","play","pause"])
-  document.addEventListener(event,()=>queueMicrotask(apply),true);
  for(const preference of [forced,contrast])preference.addEventListener("change",apply);
- if(appleWebKit){
-  chooseDisplacementEncoding(Math.max(2,Math.round((window.devicePixelRatio||1)*targetStep()))).then(choice=>{
-   if(choice===null)return;
-   negativeBias=choice;calibrated=true;schedule();
+ if(mobileWebKit){
+  chooseDisplacementEncoding(Math.max(2,Math.round((window.devicePixelRatio||1)*step))).then(choice=>{
+   if(choice!==null)negativeBias=choice;
+   calibrated=true;schedule();
   });
  }else sync();
 }
