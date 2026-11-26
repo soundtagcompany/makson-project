@@ -363,6 +363,9 @@ function attachScreenPreference(initial){
 
 function installWholeScreenRaster(){
  const root=document.documentElement, ns="http://www.w3.org/2000/svg", step=2;
+ const ios=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
+ const chromium=/Chrom(?:e|ium)\/|Edg\/|OPR\//.test(navigator.userAgent);
+ const mobileWebKit=ios&&!chromium;
  const forced=matchMedia("(forced-colors: active)"), contrast=matchMedia("(prefers-contrast: more)");
  if(!CSS.supports("filter","url(#makson-screen-raster)"))return;
  const create=(tag,attrs={})=>{
@@ -404,7 +407,13 @@ function installWholeScreenRaster(){
   const bytes=ctx.createImageData(physical,physical), center=Math.floor(physical/2);
   // Encode integer device-pixel offsets, not half-texel offsets. The latter
   // introduce a second sample and make every other dot visibly softer.
-  const offset=i=>Math.round(255*(.5+(center-i)/physical));
+  const offset=i=>{
+   const delta=center-i;
+   // WebKit's software renderer truncates negative displacement towards zero
+   // after adding 0.5. Bias only the negative samples back into the same cell.
+   const signed=mobileWebKit&&delta<0?delta-1:delta;
+   return Math.round(255*(.5+signed/physical));
+  };
   for(let y=0;y<physical;y++)for(let x=0;x<physical;x++){
    bytes.data.set([offset(x),offset(y),128,255],4*(y*physical+x));
   }
