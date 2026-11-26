@@ -1995,3 +1995,32 @@ body.console-desktop{--header-height:calc(16 * var(--screen-dot));--terminal-ste
  .console-desktop:not(.catalog-collapsed):not(.has-open-windows) .sphere-stage
  .desktop-icon:not(.node-selected):not(:focus-visible)>span:last-child{visibility:hidden}
 }
+
+/* On touch screens leave room for tool content rather than repeating its title. */
+@media(max-width:950px) and (pointer:coarse){
+ .console-desktop :is(#window-download,#window-convert) .tools-body>h2{
+  position:absolute;inline-size:1px;block-size:1px;overflow:hidden;
+  margin:0;padding:0;clip-path:inset(50%);white-space:nowrap;
+ }
+ .console-desktop :is(#window-download,#window-convert,#window-editor,#window-meme)>.titlebar{
+  --window-thumb-target:max(25px,calc(44px / var(--ui-scale,1)));
+ }
+ .console-desktop :is(#window-download,#window-convert,#window-editor,#window-meme)>.titlebar>.window-controls>button{
+  width:var(--window-thumb-target);height:var(--window-thumb-target);
+  min-width:var(--window-thumb-target)!important;min-height:var(--window-thumb-target)!important;
+ }
+ @container tool-window (max-width:240px){
+  .console-desktop :is(#window-download,#window-convert)>.titlebar>span{
+   min-height:var(--window-thumb-target);padding-inline-end:calc(var(--window-thumb-target) + 3px);
+  }
+ }
+}
+@media(orientation:landscape) and (max-width:950px) and (max-height:550px) and (pointer:coarse){
+ .console-desktop :is(#window-download,#window-convert,#window-editor,#window-meme)>.titlebar{
+  min-height:var(--window-thumb-target);height:auto;padding-block:3px;
+ }
+ .console-desktop #app-workspace>.tools-window>.tools-body{
+  padding-inline-start:calc(52px / var(--ui-scale,1));
+ }
+ .console-desktop .tools-window .tool-lead{margin-block-end:8px}
+}
