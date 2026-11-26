@@ -2318,3 +2318,17 @@ html[data-makson-pixel-screen] {filter:none!important}
     }
   }
 }
+
+/* Preserve the complete Cyrillic app name beside five full-size touch targets. */
+@media (max-width:360px) and (orientation:portrait) and (pointer:coarse) {
+  .console-desktop #window-svyaz:has(>#svyaz-root:not([hidden])) > .titlebar > span {
+    font-size:clamp(8px,calc(27px - 11px * var(--ui-scale,1)),16px)!important;
+    --ui-text-min:clamp(8px,calc(27px - 11px * var(--ui-scale,1)),16px);
+    -webkit-text-size-adjust:none;text-size-adjust:none;
+    line-height:1.1;
+    letter-spacing:0!important;
+    flex:1 1 0;
+  }
+  .console-desktop #window-svyaz:has(>#svyaz-root:not([hidden])) > .titlebar > span::before {display:none}
+  .console-desktop #window-svyaz > .titlebar #svyaz-unread:empty {display:none}
+}
