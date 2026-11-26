@@ -1486,3 +1486,27 @@ body.console-desktop{--header-height:calc(16 * var(--screen-dot));--terminal-ste
   }
  }
 }
+
+/* The clipboard and media tools must still be closable at large phone zoom. */
+@media(max-width:700px), (max-width:950px) and (pointer:coarse){
+ .console-desktop :is(#window-download,#window-convert){container:tool-window / inline-size}
+ @container tool-window (max-width:240px){
+  .console-desktop :is(#window-download,#window-convert) .tools-body>h2{
+   position:absolute;inline-size:1px;block-size:1px;overflow:hidden;
+   margin:0;padding:0;clip-path:inset(50%);white-space:nowrap;
+  }
+  .console-desktop :is(#window-download,#window-convert)>.titlebar{
+   position:relative;flex-wrap:wrap;height:auto!important;gap:3px;padding:3px;
+  }
+  .console-desktop :is(#window-download,#window-convert)>.titlebar>span{
+   flex:1 0 100%;min-height:38px;padding-inline-end:38px;box-sizing:border-box;
+   display:flex;align-items:center;white-space:normal;overflow-wrap:anywhere;
+  }
+  .console-desktop :is(#window-download,#window-convert)>.titlebar>.window-controls{
+   position:static;display:flex;flex:1 1 100%;min-width:0;flex-wrap:wrap;justify-content:flex-end;gap:2px;
+  }
+  .console-desktop :is(#window-download,#window-convert)>.titlebar>.window-controls>[data-action=close]{
+   position:absolute;inset:3px 3px auto auto;
+  }
+ }
+}
