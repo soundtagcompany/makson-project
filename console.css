@@ -1514,7 +1514,7 @@ body.console-desktop{--header-height:calc(16 * var(--screen-dot));--terminal-ste
 /* Keep all app-window controls reachable when zoom leaves a narrow titlebar. */
 @media(max-width:700px), (max-width:950px) and (pointer:coarse){
  .console-desktop :is(#window-editor,#window-meme,#window-buffer,#window-game,#window-importopoly,#window-pulse,#window-naval){
-  container:app-title-viewport / inline-size;
+  container:desktop-window app-title-viewport / inline-size;
  }
  @container app-title-viewport (max-width:240px){
   .console-desktop :is(#window-editor,#window-meme,#window-buffer,#window-game,#window-importopoly,#window-pulse,#window-naval)>.titlebar{
@@ -1609,5 +1609,22 @@ body.console-desktop{--header-height:calc(16 * var(--screen-dot));--terminal-ste
   .console-desktop #app-catalog .catalog-group summary span{
    display:block;margin:1px 0 0;text-align:end;font-size:inherit!important;
   }
+ }
+}
+
+/* The naval window must keep one scroll surface when its chrome takes the screen. */
+@media(max-width:700px), (max-width:950px) and (pointer:coarse){
+ .console-desktop #window-naval{overflow-x:hidden!important;overflow-y:auto!important;overscroll-behavior-y:contain}
+ .console-desktop #window-naval .naval-content{flex:0 0 auto;overflow:visible}
+}
+@media(max-width:700px), (max-width:950px) and (pointer:coarse){
+ .console-desktop #window-naval:not([data-phase=setup]) .naval-boards{
+  width:min(100%,360px);grid-template-columns:minmax(0,1fr);
+ }
+}
+@media(max-width:700px), (max-width:950px) and (pointer:coarse){
+ .console-desktop #window-naval .naval-grid{min-block-size:0;align-self:start}
+ .console-desktop #window-naval .naval-axis span{
+  min-width:0;min-height:0;line-height:1;font-size:clamp(9px,calc(16px / var(--ui-scale,1)),13px)!important;
  }
 }
