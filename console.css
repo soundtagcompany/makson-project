@@ -1544,3 +1544,32 @@ body.console-desktop{--header-height:calc(16 * var(--screen-dot));--terminal-ste
   }
  }
 }
+
+/* Keep the side handle clear of catalog actions on a landscape phone. */
+@media(orientation:landscape) and (max-width:950px) and (pointer:coarse){
+ .console-desktop #console-shell{
+  --catalog-handle-width:min(28px,calc(34px / var(--ui-scale,1)));
+ }
+ .console-desktop #console-shell>#catalog-toggle{width:var(--catalog-handle-width)}
+ .console-desktop:not(.catalog-collapsed) #app-catalog{
+  padding-inline-end:calc(var(--catalog-handle-width) + var(--screen-gap));
+ }
+ .console-desktop #catalog-groups{container:catalog-list / inline-size}
+ @container catalog-list (max-width:146px){
+  .console-desktop #app-catalog .catalog-row{flex-wrap:wrap}
+  .console-desktop #app-catalog .catalog-row>button:first-child{
+   flex:1 0 100%;min-height:34px;gap:4px;padding-inline:4px;
+  }
+  .console-desktop #app-catalog .catalog-row .catalog-caret{display:none}
+  .console-desktop #app-catalog .catalog-row .catalog-pip{
+   margin-inline-start:auto;min-height:30px;border:0;border-top:1px solid #153f273b;
+  }
+ }
+ @container catalog-list (max-width:110px){
+  .console-desktop #app-catalog .catalog-row .catalog-app-icon{display:none!important}
+  .console-desktop #app-catalog .catalog-row .catalog-app-name{
+   font-size:clamp(14px,calc(26px / var(--ui-scale,1)),18px)!important;
+   overflow-wrap:anywhere;
+  }
+ }
+}
