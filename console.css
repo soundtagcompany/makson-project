@@ -1510,3 +1510,37 @@ body.console-desktop{--header-height:calc(16 * var(--screen-dot));--terminal-ste
   }
  }
 }
+
+/* Keep all app-window controls reachable when zoom leaves a narrow titlebar. */
+@media(max-width:700px), (max-width:950px) and (pointer:coarse){
+ .console-desktop :is(#window-editor,#window-meme,#window-buffer,#window-game,#window-importopoly,#window-pulse,#window-naval){
+  container:app-title-viewport / inline-size;
+ }
+ @container app-title-viewport (max-width:240px){
+  .console-desktop :is(#window-editor,#window-meme,#window-buffer,#window-game,#window-importopoly,#window-pulse,#window-naval)>.titlebar{
+   --window-hit:calc(44px / var(--ui-scale,1));
+   position:relative;display:flex;flex-wrap:wrap;height:auto!important;gap:2px;padding:3px;
+  }
+  .console-desktop :is(#window-editor,#window-meme,#window-buffer,#window-game,#window-importopoly,#window-pulse,#window-naval)>.titlebar>span{
+   flex:1 0 100%;display:flex;align-items:center;min-width:0;min-height:var(--window-hit);
+   padding-inline-end:calc(var(--window-hit) + 3px);white-space:normal;overflow-wrap:anywhere;
+  }
+  .console-desktop :is(#window-editor,#window-meme,#window-buffer,#window-game,#window-importopoly,#window-pulse,#window-naval)>.titlebar>.window-controls{
+   position:static;display:flex;flex:1 1 100%;min-width:0;flex-wrap:wrap;justify-content:flex-end;gap:2px;
+  }
+  .console-desktop :is(#window-editor,#window-meme,#window-buffer,#window-game,#window-importopoly,#window-pulse,#window-naval)>.titlebar>.window-controls button{
+   width:var(--window-hit);height:var(--window-hit);
+   min-width:var(--window-hit)!important;min-height:var(--window-hit)!important;
+  }
+  .console-desktop :is(#window-editor,#window-meme,#window-buffer,#window-game,#window-importopoly,#window-pulse,#window-naval)>.titlebar>.window-controls>[data-action=close]{
+   position:absolute;inset:3px 3px auto auto;
+  }
+ }
+}
+@media(min-width:720px) and (max-width:950px) and (max-height:480px) and (orientation:landscape) and (pointer:coarse){
+ @container (max-width:550px){
+  .console-desktop #window-svyaz .overview-tabs{
+   position:static;inset:auto;z-index:auto;flex-shrink:0;
+  }
+ }
+}
