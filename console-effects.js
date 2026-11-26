@@ -5,7 +5,7 @@ export function attachConsoleEffects(settings){
  installConsoleLife(settings);
  const view=new URLSearchParams(location.search);
  if(view.get("raster")==="1"&&view.get("screen")!=="1")installRasterScreen();
- else attachScreenPreference(view.get("screen")==="1");
+ else if(view.get("screen")==="1")installWholeScreenRaster();
  let audio=null,noise=null,lastSwitch=-1,lastClick=-1;
  function unlock(){
   if(!settings.sound)return;
@@ -341,26 +341,7 @@ function installRasterScreen(){
 
 // Treat the composited UI as one pixel screen. Each physical pixel in the
 // repeating map samples the same coordinate within its logical screen cell.
-// Preview lives in the current URL, so a normal bookmark remains unchanged.
-function attachScreenPreference(initial){
- const controls=document.querySelector("#window-settings .screen-settings");
- let requested=initial,apply=initial?installWholeScreenRaster():null;
- if(!controls||!CSS.supports("filter","url(#makson-screen-raster)"))return;
- const row=document.createElement("label"),name=document.createElement("b"),toggle=document.createElement("input");
- row.className="setting";name.textContent="Пиксельный экран";toggle.type="checkbox";
- toggle.checked=requested;row.append(name,toggle);controls.append(row);
- function set(value){
-  if(value&&!apply)apply=installWholeScreenRaster();
-  requested=!!apply&&value;
-  apply?.(requested);toggle.checked=requested;
-  const url=new URL(location.href);
-  if(requested)url.searchParams.set("screen","1");else url.searchParams.delete("screen");
-  if(url.href!==location.href)history.replaceState(history.state,"",url);
- }
- toggle.addEventListener("change",()=>set(toggle.checked));
- document.getElementById("reset-settings")?.addEventListener("click",()=>{if(requested)set(false);});
-}
-
+// The explicit preview URL remains independent of the settings panel.
 // Probe real SVG pixels rather than relying on CSS.supports or guessing
 // from an iPhone label. Apple ports can choose a different rendering path.
 async function chooseDisplacementEncoding(physical){
@@ -440,10 +421,10 @@ function installWholeScreenRaster(){
  const style=document.createElement("style");
  style.textContent='html[data-makson-pixel-screen]{filter:url("#makson-screen-raster")}';
  document.head.append(style);document.body.append(svg);
- let factor=0, frame=0, pendingImage=null, densityWatch=null, usable=false, enabled=true;
+ let factor=0, frame=0, pendingImage=null, densityWatch=null, usable=false;
  let negativeBias=mobileWebKit, calibrated=!mobileWebKit;
  const apply=()=>{
-  if(enabled&&usable&&!forced.matches&&!contrast.matches&&!document.fullscreenElement)
+  if(usable&&!forced.matches&&!contrast.matches&&!document.fullscreenElement)
    root.setAttribute("data-makson-pixel-screen","");
   else root.removeAttribute("data-makson-pixel-screen");
  };
@@ -486,5 +467,4 @@ function installWholeScreenRaster(){
    calibrated=true;schedule();
   });
  }else sync();
- return value=>{enabled=value;apply();};
 }
