@@ -1311,3 +1311,48 @@ body.console-desktop{--header-height:calc(16 * var(--screen-dot));--terminal-ste
   min-width:0;white-space:normal;overflow-wrap:anywhere;
  }
 }
+
+/* Allow the wordmark to wrap when high UI zoom compresses the title slot.
+   The chat button keeps its name for assistive tech and its full touch target. */
+@media(max-width:700px), (max-width:950px) and (pointer:coarse){
+ .console-desktop .desktop-header{container-type:inline-size}
+ @container (max-width:218px){
+  .console-desktop .desktop-header h1,.console-desktop .desktop-header.has-login-hint h1{
+   white-space:normal;font-size:14px!important;line-height:1!important;
+  }
+  .console-desktop .desktop-header #chat-launcher{
+   min-width:44px;width:44px;padding-inline:0;position:relative;
+  }
+  .console-desktop .desktop-header #chat-launcher>span{
+   position:absolute;width:1px;height:1px;overflow:hidden;
+   clip-path:inset(50%);white-space:nowrap;
+  }
+  .console-desktop .desktop-header #svyaz-signin-hint{display:none}
+ }
+}
+
+/* Large console zoom must not put the chat's close button beyond the screen. */
+@media(max-width:700px), (max-width:950px) and (pointer:coarse){
+ .console-desktop #window-svyaz{container-type:inline-size}
+ @container (max-width:270px){
+  .console-desktop #window-svyaz>.titlebar{
+   flex-wrap:wrap;height:auto!important;gap:3px;padding:3px;
+  }
+  .console-desktop #window-svyaz>.titlebar>span{flex:1 0 100%}
+  .console-desktop #window-svyaz>.titlebar>.window-controls{
+   display:flex;flex:1 1 100%;min-width:0;flex-wrap:wrap;justify-content:flex-end;gap:2px;
+  }
+ }
+}
+
+@media(max-width:700px), (max-width:950px) and (pointer:coarse){
+ @container (max-width:192px){
+  .console-desktop #window-svyaz>.titlebar>span{
+   min-height:38px;padding-inline-end:38px;box-sizing:border-box;
+  }
+  .console-desktop #window-svyaz>.titlebar>.window-controls{position:static}
+  .console-desktop #window-svyaz>.titlebar>.window-controls>[data-action=close]{
+   position:absolute;inset:3px 3px auto auto;
+  }
+ }
+}
