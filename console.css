@@ -1595,3 +1595,19 @@ body.console-desktop{--header-height:calc(16 * var(--screen-dot));--terminal-ste
 .console-desktop #app-workspace.has-docked-apps>#sphere-stage{
  bottom:var(--console-dock-size);
 }
+
+/* Keep landscape group headings inside a very narrow, magnified catalog. */
+@media(orientation:landscape) and (max-width:950px) and (pointer:coarse){
+ @container catalog-list (max-width:110px){
+  .console-desktop #app-catalog .catalog-group summary{
+   display:block;position:relative;padding:3px 2px;overflow-wrap:anywhere;
+   font-size:clamp(10px,calc(18px / var(--ui-scale,1)),15px)!important;letter-spacing:-.035em;
+  }
+  .console-desktop #app-catalog .catalog-group summary::before{
+   position:absolute;inset-inline-start:2px;inset-block-end:3px;width:auto;font-size:1em;
+  }
+  .console-desktop #app-catalog .catalog-group summary span{
+   display:block;margin:1px 0 0;text-align:end;font-size:inherit!important;
+  }
+ }
+}
