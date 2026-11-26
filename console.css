@@ -1446,3 +1446,30 @@ body.console-desktop{--header-height:calc(16 * var(--screen-dot));--terminal-ste
   --ui-control-height:var(--short-race-target);padding-block:2px;
  }
 }
+
+/* Keep the terminal chrome flat. Pixel shapes belong to the icons and display,
+   not stacked borders on every control. Keyboard focus remains visible. */
+@media not all and (forced-colors:active){
+ .console-desktop #app-catalog .catalog-row,
+ .console-desktop :is(#console-settings,#chat-launcher),
+ :is(.console-desktop,.pip-desktop) .window .window-controls>button,
+ :is(.console-desktop,.pip-desktop) .window :is(.sv-primary,.tool-action,.xp-button,.meme-primary,.launch-button,.edit-tabs>button,.meme-toolbar>button),
+ :is(.console-desktop,.pip-desktop) #window-svyaz :is(.sv-form input,.sv-auth-links>button,.sv-compose textarea,.sv-compose-row>button){
+  clip-path:none;box-shadow:none!important;border-width:1px!important;border-radius:0;
+ }
+ .console-desktop #app-catalog .catalog-row{
+  border-color:transparent!important;border-bottom-color:#203c2a!important;
+  background-image:none!important;
+ }
+ .console-desktop #app-catalog .catalog-row.selected{
+  border-bottom-color:currentColor!important;
+ }
+ .console-desktop .desktop-header{box-shadow:none!important}
+ .console-desktop .desktop-header :is(#console-settings,#chat-launcher),
+ .console-desktop .desktop-header :is(#console-settings,#chat-launcher):is(:hover,[aria-expanded=true]){
+  border-color:transparent!important;box-shadow:none!important;
+ }
+ :is(.console-desktop,.pip-desktop) .window>.titlebar{
+  border-bottom-width:1px!important;box-shadow:none!important;
+ }
+}
