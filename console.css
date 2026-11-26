@@ -2511,3 +2511,19 @@ html[data-makson-pixel-screen] {filter:none!important}
   margin:0;min-width:0;
  }
 }
+
+/* A single green terminal surface; entries are text, not separate cards. */
+@media (forced-colors:none){
+ .console-desktop #app-catalog .catalog-row:not(.selected){
+  background:transparent!important;border-color:transparent!important;box-shadow:none!important;
+ }
+ .console-desktop #app-catalog .catalog-row:not(.selected)>button:first-child{
+  color:#96eeb3;
+ }
+ .console-desktop #app-catalog .catalog-row.selected{
+  border-color:transparent!important;
+ }
+ .console-desktop #app-catalog .catalog-row:focus-within{
+  outline:2px solid #b4facc;outline-offset:-4px;
+ }
+}
