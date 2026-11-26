@@ -71,3 +71,52 @@
 }
 .meme-root .meme-layout:has(#meme-editor:disabled){grid-template:minmax(0,1fr) / minmax(0,1fr)}
 .meme-root .meme-controls:has(#meme-editor:disabled){display:none}
+
+/* A phone uses one scroll surface; a fixed footer must not overlap the editor. */
+@media(max-width:950px) and (pointer:coarse){
+ .console-desktop #window-meme .meme-root{
+  overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;
+  --meme-thumb:calc(44px / var(--ui-scale,1));
+  --meme-space:calc(8px / var(--ui-scale,1));
+ }
+ .console-desktop #window-meme .meme-root .meme-layout{
+  display:flex;flex-direction:column;flex:none;min-height:0;
+ }
+ .console-desktop #window-meme .meme-root .meme-stage{
+  flex:none;min-height:calc(144px / var(--ui-scale,1));padding:var(--meme-space);
+  background-image:none;
+ }
+ .console-desktop #window-meme .meme-root .meme-empty{
+  padding:var(--meme-space);gap:var(--meme-space);width:100%;max-width:360px;
+ }
+ .console-desktop #window-meme .meme-root .meme-empty svg{
+  width:var(--meme-thumb);height:var(--meme-thumb);
+ }
+ .console-desktop #window-meme .meme-root .meme-empty p,
+ .console-desktop #window-meme .meme-root .meme-empty small,
+ .console-desktop #window-meme .meme-root .meme-file-name{display:none}
+ .console-desktop #window-meme .meme-root .meme-controls{overflow:visible;min-height:0;border-left:0;padding:var(--meme-space)}
+ .console-desktop #window-meme .meme-root .meme-footer,
+ .console-desktop #window-meme .meme-root .meme-toolbar{position:static;gap:var(--meme-space);padding:var(--meme-space)}
+ .console-desktop #window-meme .meme-root .meme-export{width:100%;flex-wrap:nowrap}
+ .console-desktop #window-meme .meme-root:has(#meme-editor:disabled) .meme-export{display:none}
+ .console-desktop #window-meme .meme-root :is(.meme-toolbar,.meme-footer,.meme-controls,.meme-empty) :is(button,label.meme-file-button,select,summary){
+  min-height:var(--meme-thumb)!important;padding-block:var(--meme-space);
+ }
+}
+@media(orientation:landscape) and (max-width:950px) and (max-height:550px) and (pointer:coarse){
+ .console-desktop #window-meme .meme-root>*{padding-inline-start:calc(51px / var(--ui-scale,1))}
+ .console-desktop #window-meme .meme-root .meme-controls,
+ .console-desktop #window-meme .meme-root .meme-stage{padding-inline-start:calc(51px / var(--ui-scale,1))}
+}
+@media(max-width:950px) and (pointer:coarse){
+ .console-desktop #window-meme .meme-root .meme-toolbar :is(button,.meme-file-button){
+  font-size:max(11px,calc(19px / var(--ui-scale,1)))!important;
+  min-width:0;padding-inline:var(--meme-space);line-height:1.25!important;
+ }
+}
+@media(orientation:landscape) and (max-width:950px) and (max-height:550px) and (pointer:coarse){
+ .console-desktop #window-meme .meme-root :is(.meme-toolbar,.meme-footer){
+  padding-inline-start:calc(51px / var(--ui-scale,1));
+ }
+}
