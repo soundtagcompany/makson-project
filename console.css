@@ -2024,3 +2024,52 @@ body.console-desktop{--header-height:calc(16 * var(--screen-dot));--terminal-ste
  }
  .console-desktop .tools-window .tool-lead{margin-block-end:8px}
 }
+
+/* Phone naval lobby: get to a match without scrolling past repeated headings. */
+@media(max-width:950px) and (pointer:coarse){
+ .console-desktop #console-shell #window-naval{
+  --naval-touch:calc(44px / var(--ui-scale,1));
+  --naval-touch-text:clamp(11px,calc(18px / var(--ui-scale,1)),18px); --ui-text-min:var(--naval-touch-text);
+ }
+ .console-desktop #console-shell #window-naval .naval-content{overflow-anchor:none}
+ .console-desktop #console-shell #window-naval .naval-menu-heading{
+  position:absolute;inline-size:1px;block-size:1px;overflow:hidden;
+  padding:0;margin:0;clip-path:inset(50%);white-space:nowrap;
+ }
+ .console-desktop #console-shell #window-naval .naval-orders{
+  min-height:0;gap:2px;margin:0;padding:calc(6px / var(--ui-scale,1)) calc(10px / var(--ui-scale,1));
+ }
+ .console-desktop #console-shell #window-naval :is(.naval-orders>strong,.naval-orders>span,.naval-toolbar>b,.naval-weapons>span){
+  font-size:var(--naval-touch-text)!important;line-height:1.27!important;letter-spacing:0;
+ }
+ .console-desktop #console-shell #window-naval .naval-weapons>span{min-width:0}
+ .console-desktop #console-shell #window-naval :is(.naval-toolbar,.naval-setup,.naval-weapons){
+  min-height:0;gap:calc(6px / var(--ui-scale,1));padding-block:calc(4px / var(--ui-scale,1));
+ }
+ .console-desktop #console-shell #window-naval :is(.naval-toolbar,.naval-setup,.naval-weapons)>button{
+  --ui-control-height:var(--naval-touch);font-size:var(--naval-touch-text)!important;line-height:1.15!important;
+  min-height:var(--naval-touch)!important;min-width:0;padding:3px 6px;
+ }
+ .console-desktop #console-shell #window-naval .naval-setup{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+ }
+ .console-desktop #console-shell #window-naval .naval-setup .launch-button{width:100%;grid-column:1/-1;margin:0}
+}
+@media(orientation:landscape) and (max-width:950px) and (max-height:550px) and (pointer:coarse){
+ .console-desktop #console-shell #window-naval>.titlebar{
+  height:auto;min-height:var(--naval-touch);padding-block:3px;
+ }
+ .console-desktop #console-shell #window-naval>.titlebar>.window-controls button{
+  width:var(--naval-touch);height:var(--naval-touch);
+  min-width:var(--naval-touch)!important;min-height:var(--naval-touch)!important;
+ }
+ .console-desktop #console-shell #window-naval :is(.naval-toolbar,.naval-orders,.naval-setup,.naval-weapons){
+  padding-inline-start:calc(51px / var(--ui-scale,1));
+ }
+}
+@media(max-height:650px) and (max-width:950px) and (pointer:coarse){
+ .console-desktop #console-shell #window-naval[data-phase=setup] #naval-detail{
+  position:absolute;inline-size:1px;block-size:1px;overflow:hidden;
+  padding:0;margin:0;clip-path:inset(50%);white-space:nowrap;
+ }
+}
