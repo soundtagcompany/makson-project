@@ -414,7 +414,7 @@ function installWholeScreenRaster(){
   x:0,y:0,"color-interpolation-filters":"sRGB"});
  const tile=create("feImage",{x:0,y:0,width:step,height:step,preserveAspectRatio:"none",result:"matrix"});
  const displacement=create("feDisplacementMap",{in:"videoSignal",in2:"grid",scale:step,xChannelSelector:"R",yChannelSelector:"G"});
- filter.append(create("feGaussianBlur",{in:"SourceGraphic",stdDeviation:".46",edgeMode:"duplicate",result:"videoSignal"}),tile,create("feTile",{in:"matrix",result:"grid"}),displacement);
+ filter.append(create("feGaussianBlur",{in:"SourceGraphic",stdDeviation:".30",edgeMode:"duplicate",result:"videoSignal"}),tile,create("feTile",{in:"matrix",result:"grid"}),displacement);
  svg.append(filter);
  const surface=document.createElement("canvas"), ctx=surface.getContext("2d");
  if(!ctx)return;
