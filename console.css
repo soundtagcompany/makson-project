@@ -1738,3 +1738,16 @@ body.console-desktop{--header-height:calc(16 * var(--screen-dot));--terminal-ste
   }
  }
 }
+
+/* Keep the clipboard action inside its window at large interface scales. */
+@container desktop-window (max-width:260px){
+ .console-desktop #window-buffer .field-heading{
+  display:flex;flex-wrap:wrap;align-items:center;gap:var(--screen-gap);
+ }
+ .console-desktop #window-buffer .field-heading>*{min-width:0;max-width:100%}
+ .console-desktop #window-buffer #copy-buffer{margin-inline-start:auto;white-space:normal}
+ .console-desktop #window-buffer .utility-intro>div{min-width:0;overflow-wrap:anywhere}
+ .console-desktop #window-buffer input[type=file]{max-width:100%;overflow:hidden}
+}
+
+.console-desktop #window-buffer .field-heading label{color:#ccebd2}
