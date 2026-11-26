@@ -1294,3 +1294,20 @@ body.console-desktop{--header-height:calc(16 * var(--screen-dot));--terminal-ste
   :is(.console-desktop,.pip-desktop) .window .window-controls>button[data-action=maximize]{--pixel-sprite:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%206%206%22%20shape-rendering%3D%22crispEdges%22%3E%3Cpath%20fill%3D%22white%22%20d%3D%22M0%200h1v1h-1ZM1%200h1v1h-1ZM4%200h1v1h-1ZM5%200h1v1h-1ZM0%201h1v1h-1ZM5%201h1v1h-1ZM0%204h1v1h-1ZM5%204h1v1h-1ZM0%205h1v1h-1ZM1%205h1v1h-1ZM4%205h1v1h-1ZM5%205h1v1h-1Z%22%2F%3E%3C%2Fsvg%3E")}
  }
 }
+
+/* Settings can be narrower than the handset when the console itself is enlarged.
+   Keep controls and labels inside that available width instead of clipping a row. */
+.console-desktop #window-settings .utility-body{container-type:inline-size;min-width:0}
+@container (max-width:205px){
+ .console-desktop #window-settings .console-zoom{
+  display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:4px;
+ }
+ .console-desktop #window-settings .console-zoom>span{grid-column:1/-1;margin:0}
+ .console-desktop #window-settings .console-zoom output{min-width:0}
+ .console-desktop #window-settings :is(.settings-fullscreen,.setting){
+  display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px;
+ }
+ .console-desktop #window-settings :is(.settings-fullscreen>span,.setting>b){
+  min-width:0;white-space:normal;overflow-wrap:anywhere;
+ }
+}
