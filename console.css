@@ -1473,3 +1473,16 @@ body.console-desktop{--header-height:calc(16 * var(--screen-dot));--terminal-ste
   border-bottom-width:1px!important;box-shadow:none!important;
  }
 }
+
+/* The readability layer must not reveal the original character underneath
+   a replacement icon. Keep the buttons' accessible names and hit targets. */
+@media not all and (forced-colors:active){
+ :is(.console-desktop,.pip-desktop) .window .window-controls>button:is([data-action=close],[data-action=minimize]){
+  --ui-text-min:0px;
+ }
+ @supports (mask-image:url("")){
+  :is(.console-desktop,.pip-desktop) .window .window-controls>button[data-action=maximize]{
+   --ui-text-min:0px;
+  }
+ }
+}
