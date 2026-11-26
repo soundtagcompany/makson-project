@@ -1900,3 +1900,33 @@ body.console-desktop{--header-height:calc(16 * var(--screen-dot));--terminal-ste
   left:calc(42px / var(--ui-scale,1))!important;
  }
 }
+
+/* Keep the first editor action and playback reachable on short touch screens. */
+@media(max-width:950px) and (max-height:650px) and (pointer:coarse){
+ .console-desktop #editor-root #edit-export{position:static;box-shadow:none}
+ .console-desktop #editor-root:has(#edit-empty:not([hidden])) :is(#edit-export,.edit-timeline-panel,.edit-inspector,.edit-transport){display:none}
+ .console-desktop #editor-root .edit-panel-head{height:auto;min-height:36px;flex-wrap:wrap}
+ .console-desktop #editor-root .edit-panel-head>*{min-width:0;overflow-wrap:anywhere}
+ .console-desktop #editor-root .edit-timeline-panel output{white-space:normal}
+ .console-desktop #editor-root .edit-stage:has(#edit-empty:not([hidden])){
+  min-height:0;height:auto;overflow:visible;
+ }
+ .console-desktop #editor-root #edit-empty:not([hidden]){
+  position:relative;inset:auto;padding:8px;min-height:80px;
+ }
+ .console-desktop #editor-root #edit-empty>svg{display:none}
+ .console-desktop #editor-root #edit-open{max-inline-size:100%;white-space:normal}
+}
+@media(orientation:landscape) and (max-width:950px) and (max-height:500px) and (pointer:coarse){
+ .console-desktop #editor-root .edit-preview:has(#edit-empty[hidden]) .edit-transport{order:-1;padding-inline-start:34px}
+ .console-desktop #editor-root :is(.edit-preview>.edit-panel-head,#edit-export,.edit-tabs,.edit-status,.edit-timeline-panel>.edit-panel-head){padding-inline-start:34px}
+}
+@media(max-width:400px) and (max-height:650px) and (pointer:coarse){
+ .console-desktop #editor-root .edit-transport{
+  --ui-control-height:calc(44px / var(--ui-scale,1) / .8);
+  height:auto;min-height:var(--ui-control-height);flex-wrap:wrap;gap:4px;
+ }
+ .console-desktop #editor-root .edit-transport button{
+  width:var(--ui-control-height);height:var(--ui-control-height);padding:0;
+ }
+}
