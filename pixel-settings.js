@@ -42,11 +42,19 @@ export function makeText(bitmap,ctx){
   }
   ctx.drawImage(sprite,x,y);
  }
- function wrap(value,available,small){
+ function wrap(value,available,small,breakWords=false){
   const lines=[];
   for(const input of value.split('\n')){
    let line='';
    for(const word of input.split(' ')){
+    if(breakWords&&textWidth(word,small)>available){
+     if(line){lines.push(line);line='';}
+     for(const letter of word){
+      if(line&&textWidth(line+letter,small)>available){lines.push(line);line='';}
+      line+=letter;
+     }
+     continue;
+    }
     const next=line?line+' '+word:word;
     if(line&&textWidth(next,small)>available){lines.push(line);line=word;}
     else line=next;
@@ -55,11 +63,11 @@ export function makeText(bitmap,ctx){
   }
   return lines;
  }
- function text(value,b,{center=false,color='#9cdeb4',pad=0,flow=false,compact=false}={}){
+ function text(value,b,{center=false,color='#9cdeb4',pad=0,flow=false,compact=false,breakWords=false}={}){
   const available=Math.max(1,b.r-b.l-2*pad);
-  let small=compact,lines=wrap(value,available,small);
+  let small=compact,lines=wrap(value,available,small,breakWords);
   if(!small&&(lines.some(line=>textWidth(line,small)>available)||lines.length*9-1>b.b-b.t-2)){
-   small=true;lines=wrap(value,available,true);
+   small=true;lines=wrap(value,available,true,breakWords);
   }
   const step=small?7:9,actual=lines.length*step-(small?2:1);
   const start=flow?b.t+pad:Math.round((b.t+b.b-actual)/2);
@@ -67,7 +75,8 @@ export function makeText(bitmap,ctx){
   lines.forEach((line,i)=>ink(line,center?Math.round((b.l+b.r-textWidth(line,small))/2):b.l+pad,start+i*step,color,small));
   ctx.restore();
  }
- return {text};
+ const compactHeight=(value,available)=>Math.max(0,wrap(value,Math.max(1,available),true,true).length*7-2);
+ return {text,compactHeight};
 }
 const SETTINGS_CSS=`
 body.matrix-settings-active #window-settings{
@@ -465,7 +474,7 @@ body.matrix-tool #console-shell #app-workspace .matrix-tool-window .tools-body :
  padding:0;margin:0 0 calc(3 * var(--mt))!important;border:0;
 }
 body.matrix-tool #console-shell #app-workspace .matrix-tool-window .tools-body p{
- margin:0 0 calc(3 * var(--mt))!important;min-height:calc(9 * var(--mt));font:500 calc(5 * var(--mt)) / calc(8 * var(--mt)) ConsoleMono,monospace!important;
+ margin:0 0 calc(3 * var(--mt))!important;min-height:var(--matrix-copy-min,calc(9 * var(--mt)));font:500 calc(5 * var(--mt)) / calc(8 * var(--mt)) ConsoleMono,monospace!important;
  overflow-wrap:anywhere;
 }
 body.matrix-tool #console-shell #app-workspace .matrix-tool-window .tools-body .tool-drop{
@@ -993,13 +1002,26 @@ body.matrix-tool #window-importopoly.matrix-tool-window>#importopoly-frame{
    const box=(b,edge,fillColor)=>{fill(b,edge);fill(inset(b,1),fillColor)};
    const hot=el=>el.matches(':hover,:focus-within');
    const elText=el=>[...el.childNodes].filter(n=>n.nodeType===3).map(n=>n.textContent).join(' ').trim();
-   function words(value,b,{primary=false,center=false,full=false,quiet=false}={}){
+   function words(value,b,{primary=false,center=false,full=false,quiet=false,breakWords=false}={}){
     let name=value.trim().replace(/[\u00a0\u202f]/g,' ').toUpperCase(),max=b.r-b.l-2;
     if(primary&&bitmap.compactWidth(name)>max){
      let s='';for(const ch of name){if(bitmap.compactWidth(s+ch+'…')>max)break;s+=ch;}
      name=s+'…';
     }
-    font.text(name,b,{center,pad:1,compact:!full,color:quiet?colors.muted:colors.text});
+    font.text(name,b,{center,pad:1,compact:!full,breakWords,color:quiet?colors.muted:colors.text});
+   }
+   if(id==='download'||id==='convert'){
+    // The invisible DOM reserves space and scrolls, but its font wraps at a
+    // different column than the bitmap. Measure the actual rendered copy.
+    const layout=[];
+    for(const el of pane.querySelectorAll('p:not(.tool-lead)')){
+     if(el.closest('[hidden],details:not([open])')||!el.getClientRects().length)continue;
+     const b=bounds(el);
+     const value=el.textContent.trim().replace(/[\u00a0\u202f]/g,' ').toUpperCase();
+     const height=Math.max(9,font.compactHeight(value,b.r-b.l-2)+2)*pitch/zoom+'px';
+     if(el.style.getPropertyValue('--matrix-copy-min')!==height)layout.push([el,height]);
+    }
+    for(const [el,height] of layout)el.style.setProperty('--matrix-copy-min',height);
    }
    const tb=bounds(title),pb=chat||race||naval?{...bounds(pane),t:tb.b}:bounds(pane);
    if(pb.b<=pb.t||tb.b<=top){stop();return false;}
@@ -1665,7 +1687,7 @@ body.matrix-tool #window-importopoly.matrix-tool-window>#importopoly-frame{
      }else{
       const value=el.matches('.tool-lead')?(id==='convert'?'ФАЙЛ В НОВЫЙ ФОРМАТ':'ВИДЕО И АУДИО · YOUTUBE И TIKTOK'):
        media&&el.id==='meme-status'&&el.textContent.startsWith('Открой изображение')?'ФОТО ДО 20 МБ':el.textContent;
-      words(value,b,{center:media&&tag==='h2',full:['h3','h2','b','output'].includes(tag),quiet:!el.matches('.tool-status,h3'),primary:el.id==='convert-name'||el.matches('.tool-lead,.meme-file-name,#meme-status,output')});
+      words(value,b,{center:media&&tag==='h2',breakWords:tag==='p'&&!el.matches('.tool-lead')&&(id==='download'||id==='convert'),full:['h3','h2','b','output'].includes(tag),quiet:!el.matches('.tool-status,h3'),primary:el.id==='convert-name'||el.matches('.tool-lead,.meme-file-name,#meme-status,output')});
      }
      }finally{if(room)ctx.restore();}
     }
