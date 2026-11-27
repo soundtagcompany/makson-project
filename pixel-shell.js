@@ -46,7 +46,7 @@ const windows=[...document.querySelectorAll('.window[id^="window-"]')], allowed=
 const dock=document.querySelector('#console-dock'),contrast=matchMedia('(forced-colors:active)'),previousInert=new Map();
 const motion=matchMedia('(prefers-reduced-motion:reduce)');
 const settingsWin=document.querySelector('#window-settings'),bufferWin=document.querySelector('#window-buffer'),nav=root.querySelector('nav');
-let painter=null,buffer=null,activeSurface=null,revealStart=0,revealFrame=0;
+let painter=null,buffer=null,tools={},activeSurface=null,revealStart=0,revealFrame=0;
 function leaveSurface(){
  if(!activeSurface)return;
  const prior=activeSurface;activeSurface=null;nav.hidden=false;
@@ -57,6 +57,7 @@ function leaveSurface(){
 window.MaksonPixelApp=Object.freeze({
  hasSettings:()=>!!painter&&!contrast.matches,
  hasBuffer:()=>!!buffer&&!contrast.matches,
+ hasTools:id=>!!tools[id]&&!contrast.matches,
  paintSettings(frame){return activeSurface===painter&&painter&&this.paintApp(frame)==='settings';},
  paintApp(frame){
   if(!activeSurface)return '';
@@ -90,7 +91,7 @@ function sync(){
   didSchedule=false;
   const active=windows.filter(w=>w.isConnected&&!w.hidden);
   const target=active.length===1&&!dock?.childElementCount&&active[0].ownerDocument===document&&!document.fullscreenElement&&
-   !active[0].classList.contains('fullscreen-fallback')?(active[0]===settingsWin?painter:active[0]===bufferWin?buffer:null):null;
+   !active[0].classList.contains('fullscreen-fallback')?(active[0]===settingsWin?painter:active[0]===bufferWin?buffer:tools[active[0].id.slice(7)]):null;
   if(ready&&target&&!contrast.matches){
    show();
    if(activeSurface!==target){
@@ -157,6 +158,8 @@ script.onload=()=>{
    const bitmap=window.MaksonPreviewBitmap,ctx=root.querySelector('canvas').getContext('2d');
    painter=mod.createSettingsSurface(bitmap,ctx);painter?.watch(repaint);
    buffer=mod.createBufferSurface?.(bitmap,ctx);buffer?.watch(repaint);
+   tools=mod.createToolSurfaces?.(bitmap,ctx)??{};
+   for(const tool of Object.values(tools))tool?.watch(repaint);
   }
   catch(error){console.warn('Settings module unavailable',error);}
   sync();

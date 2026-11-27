@@ -272,7 +272,7 @@ function draw(buttons,focusKey){
  const rasterApp=app?.paintApp?app.paintApp(appFrame):app?.paintSettings?.(appFrame)?'settings':'';
  if(rasterApp){
   drawHeader(top);
-  if(rasterApp==='buffer')return;
+  if(rasterApp!=='settings')return;
   const win=document.querySelector('#window-settings');
   const title=anchor(win?.querySelector('.titlebar')),close=anchor(win?.querySelector('[data-action=close]'));
   if(title){

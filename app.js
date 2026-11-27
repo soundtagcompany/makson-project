@@ -54,7 +54,7 @@ function reveal(win,origin){
  if(!motionEnabled()||isPictureInPicture(win))return;
  win.getAnimations().forEach(a=>a.cancel());const panel=panelIds.has(win.id.slice(7));
  if(document.body.classList.contains('preview-native-home')){
-  if((win.id==='window-settings'&&window.MaksonPixelApp?.hasSettings?.())||(win.id==='window-buffer'&&window.MaksonPixelApp?.hasBuffer?.()))return;
+  if((win.id==='window-settings'&&window.MaksonPixelApp?.hasSettings?.())||(win.id==='window-buffer'&&window.MaksonPixelApp?.hasBuffer?.())||window.MaksonPixelApp?.hasTools?.(win.id.slice(7)))return;
   win.classList.add('window-opening');
   const wipe=win.animate([{clipPath:'inset(0 0 100% 0)'},{clipPath:'inset(0 0 0% 0)'}],
    {duration:230,easing:'cubic-bezier(.24,.81,.27,1)'});
