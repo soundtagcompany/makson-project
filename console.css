@@ -2657,3 +2657,43 @@ html[data-makson-pixel-screen] {filter:none!important}
   font-size:calc(15px / var(--ui-scale,1))!important;padding-inline:2px;
  }
 }
+
+/* Phone conversations: place the thread between a compact peer header and composer. */
+@media(max-width:950px) and (pointer:coarse){
+ @container (max-width:505px){
+  .console-desktop #window-svyaz #svyaz-chat .sv-has-dialog :is(.sv-back,.sv-attach,.sv-send,.sv-options>summary){
+   min-width:calc(44px / var(--ui-scale,1))!important;
+   min-height:calc(44px / var(--ui-scale,1))!important;
+  }
+  .console-desktop #window-svyaz #svyaz-chat .sv-has-dialog .sv-options>div{
+   top:100%;margin-top:2px;
+  }
+ }
+}
+@media(orientation:portrait) and (max-width:700px) and (pointer:coarse){
+ .console-desktop #window-svyaz[data-wide=false]:has(#svyaz-chat:not([hidden]) .sv-has-dialog)>#overview-tabs{display:none}
+ .console-desktop #window-svyaz #svyaz-chat .sv-has-dialog .sv-chat-head{
+  padding:4px 6px;gap:4px;min-height:0;
+ }
+ .console-desktop #window-svyaz #svyaz-chat .sv-has-dialog .sv-peer-actions>[data-social]{
+  font-size:12px!important;line-height:1.15!important;padding:2px 4px;
+ }
+}
+@media(orientation:landscape) and (max-width:950px) and (max-height:480px) and (pointer:coarse){
+ .console-desktop #window-svyaz #svyaz-chat .sv-has-dialog .sv-messages{gap:calc(5px / var(--ui-scale,1))}
+ .console-desktop #window-svyaz #svyaz-chat .sv-has-dialog .sv-message{
+  max-width:86%;padding:calc(4px / var(--ui-scale,1)) calc(8px / var(--ui-scale,1));
+ }
+ .console-desktop #window-svyaz #svyaz-chat .sv-has-dialog .sv-message:has(>p){
+  display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:8px;align-items:baseline;
+ }
+ .console-desktop #window-svyaz #svyaz-chat .sv-has-dialog .sv-message:has(>p)>.sv-message-from{
+  grid-column:1;grid-row:1;min-width:0;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+ }
+ .console-desktop #window-svyaz #svyaz-chat .sv-has-dialog .sv-message:has(>p)>footer{
+  grid-column:2;grid-row:1;margin:0;
+ }
+ .console-desktop #window-svyaz #svyaz-chat .sv-has-dialog .sv-message:has(>p)>p{
+  grid-column:1/-1;grid-row:2;
+ }
+}
