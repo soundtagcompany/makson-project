@@ -47,6 +47,59 @@ body.preview-chrome :is(#console-shell .window,#window-svyaz,#window-settings)>.
   color:var(--console-green,#96eeb3);letter-spacing:.02em;
  }
 }
+/* Keep at least one conversation on-screen on a short portrait phone at large UI scale. */
+@media (orientation:portrait) and (max-width:370px) and (max-height:680px) and (pointer:coarse){
+ body.preview-chrome #window-svyaz[data-account-state=member]:not(:fullscreen):not(.fullscreen-fallback){
+  --preview-sv-hit:calc(44px / var(--ui-scale,1));--preview-sv-gap:calc(4px / var(--ui-scale,1));
+ }
+ body.preview-chrome #window-svyaz[data-account-state=member]:not(:fullscreen):not(.fullscreen-fallback)>.titlebar{
+  height:auto!important;min-height:var(--preview-sv-hit)!important;
+  gap:var(--preview-sv-gap);padding:var(--preview-sv-gap);flex-wrap:nowrap;
+ }
+ body.preview-chrome #window-svyaz[data-account-state=member]:not(:fullscreen):not(.fullscreen-fallback)>.titlebar>span{
+  flex:1 1 0;min-width:0;min-height:0;padding-inline-end:0;white-space:nowrap;
+ }
+ body.preview-chrome #window-svyaz[data-account-state=member]:not(:fullscreen):not(.fullscreen-fallback)>.titlebar>.window-controls{
+  display:flex;position:static;flex:0 0 auto;flex-wrap:nowrap;gap:var(--preview-sv-gap);
+ }
+ body.preview-chrome #window-svyaz[data-account-state=member]:not(:fullscreen):not(.fullscreen-fallback)>.titlebar>.window-controls>button{
+  position:static!important;inset:auto;width:var(--preview-sv-hit);height:var(--preview-sv-hit);
+  min-width:var(--preview-sv-hit)!important;min-height:var(--preview-sv-hit)!important;
+ }
+ body.preview-chrome #window-svyaz[data-account-state=member]:not(:fullscreen):not(.fullscreen-fallback) #overview-tabs{
+  height:auto!important;min-height:0!important;padding-block:0;
+ }
+ body.preview-chrome #window-svyaz[data-account-state=member]:not(:fullscreen):not(.fullscreen-fallback) #overview-tabs>button{
+  --ui-control-height:var(--preview-sv-hit);--ui-text-min:calc(17px / var(--ui-scale,1));
+  height:var(--preview-sv-hit);min-height:var(--preview-sv-hit)!important;padding-block:0;
+ }
+ body.preview-chrome #window-svyaz[data-account-state=member]:not(:fullscreen):not(.fullscreen-fallback) #svyaz-chat :is(.sv-topline,.sv-search,.social-tabs){
+  --ui-text-min:calc(13px / var(--ui-scale,1));min-height:0;padding:var(--preview-sv-gap) calc(10px / var(--ui-scale,1));gap:var(--preview-sv-gap);
+ }
+ body.preview-chrome #window-svyaz[data-account-state=member]:not(:fullscreen):not(.fullscreen-fallback) #svyaz-chat .social-toolbar{padding:0;gap:var(--preview-sv-gap)}
+ body.preview-chrome #window-svyaz[data-account-state=member]:not(:fullscreen):not(.fullscreen-fallback) #svyaz-chat :is(.social-tabs,.sv-search,.sv-topline) :is(button,input){
+  --ui-control-height:var(--preview-sv-hit);--ui-text-min:calc(16px / var(--ui-scale,1));
+  min-height:var(--preview-sv-hit)!important;padding-block:0;
+ }
+ body.preview-chrome #window-svyaz[data-account-state=member]:not(:fullscreen):not(.fullscreen-fallback) #svyaz-chat .sv-topline .sv-identity{
+  flex:1;max-width:none;min-width:0;gap:calc(6px / var(--ui-scale,1));
+ }
+ body.preview-chrome #window-svyaz[data-account-state=member]:not(:fullscreen):not(.fullscreen-fallback) #svyaz-chat .sv-identity .sv-avatar{
+  width:calc(32px / var(--ui-scale,1));height:calc(32px / var(--ui-scale,1));flex:0 0 auto;
+ }
+ body.preview-chrome #window-svyaz[data-account-state=member]:not(:fullscreen):not(.fullscreen-fallback) #svyaz-chat .sv-identity small{--ui-text-min:calc(12px / var(--ui-scale,1))}
+ body.preview-chrome #window-svyaz[data-account-state=member]:not(:fullscreen):not(.fullscreen-fallback) #svyaz-chat .sv-contact{
+  --ui-control-height:calc(62px / var(--ui-scale,1));--ui-text-min:calc(15px / var(--ui-scale,1));
+  gap:calc(8px / var(--ui-scale,1));padding:calc(8px / var(--ui-scale,1));
+ }
+ body.preview-chrome #window-svyaz[data-account-state=member]:not(:fullscreen):not(.fullscreen-fallback) #svyaz-chat .sv-contact .sv-contact-avatar{
+  width:calc(34px / var(--ui-scale,1));height:calc(34px / var(--ui-scale,1));
+ }
+ body.preview-chrome #window-svyaz[data-account-state=member]:not(:fullscreen):not(.fullscreen-fallback) #svyaz-chat .sv-contact :is(time,small,.sv-contact-meta b){--ui-text-min:calc(12px / var(--ui-scale,1))}
+ body.preview-chrome #window-svyaz[data-account-state=member]:not(:fullscreen):not(.fullscreen-fallback) #svyaz-chat .sv-bottom{
+  --ui-text-min:calc(13px / var(--ui-scale,1));min-height:0;padding:var(--preview-sv-gap) calc(10px / var(--ui-scale,1));
+ }
+}
 @media(forced-colors:active){#preview-window-grid{display:none!important}}
 
 `;
@@ -156,6 +209,11 @@ function setupBitmapTitles(){
   link:['00111','00011','00101','11000','11100'],
   pip:['11111','10001','10111','10111','11111'],
  };
+ const digits={
+  0:'75557',1:'26227',2:'71247',3:'71317',4:'55711',5:'74617',
+  6:'74757',7:'71122',8:'75757',9:'75717','+':'02720'
+ };
+ const unreadLabel=document.querySelector('#svyaz-unread');
  const scope=':scope>.titlebar>.window-controls button';
  const buttonGroups=labels.map(({win})=>({win,strip:win.querySelector(':scope>.titlebar>.window-controls')})).filter(({strip})=>strip);
  const screen=document.createElement('canvas');screen.id='preview-window-grid';screen.setAttribute('aria-hidden','true');screen.hidden=true;
@@ -180,29 +238,60 @@ function setupBitmapTitles(){
    document.body.classList.toggle('preview-app-header',!!headerVisible);
    for(const {win,title,text,canvas} of labels){
     const active=!contrast.matches&&root.hidden&&!playing&&!moving.has(win)&&!win.hidden&&win.ownerDocument===document;
-    if(!active){title.removeAttribute('data-preview-grid-ink');continue;}
+    if(!active){
+     title.removeAttribute('data-preview-grid-ink');
+     if(title.contains(unreadLabel))unreadLabel.removeAttribute('data-preview-grid-badge');
+     continue;
+    }
     const barEl=title.parentElement, r=title.getBoundingClientRect(),bar=barEl.getBoundingClientRect();
     const gx=Math.max(0,Math.ceil((r.left+1)/pitch));
     const blockers=[...win.querySelectorAll(scope)].map(btn=>btn.getBoundingClientRect()).filter(b=>b.width&&b.height);
-    function fit(compact){
-     const width=compact?bitmap.compactWidth(text):bitmap.width(text),rows=compact?5:8;
-     const gy=Math.floor((r.top+(r.height-rows*pitch)/2)/pitch),top=gy*pitch,bottom=(gy+rows)*pitch;
-     // Use the free part of the bar, not the width of its clipped/flex-shrunk native label.
+    function clear(x,y,width,rows){
+     const top=y*pitch,bottom=(y+rows)*pitch;
      const limit=Math.min(bar.right-2,w*pitch,...blockers.filter(b=>b.bottom>top&&b.top<bottom).map(b=>b.left-2));
-     if(!r.width||!r.height||r.height+1<rows*pitch||gy<0||gy+rows>h||top<bar.top||bottom>bar.bottom||(gx+width)*pitch>limit)return null;
-     for(const y of [gy,gy+rows-1])for(const x of [gx,gx+Math.floor(width/2),gx+width-1]){
-      const hit=document.elementFromPoint((x+.5)*pitch,(y+.5)*pitch);
-      if(!barEl.contains(hit)||hit?.closest('button, a, input, select, [role=button], [role=menu]'))return null;
+     if(!r.width||!r.height||y<0||y+rows>h||top<bar.top||bottom>bar.bottom||(x+width)*pitch>limit)return false;
+     for(const yy of [y,y+rows-1])for(const xx of [x,x+Math.floor(width/2),x+width-1]){
+      const hit=document.elementFromPoint((xx+.5)*pitch,(yy+.5)*pitch);
+      if(!barEl.contains(hit)||hit?.closest('button, a, input, select, [role=button], [role=menu]'))return false;
      }
-     return {compact,width,rows,gy};
+     return true;
     }
-    const layout=fit(false)||fit(true);
+    function fit(compact,forceY=null){
+     const width=compact?bitmap.compactWidth(text):bitmap.width(text),rows=compact?5:8;
+     if(forceY===null&&r.height+1<rows*pitch)return null;
+     const gy=forceY??Math.floor((r.top+(r.height-rows*pitch)/2)/pitch);
+     return clear(gx,gy,width,rows)?{compact,width,rows,gy}:null;
+    }
+    const large=fit(false),small=fit(true);
+    let layout=large||small,badge=null;
+    const unread=title.contains(unreadLabel)?Number(unreadLabel.textContent.match(/\d+/)?.[0]):0;
+    if(unread>0){
+     const value=unread>99?'99+':String(unread),width=value.length*4-1;
+     for(const candidate of [large,small]){
+      if(!candidate)continue;
+      const x=gx+candidate.width+1,y=candidate.gy+Math.floor((candidate.rows-5)/2);
+      if(clear(x,y,width,5)){layout=candidate;badge={value,x,y};break;}
+     }
+     if(!badge){
+      const y=Math.round((bar.top+(bar.height-11*pitch)/2)/pitch);
+      const stacked=fit(true,y);
+      if(stacked&&clear(gx,y+6,width,5)){layout=stacked;badge={value,x:gx,y:y+6};}
+      else layout=null; // Keep the native title and unread number together if the bitmap would lose data.
+     }
+    }
+    if(title.contains(unreadLabel))unreadLabel.toggleAttribute('data-preview-grid-badge',!!badge);
     title.toggleAttribute('data-preview-grid-ink',!!layout);
     if(!layout)continue;
     const {compact,width:size,rows,gy}=layout;
     const color=getComputedStyle(title).getPropertyValue('--app-color').trim()||'#96eeb3';
     canvas.width=size;canvas.height=rows;
     (compact?bitmap.drawCompact:bitmap.draw)(canvas,text,color);ctx.drawImage(canvas,gx,gy);rendered=true;
+    if(badge){
+     ctx.fillStyle='#c8ff95';
+     [...badge.value].forEach((digit,i)=>[...digits[digit]].forEach((row,j)=>{
+      for(let k=0;k<3;k++)if(Number(row)&(4>>k))ctx.fillRect(badge.x+i*4+k,badge.y+j,1,1);
+     }));
+    }
    }
    // Replace ink only: the original button still owns sizing, hit targets, focus and actions.
    for(const {win} of buttonGroups)for(const button of win.querySelectorAll(scope)){
@@ -235,6 +324,7 @@ function setupBitmapTitles(){
   const headerChanges=new MutationObserver(draw);
   headerChanges.observe(header,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['aria-expanded','hidden','class']});
  }
+ if(unreadLabel)new MutationObserver(draw).observe(unreadLabel,{childList:true,subtree:true,characterData:true});
  const controls=new MutationObserver(draw);
  buttonGroups.forEach(({strip})=>{ro.observe(strip);controls.observe(strip,{subtree:true,childList:true,attributes:true,attributeFilter:['aria-pressed','hidden','style','class']});});
  for(const e of ['focusin','focusout','pointerover','pointerout','click','beforetoggle','toggle'])document.addEventListener(e,draw,true);
