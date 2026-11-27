@@ -436,7 +436,7 @@ body.matrix-buffer>.console-focus-frame{z-index:2147482499!important}
 export function createToolSurfaces(bitmap,ctx){
  const body=document.body,style=document.createElement('style');
  style.textContent=`
-body.matrix-tool #console-shell #app-workspace :is(.tools-window,.meme-window,.editor-window,.svyaz-window,.game-window).matrix-tool-window{
+body.matrix-tool #console-shell #app-workspace :is(.tools-window,.meme-window,.editor-window,.svyaz-window,.game-window,.naval-window).matrix-tool-window{
  position:fixed!important;inset:var(--mtop) 0 0!important;width:100%!important;max-width:none!important;
  height:calc(var(--viewport-height,100dvh) - var(--mtop))!important;max-height:none!important;
  min-height:0!important;margin:0!important;border:0!important;box-shadow:none!important;
@@ -501,8 +501,8 @@ body.matrix-tool #console-shell #app-workspace .matrix-tool-window .tools-body .
 body.matrix-tool #console-shell #app-workspace .matrix-tool-window .tools-body .tool-progress progress{
  display:block;width:100%;height:calc(4 * var(--mt));margin:0 0 calc(2 * var(--mt));
 }
-body.matrix-tool #console-shell #app-workspace :is(.tools-window,.meme-window,.editor-window,.svyaz-window,.game-window).matrix-tool-window .tools-body [hidden][hidden],
-body.matrix-tool #console-shell #app-workspace :is(.tools-window,.meme-window,.editor-window,.svyaz-window,.game-window).matrix-tool-window .tools-body :is(p:empty,details:not([open])>:not(summary)){
+body.matrix-tool #console-shell #app-workspace :is(.tools-window,.meme-window,.editor-window,.svyaz-window,.game-window,.naval-window).matrix-tool-window .tools-body [hidden][hidden],
+body.matrix-tool #console-shell #app-workspace :is(.tools-window,.meme-window,.editor-window,.svyaz-window,.game-window,.naval-window).matrix-tool-window .tools-body :is(p:empty,details:not([open])>:not(summary)){
  display:none!important;
 }
 body.matrix-tool #console-shell #app-workspace .matrix-tool-window .tools-body form>:is(.tool-note,.tool-details,h3,p){
@@ -726,18 +726,108 @@ body.console-desktop.matrix-tool #window-game.matrix-tool-window>.window-status:
   min-height:calc(44px / var(--ui-scale,1))!important;height:calc(44px / var(--ui-scale,1))!important;
  }
 }
+body.console-desktop.matrix-tool #console-shell #app-workspace #window-naval.matrix-tool-window{
+ inset:var(--mtop) 0 0!important;height:calc(var(--viewport-height,100dvh) - var(--mtop))!important;
+}
+body.console-desktop.matrix-tool #window-naval.matrix-tool-window :is(.titlebar,.naval-toolbar){
+ min-height:max(calc(16 * var(--mt)),calc(44px / var(--ui-scale,1)))!important;
+ flex:0 0 auto!important;padding-inline:calc(3 * var(--mt))!important;
+}
+body.console-desktop.matrix-tool #window-naval.matrix-tool-window>.titlebar button{
+ min-width:calc(44px / var(--ui-scale,1))!important;min-height:calc(44px / var(--ui-scale,1))!important;
+}
+body.console-desktop.matrix-tool #window-naval.matrix-tool-window .naval-content{
+ flex:1 1 0%!important;min-height:0!important;max-height:none!important;overflow:auto!important;scrollbar-width:none;
+}
+body.console-desktop.matrix-tool #window-naval.matrix-tool-window .naval-content :is(button:not(.naval-cell),input,summary){
+ min-height:max(calc(15 * var(--mt)),calc(44px / var(--ui-scale,1)))!important;
+}
+body.console-desktop.matrix-tool #window-naval.matrix-tool-window .naval-content input{
+ color:#d8f4ff!important;background:#0f2435!important;border-radius:0!important;
+}
+body.console-desktop.matrix-tool #window-naval.matrix-tool-window .naval-content :is(.naval-orders,.naval-toolbar,.naval-setup,.naval-weapons,.naval-online,.naval-log){
+ max-width:min(100%,calc(228 * var(--mt)))!important;margin-inline:auto!important;
+}
+body.console-desktop.matrix-tool #window-naval.matrix-tool-window .naval-menu-heading{
+ width:min(100%,calc(228 * var(--mt)));margin-inline:auto;
+}
+body.console-desktop.matrix-tool #window-naval.matrix-tool-window .naval-menu-heading h2{
+ position:static!important;inline-size:100%!important;block-size:auto!important;clip-path:none!important;min-height:calc(12 * var(--mt));
+}
+body.console-desktop.matrix-tool #window-naval.matrix-tool-window .naval-ocean{
+ display:none!important;
+}
+body.console-desktop.matrix-tool #window-naval.matrix-tool-window .naval-axis span{
+ min-height:calc(8 * var(--mt));
+}
+body.console-desktop.matrix-tool #window-naval.matrix-tool-window .naval-board-panel>header{
+ min-height:calc(12 * var(--mt));
+}
+body.console-desktop.matrix-tool #window-naval.matrix-tool-window .naval-chart{
+ grid-template-columns:calc(11 * var(--mt)) minmax(0,1fr)!important;
+ grid-template-rows:calc(9 * var(--mt)) minmax(0,1fr)!important;
+}
+body.console-desktop.matrix-tool #window-naval.matrix-tool-window :is(.naval-grid,.naval-axis-x){
+ width:100%;width:round(down,100%,calc(10 * var(--mt)))!important;
+ padding:0!important;border:0!important;gap:0!important;
+}
+body.console-desktop.matrix-tool #window-naval.matrix-tool-window .naval-axis-y{
+ height:100%;padding:0!important;align-self:start;
+}
+body.console-desktop.matrix-tool #window-naval.matrix-tool-window .naval-toolbar{
+ flex-wrap:nowrap!important;justify-content:space-between!important;
+}
+body.console-desktop.matrix-tool #window-naval.matrix-tool-window .naval-toolbar>b{
+ min-width:0;flex:1 1 auto;margin:0;white-space:nowrap;overflow:hidden;
+}
+body.console-desktop.matrix-tool #window-naval.matrix-tool-window .naval-toolbar button{flex:0 0 auto}
+body.console-desktop.matrix-tool #window-naval.matrix-tool-window>.window-status{
+ min-height:calc(9 * var(--mt))!important;height:calc(9 * var(--mt))!important;
+ flex:0 0 calc(9 * var(--mt))!important;padding:0!important;position:static!important;
+}
+body.console-desktop.matrix-tool #window-naval.matrix-tool-window[data-phase=setup] .naval-menu-heading{
+ position:static!important;inline-size:min(100%,calc(228 * var(--mt)))!important;block-size:auto!important;
+ padding:calc(3 * var(--mt))!important;margin:0 auto!important;clip-path:none!important;
+}
+body.console-desktop.matrix-tool #window-naval.matrix-tool-window .naval-menu-heading p{display:none}
+
+@media (orientation:landscape) and (max-height:480px) and (pointer:coarse){
+ body.console-desktop.matrix-tool #window-naval.matrix-tool-window{--ui-control-height:calc(44px / var(--ui-scale,1))}
+ body.console-desktop.matrix-tool #window-naval.matrix-tool-window .naval-toolbar button{
+  min-height:var(--ui-control-height)!important;
+ }
+}
 `;
  document.head.append(style);
  const toolsColors={page:'#020704',surface:'#08130d',input:'#0b1c12',edge:'#2d5840',text:'#b5eccc',muted:'#80ae91',on:'#76e6a7'};
  const font=makeText(bitmap,ctx);
- return Object.fromEntries(['convert','download','meme','editor','svyaz','game'].map(id=>{
-  const media=id==='meme',editor=id==='editor',chat=id==='svyaz',race=id==='game';
-  const colors=media?{page:'#090609',surface:'#170e16',input:'#241421',edge:'#673951',text:'#f6c2df',muted:'#bd8aa6',on:'#fd9fca'}:editor?{page:'#040a09',surface:'#0c1a15',input:'#13271e',edge:'#34604d',text:'#cbf5e2',muted:'#93b9a8',on:'#b6e777'}:chat?{page:'#050a09',surface:'#0a1713',input:'#10251b',edge:'#305a48',text:'#d1f3de',muted:'#91b5a5',on:'#8ce4b8'}:race?{page:'#090711',surface:'#151022',input:'#201630',edge:'#514067',text:'#edddff',muted:'#b8a7cb',on:'#bd9df8'}:toolsColors;
-  const win=document.getElementById('window-'+id),pane=chat||race?win:document.getElementById(media?'meme-root':editor?'editor-root':id+'-tool'),title=win?.querySelector('.titlebar');
+ return Object.fromEntries(['convert','download','meme','editor','svyaz','game','naval'].map(id=>{
+  const media=id==='meme',editor=id==='editor',chat=id==='svyaz',race=id==='game',naval=id==='naval';
+  const colors=media?{page:'#090609',surface:'#170e16',input:'#241421',edge:'#673951',text:'#f6c2df',muted:'#bd8aa6',on:'#fd9fca'}:editor?{page:'#040a09',surface:'#0c1a15',input:'#13271e',edge:'#34604d',text:'#cbf5e2',muted:'#93b9a8',on:'#b6e777'}:chat?{page:'#050a09',surface:'#0a1713',input:'#10251b',edge:'#305a48',text:'#d1f3de',muted:'#91b5a5',on:'#8ce4b8'}:race?{page:'#090711',surface:'#151022',input:'#201630',edge:'#514067',text:'#edddff',muted:'#b8a7cb',on:'#bd9df8'}:naval?{page:'#070e17',surface:'#0d1b2a',input:'#12263a',edge:'#28465b',text:'#d5f3ff',muted:'#96b6c8',on:'#83dce8'}:toolsColors;
+  const win=document.getElementById('window-'+id),pane=chat||race||naval?win:document.getElementById(media?'meme-root':editor?'editor-root':id+'-tool'),title=win?.querySelector('.titlebar');
   if(!win||!pane||!title)return [id,null];
   const field=race?win.querySelector('#race-canvas'):null;
+  const effectSource=naval?win.querySelector('#naval-fx'):null;
+  let effectLayer=null,effectContext=null,effectFrame=null;
+  if(effectSource){
+   effectLayer=document.createElement('canvas');effectLayer.hidden=true;
+   effectLayer.id='matrix-naval-effects';effectLayer.setAttribute('aria-hidden','true');
+   effectContext=effectLayer.getContext('2d');ctx.canvas.after(effectLayer);
+   effectSource.addEventListener('makson-naval-fx-frame',()=>{
+    if(!effectFrame||effectLayer.hidden||!effectContext)return;
+    const {w,h,pitch,top}=effectFrame,r=effectSource.getBoundingClientRect();
+    effectContext.clearRect(0,0,w,h);
+    if(!r.width||!r.height)return;
+    const x=Math.round(r.left/pitch),y=Math.round(r.top/pitch);
+    const cols=Math.round(r.right/pitch)-x,rows=Math.round(r.bottom/pitch)-y;
+    if(cols<=0||rows<=0)return;
+    effectContext.save();effectContext.beginPath();effectContext.rect(0,top,w,h-top);effectContext.clip();
+    effectContext.imageSmoothingEnabled=false;
+    effectContext.drawImage(effectSource,x,y,cols,rows);effectContext.restore();
+   });
+  }
   const clearRaceGrid=()=>{if(field){delete field.dataset.matrixWidth;delete field.dataset.matrixHeight;}};
-  const stop=()=>{win.classList.remove('matrix-tool-window');body.classList.remove('matrix-tool');if(race)clearRaceGrid();};
+  const stop=()=>{win.classList.remove('matrix-tool-window');body.classList.remove('matrix-tool');if(race)clearRaceGrid();if(effectLayer){effectLayer.hidden=true;effectFrame=null;effectContext?.clearRect(0,0,effectLayer.width,effectLayer.height);}};
   function paint({pitch,width:w,height:h,headerRows:top,active}){
    if(!active||win.hidden||win.ownerDocument!==document){stop();return false;}
    const zoom=Number(body.style.zoom)||1,cell=pitch/zoom+'px',offset=top*pitch/zoom+'px';
@@ -758,7 +848,7 @@ body.console-desktop.matrix-tool #window-game.matrix-tool-window>.window-status:
     }
     font.text(name,b,{center,pad:1,compact:!full,color:quiet?colors.muted:colors.text});
    }
-   const tb=bounds(title),pb=chat||race?{...bounds(pane),t:tb.b}:bounds(pane);
+   const tb=bounds(title),pb=chat||race||naval?{...bounds(pane),t:tb.b}:bounds(pane);
    if(pb.b<=pb.t||tb.b<=top){stop();return false;}
    fill({l:0,t:top,r:w,b:h},colors.page);
    fill({l:0,t:top,r:w,b:tb.b},colors.surface);
@@ -775,9 +865,9 @@ body.console-desktop.matrix-tool #window-game.matrix-tool-window>.window-status:
      const y=Math.floor((tb.t+tb.b)/2);
      if(l>=24){const b={l,r,t:y-4,b:y+4};box(b,colors.on,colors.input);words(n,b,{center:true});}
     }
-   }else if(race){
+   }else if(race||naval){
     const room={l:3,r:control.l-1,t:tb.t,b:tb.b};
-    words(bitmap.compactWidth(titleText)+3<=room.r-room.l?titleText:'ПОЛЁТ',room,{primary:true,full:true});
+    words(bitmap.compactWidth(titleText.toUpperCase())+3<=room.r-room.l?titleText:naval?'ФЛОТ':'ПОЛЁТ',room,{primary:true,full:true});
    }else words(titleText,{l:3,r:control.l-1,t:tb.t,b:tb.b},{full:true});
    for(const el of title.querySelectorAll('button')){
     const b=bounds(el),x=Math.floor((b.l+b.r)/2),y=Math.floor((b.t+b.b)/2);
@@ -806,6 +896,104 @@ body.console-desktop.matrix-tool #window-game.matrix-tool-window>.window-status:
       const image=bounds(bitmap);box({l:image.l-1,r:image.r+1,t:image.t-1,b:image.b+1},colors.edge,colors.page);
       ctx.clearRect(image.l,image.t,image.r-image.l,image.b-image.t);
      }
+    }
+    if(naval){
+     if(effectLayer){
+      if(effectLayer.width!==w)effectLayer.width=w;
+      if(effectLayer.height!==h)effectLayer.height=h;
+      const width=w*pitch+'px',height=h*pitch+'px';
+      if(effectLayer.style.width!==width)effectLayer.style.width=width;
+      if(effectLayer.style.height!==height)effectLayer.style.height=height;
+      effectLayer.hidden=false;effectFrame={w,h,pitch,top:tb.b};
+     }
+     const visible=el=>!!el&&!!el.getClientRects().length&&getComputedStyle(el).visibility!=='hidden';
+     const get=sel=>pane.querySelector(sel);
+     const show=(sel,fn)=>{const el=get(sel);if(visible(el))fn(el,bounds(el));};
+     const clipping=(b,fn)=>{
+      if(b.r<=b.l||b.b<=b.t)return;ctx.save();try{ctx.beginPath();ctx.rect(b.l,b.t,b.r-b.l,b.b-b.t);ctx.clip();fn()}finally{ctx.restore();}
+     };
+     const textOf=el=>el.innerText?.trim()||el.textContent.trim();
+     function drawNaval(el,b){
+      if(b.b<=pb.t||b.t>=pb.b||b.r<=b.l||b.t>=b.b)return;
+      const tag=el.localName;
+      if(el.matches('button,summary')){
+       const primary=el.matches('#naval-start,[aria-pressed=true]');
+       const active=primary&&!el.matches(':disabled');
+       box(b,active||hot(el)?colors.on:colors.edge,active?'#174354':colors.input);
+       const text=el.id==='naval-clear'?'СВОЙ ФЛОТ':textOf(el).replace(/^[↻↔↕]+\s*/, '').replace(/\s*→$/, '');
+       words(el.localName==='summary'?(el.parentElement.open?'− ':'+ ')+text:text,{...b,l:b.l+1},{primary:true,center:tag==='button',quiet:el.matches(':disabled')});
+      }else if(tag==='input'){
+       box(b,hot(el)?colors.on:colors.edge,colors.input);const a=inset(b,1);
+       ctx.clearRect(a.l,a.t,Math.max(0,a.r-a.l),Math.max(0,a.b-a.t));
+      }else words(textOf(el),b,{full:tag==='h2',primary:!el.matches('p,.naval-orders>span'),center:el.matches('h2,.naval-axis>span,.naval-result'),quiet:el.matches('p,small,.naval-orders>span')});
+     }
+     show('.naval-toolbar',(bar,b)=>{
+      fill(b,colors.surface);fill({...b,t:b.b-1},colors.edge);
+      const reset=bar.querySelector('button');
+      if(visible(reset))drawNaval(reset,bounds(reset));
+      const state=get('#naval-phase').textContent;words(w<125?state.replace('Расстановка флота','РАССТАНОВКА'):state,{...b,l:b.l+4,r:visible(reset)?bounds(reset).l-3:b.r-2},{primary:true});
+     });
+     show('.naval-content',(content,cb)=>clipping(cb,()=>{
+      fill(cb,colors.page);
+      for(const sel of ['.naval-orders','.naval-setup','.naval-weapons','.naval-online','.naval-log','.naval-board-panel']){
+       for(const zone of content.querySelectorAll(sel)){
+        if(!visible(zone))continue;
+        const b=bounds(zone);
+        if(b.b<=cb.t||b.t>=cb.b)continue;
+        box(b,colors.edge,colors.surface);
+       }
+      }
+      for(const el of content.querySelectorAll('h2,.naval-menu-heading p,.naval-orders strong,.naval-orders span,summary,button:not(.naval-cell),input,#naval-room>b,#naval-players,#naval-connection,#naval-weapon-hint,.naval-board-panel>header>* , .naval-axis>span,.naval-log>li')){
+       if(!visible(el))continue;
+       const details=el.closest('details');
+       if(details&&!details.open&&!el.matches('summary'))continue;
+       const b=bounds(el);
+       if(b.b<=cb.t||b.t>=cb.b)continue;
+       const head=el.closest('.naval-board-panel>header');
+       if(head&&el.localName==='b'){const hb=bounds(head),ending=head.querySelector('span');b.l=hb.l+2;b.r=visible(ending)?bounds(ending).l-2:hb.r-2;}
+       if(el.id==='naval-message'&&b.r-b.l<115){
+        const short=textOf(el).replace(/Флот готов. Можно начинать./i,'ФЛОТ ГОТОВ').replace(/Твой ход. Выбирай цель./i,'ВЫБИРАЙ ЦЕЛЬ');
+        words(short,{...b,l:b.l+1},{primary:true});continue;
+       }
+       drawNaval(el,b);
+      }
+      for(const board of content.querySelectorAll('.naval-grid')){
+       if(!visible(board))continue;
+       const bb=bounds(board);if(bb.b<=cb.t||bb.t>=cb.b)continue;
+       fill(bb,colors.edge);
+       for(const cell of board.querySelectorAll('.naval-cell')){
+        const b=bounds(cell),w=b.r-b.l,h=b.b-b.t;
+        if(b.b<=cb.t||b.t>=cb.b||w<2||h<2)continue;
+        const x=Math.round((b.l+b.r)/2),y=Math.round((b.t+b.b)/2);
+        const hit=cell.matches('.hit,.sunk'),water=cell.matches('.miss,.water'),ship=cell.classList.contains('ship');
+        const scanning=cell.classList.contains('scanned'),valid=cell.classList.contains('preview'),invalid=cell.classList.contains('invalid');
+        const hovering=!cell.disabled&&hot(cell);
+        const tint=hit?'#4d2630':invalid?'#422530':valid?'#17534d':scanning?'#134e49':ship?'#1a3d55':'#102236';
+        const edge=hovering?colors.on:scanning?'#55c9b4':hit?'#a05756':'#2a465d';
+        if(hovering||scanning||hit)box(b,edge,tint);
+        else{fill(b,edge);fill({...b,l:b.l+1,t:b.t+1},tint);}
+        if(hit){
+         const hue=cell.classList.contains('sunk')?'#ffa88f':'#ffe09b',len=Math.max(1,Math.min(2,Math.floor(Math.min(w,h)/2)-1));
+         for(let j=-len;j<=len;j++){
+          fill({l:x+j,r:x+j+1,t:y+j,b:y+j+1},hue);fill({l:x-j,r:x-j+1,t:y+j,b:y+j+1},hue);
+         }
+        }else if(water)fill({l:x,r:x+1,t:y,b:y+1},'#7db5d0');
+        else if(ship){
+         const a=inset(b,Math.min(2,Math.floor((Math.min(w,h)-1)/2)));
+         fill(a,'#5793a9');fill({...a,t:a.t+1},'#376780');
+        }
+       }
+      }
+      show('.naval-result',(el,b)=>{box(b,colors.on,colors.input);drawNaval(el,b)});
+     }));
+     show('.window-status',(_,b)=>{
+      fill(b,colors.surface);fill({...b,b:b.t+1},colors.edge);
+      const score=get('#naval-score'),status=get('#naval-status');
+      const duel=/^одиночная/i.test(textOf(status))?'ОДИНОЧНАЯ ИГРА':textOf(status);
+      const tally=(textOf(score).match(/[0-9]+/g)||[]).join(' : ');
+      words(duel,{...b,l:b.l+3,r:b.r-34},{primary:true});
+      words(tally,{...b,l:b.r-33,r:b.r-2},{primary:true,center:true,quiet:true});
+     });
     }
     if(race){
      const visible=el=>!!el&&!!el.getClientRects().length&&getComputedStyle(el).visibility!=='hidden';
@@ -1122,7 +1310,7 @@ body.console-desktop.matrix-tool #window-game.matrix-tool-window>.window-status:
       }});
      }
     }
-    const nodes=editor||chat||race?[]:pane.querySelectorAll('p,h3,summary,label,button,select,input,progress,a.tool-primary'+(media?',h2,b,output,textarea,.meme-file-name,.meme-empty small':''));
+    const nodes=editor||chat||race||naval?[]:pane.querySelectorAll('p,h3,summary,label,button,select,input,progress,a.tool-primary'+(media?',h2,b,output,textarea,.meme-file-name,.meme-empty small':''));
     for(const el of nodes){
      if(el.closest('[hidden]')||!el.getClientRects().length)continue;
      const fold=el.closest('details');if(fold&&!fold.open&&el!==fold.querySelector('summary'))continue;
@@ -1189,7 +1377,7 @@ body.console-desktop.matrix-tool #window-game.matrix-tool-window>.window-status:
   function watch(repaint){
    const draw=()=>{if(!win.hidden)repaint()};
    const resize=new ResizeObserver(draw);resize.observe(win);if(pane!==win)resize.observe(pane);
-   if(chat||race)for(const region of pane.querySelectorAll(chat?'.sv-surface,.overview-tabs,.sv-voice-panel':'.game-toolbar,.game-layout,.race-sidebar,.game-overlay'))resize.observe(region);
+   if(chat||race||naval)for(const region of pane.querySelectorAll(chat?'.sv-surface,.overview-tabs,.sv-voice-panel':naval?'.naval-content,.naval-toolbar,.naval-boards':'.game-toolbar,.game-layout,.race-sidebar,.game-overlay'))resize.observe(region);
    let raceTimer=0,lastRacePaint=0;
    const observer=new MutationObserver(records=>{
     if(!race||!win.classList.contains('racing'))return draw();
@@ -1198,7 +1386,7 @@ body.console-desktop.matrix-tool #window-game.matrix-tool-window>.window-status:
     if(raceTimer)return;
     raceTimer=setTimeout(()=>{raceTimer=0;lastRacePaint=performance.now();draw();},Math.max(0,85-(performance.now()-lastRacePaint)));
    });
-   for(const region of chat||race?pane.querySelectorAll(chat?'.sv-surface,.overview-tabs,.sv-voice-panel':'.game-toolbar,.game-layout,.window-status'):[pane]){
+   for(const region of chat||race||naval?pane.querySelectorAll(chat?'.sv-surface,.overview-tabs,.sv-voice-panel':naval?'.naval-toolbar,.naval-content,.window-status':'.game-toolbar,.game-layout,.window-status'):[pane]){
     observer.observe(region,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['hidden','open','disabled','value','class','aria-selected','aria-current']});
    }
    if(editor){

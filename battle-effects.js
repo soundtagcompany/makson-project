@@ -20,8 +20,9 @@ export class BattleEffects{
   canvas.style.imageRendering='pixelated';
  }
  visible(){return !this.win.hidden&&!this.win.classList.contains('inactive')&&!this.win.ownerDocument.hidden;}
+ publish(){if(this.win.classList.contains('matrix-tool-window'))this.canvas.dispatchEvent(new Event('makson-naval-fx-frame'));}
  motion(){return this.settings().motion&&!this.win.ownerDocument.defaultView.matchMedia('(prefers-reduced-motion: reduce)').matches;}
- clear(){this.items=[];cancelWindowFrame(this.frame);this.frame=0;this.shake?.cancel();this.shake=null;this.ctx.setTransform(1,0,0,1,0,0);this.ctx.clearRect(0,0,this.canvas.width,this.canvas.height);}
+ clear(){this.items=[];cancelWindowFrame(this.frame);this.frame=0;this.shake?.cancel();this.shake=null;this.ctx.setTransform(1,0,0,1,0,0);this.ctx.clearRect(0,0,this.canvas.width,this.canvas.height);this.publish();}
  add(p){this.items.push({...p,age:0});if(this.items.length>160)this.items.splice(0,this.items.length-160);this.wake();}
  wake(){if(!this.frame){this.last=performance.now();this.frame=windowFrame(this.canvas,t=>this.draw(t));}}
  point(element){
@@ -101,6 +102,7 @@ export class BattleEffects{
    }
   }
   g.restore();g.globalAlpha=1;
+  this.publish();
   this.items=this.items.filter(p=>p.age<p.life+(p.delay||0));
   if(this.items.length)this.frame=windowFrame(c,t=>this.draw(t));
  }
