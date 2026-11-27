@@ -3036,3 +3036,81 @@ html[data-makson-pixel-screen] {filter:none!important}
  .console-desktop #window-buffer .upload-zone{grid-area:4/2;margin:0}
  .console-desktop #window-buffer #file-status{grid-area:5/2}
 }
+
+/* Compact portrait Buffer: preserve the connection controls and prioritize writing. */
+@media(orientation:portrait) and (max-width:430px) and (pointer:coarse){
+ .console-desktop #console-shell #window-buffer>.titlebar{
+  height:auto!important;min-height:calc(50px / var(--ui-scale,1))!important;
+  padding-block:calc(3px / var(--ui-scale,1));
+ }
+ .console-desktop #console-shell #window-buffer>.titlebar .window-controls>button{
+  height:var(--buffer-tap);width:var(--buffer-tap);
+  min-height:var(--buffer-tap)!important;min-width:var(--buffer-tap)!important;padding:0;
+ }
+ .console-desktop #window-buffer .utility-body{display:flex;flex-direction:column;gap:0}
+ .console-desktop #window-buffer .utility-intro{margin-block-end:calc(5px / var(--ui-scale,1))}
+ .console-desktop #window-buffer .utility-intro h2{margin:0}
+ .console-desktop #window-buffer [data-share-session=buffer]{align-self:start;margin-block:0 calc(8px / var(--ui-scale,1))}
+ .console-desktop #window-buffer .utility-body>.subtle{order:1;margin:calc(5px / var(--ui-scale,1)) 0 0}
+ .console-desktop #window-buffer .utility-body .upload-zone{order:2}
+ .console-desktop #window-buffer #file-status{order:3}
+ .console-desktop #window-buffer #buffer-text{height:calc(124px / var(--ui-scale,1));min-height:calc(112px / var(--ui-scale,1));flex:none;margin:0}
+}
+@media(orientation:portrait) and (max-width:430px) and (pointer:coarse){
+ body.console-desktop:has(#window-buffer:not([hidden])){
+  --header-hit:calc(44px / var(--ui-scale,1));
+  --header-height:clamp(calc(48px / var(--ui-scale,1)),calc(16 * var(--screen-dot)),calc(54px / var(--ui-scale,1)));
+ }
+ .console-desktop:has(#window-buffer:not([hidden])) .desktop-header :is(#console-settings,#chat-launcher,#svyaz-signin-hint){
+  height:var(--header-hit)!important;min-height:var(--header-hit)!important;
+ }
+ .console-desktop:has(#window-buffer:not([hidden])) .desktop-header #console-settings{
+  width:var(--header-hit)!important;min-width:var(--header-hit)!important;
+ }
+ .console-desktop:has(#window-buffer:not([hidden])) .desktop-header #chat-launcher{min-width:var(--header-hit)!important}
+ .console-desktop #console-shell #window-buffer>.titlebar{flex-wrap:nowrap;gap:calc(3px / var(--ui-scale,1))}
+ .console-desktop #console-shell #window-buffer>.titlebar>span{
+  flex:1 1 0;min-width:0;min-height:0;padding-inline-end:0;
+  white-space:nowrap;font-size:calc(18px / var(--ui-scale,1))!important;
+ }
+ .console-desktop #console-shell #window-buffer>.titlebar>span>svg{display:none}
+ .console-desktop #console-shell #window-buffer>.titlebar>.window-controls{
+  flex:0 0 auto;gap:calc(3px / var(--ui-scale,1));flex-wrap:nowrap;
+ }
+ .console-desktop #console-shell #window-buffer>.titlebar>.window-controls>[data-action=close]{position:static}
+}
+@media(orientation:portrait) and (max-width:430px) and (pointer:coarse){
+ .console-desktop #console-shell #window-buffer>.titlebar{padding-inline:calc(4px / var(--ui-scale,1))}
+ .console-desktop #console-shell #window-buffer>.titlebar>.window-controls{padding-inline:0;gap:calc(2px / var(--ui-scale,1))}
+ .console-desktop #window-buffer .buffer-connect{
+  display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.25fr) minmax(0,.72fr);
+  align-items:end;gap:calc(5px / var(--ui-scale,1));
+ }
+ .console-desktop #window-buffer .buffer-connect label{grid-template-columns:1fr;gap:calc(3px / var(--ui-scale,1));white-space:nowrap;margin:0}
+}
+@media(orientation:portrait) and (max-width:430px) and (pointer:coarse){
+ .console-desktop #window-buffer .buffer-connect :is(label,input,button){min-inline-size:0!important}
+ .console-desktop #window-buffer .buffer-connect button{padding-inline:calc(3px / var(--ui-scale,1))}
+}
+@media(orientation:portrait) and (max-width:350px) and (pointer:coarse){
+ .console-desktop #console-shell #window-buffer>.titlebar{padding-inline:calc(2px / var(--ui-scale,1));gap:0}
+ .console-desktop #console-shell #window-buffer>.titlebar>.window-controls{gap:0}
+}
+@media(orientation:portrait) and (max-width:350px) and (pointer:coarse){
+ @container app-title-viewport (max-width:195px){
+  .console-desktop #console-shell #window-buffer>.titlebar{flex-wrap:wrap;padding-inline:calc(5px / var(--ui-scale,1))}
+  .console-desktop #console-shell #window-buffer>.titlebar>span{flex:1 0 100%;min-height:calc(34px / var(--ui-scale,1))}
+  .console-desktop #console-shell #window-buffer>.titlebar>.window-controls{flex:1 0 100%;gap:calc(2px / var(--ui-scale,1))}
+  .console-desktop #window-buffer .utility-intro h2{
+   position:absolute;inline-size:1px;block-size:1px;overflow:hidden;
+   padding:0;margin:0;clip-path:inset(50%);white-space:nowrap;
+  }
+ }
+}
+@media(orientation:portrait) and (max-width:430px) and (pointer:coarse){
+ .console-desktop #window-buffer #file-status{
+  --ui-text-min:var(--buffer-caption);font-size:var(--buffer-caption)!important;
+  color:#b8dbc5;line-height:1.4;overflow-wrap:anywhere;
+ }
+ .console-desktop #window-buffer #buffer-file{inline-size:100%;min-inline-size:0!important}
+}
