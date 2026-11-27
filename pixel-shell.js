@@ -50,6 +50,8 @@ let painter=null,revealStart=0,settingsVisible=false,revealFrame=0;
 function leaveSettings(){
  if(!settingsVisible)return;
  settingsVisible=false;nav.hidden=false;
+ document.body.classList.remove('pixel-app-cover');
+ document.dispatchEvent(new Event('makson-sphere-cover-change'));
  cancelAnimationFrame(revealFrame);revealFrame=0;painter?.stop();
 }
 window.MaksonPixelApp=Object.freeze({
@@ -69,7 +71,7 @@ window.MaksonPixelApp=Object.freeze({
   return true;
  }
 });
-function repaint(){document.dispatchEvent(new Event('makson-pixel-screen-change'));}
+function repaint(){document.dispatchEvent(new Event('makson-pixel-repaint'));}
 let ready=false,didSchedule=false,restore=null,drawer=null,contrastReturn=null;
 function hide(){leaveSettings();if(root.hidden)return;root.hidden=true;document.body.classList.remove('preview-native-home');document.dispatchEvent(new Event('makson-pixel-screen-change'));for(const [el,old] of previousInert)el.inert=old;previousInert.clear();}
 function show(){
@@ -89,6 +91,8 @@ function sync(){
    show();
    if(!settingsVisible){
     settingsVisible=true;nav.hidden=true;
+    document.body.classList.add('pixel-app-cover');
+    document.dispatchEvent(new Event('makson-sphere-cover-change'));
     revealStart=motion.matches||document.body.classList.contains('reduced-motion')?0:performance.now();
    }
    repaint();return;

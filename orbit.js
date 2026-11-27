@@ -1,7 +1,7 @@
 import {settings} from './app.js';
 // A small 2D buffer with one glow composite; no WebGL or readback. Motion sleeps when the scene is covered.
 const stage=document.getElementById('sphere-stage'),canvas=document.getElementById('sphere-canvas'),ctx=canvas.getContext('2d',{alpha:false});
-const sceneVisible=()=>!document.hidden&&!stage.hidden&&!document.body.classList.contains('game-fullscreen-on')&&!document.documentElement.classList.contains('console-scaling')&&!['waiting','folding'].includes(document.body.dataset.bootPhase);
+const sceneVisible=()=>!document.hidden&&!stage.hidden&&!document.body.classList.contains('game-fullscreen-on')&&!document.body.classList.contains('pixel-app-cover')&&!document.documentElement.classList.contains('console-scaling')&&!['waiting','folding'].includes(document.body.dataset.bootPhase);
 const grid=document.createElement('canvas'),lines=grid.getContext('2d');
 // Keep a distant numerical guard, without capping a normal fast gesture at 4.1 rev/s.
 const TAU=Math.PI*2,MAX_SPIN=TAU*60;
@@ -148,7 +148,7 @@ window.addEventListener('resize',resize,{passive:true});
 new ResizeObserver(resize).observe(stage);
 document.addEventListener('console-scene-intro',e=>{if(!motion())return;intro={start:performance.now(),duration:Math.max(300,e.detail?.duration||1080)};wake();});
 document.addEventListener('appselect',e=>select(e.detail));
-for(const name of ['windowfocus','windowhide','visibilitychange','settingschange','desktopfullscreenchange','console-scale-change','console-boot-change'])document.addEventListener(name,()=>{
+for(const name of ['windowfocus','windowhide','visibilitychange','settingschange','desktopfullscreenchange','console-scale-change','console-boot-change','makson-sphere-cover-change'])document.addEventListener(name,()=>{
  if(!sceneVisible()){cancelAnimationFrame(frame);frame=0;lastTick=0;drag=null;resetSpin();}else{if(!motion())resetSpin();wake();}
 });
 stage.addEventListener('pointerdown',e=>{if(e.button!==0)return;drag={id:e.pointerId,x:e.clientX,y:e.clientY,startX:e.clientX,startY:e.clientY,moved:false,mode:null,time:performance.now()};tween=null;activity=performance.now();suppressClick=false;});

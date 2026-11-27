@@ -14,25 +14,33 @@ const fullExtra={
  'Э':[30,1,1,15,1,1,30],'Ю':[18,21,21,29,21,21,18],
 };
 export function makeText(bitmap,ctx){
- const canvas=document.createElement('canvas');
+ const sprites=new Map();
  const textWidth=(s,small)=>(small?bitmap.compactWidth(s):bitmap.width(s))-1;
  const needsExtras=s=>[...s].some(letter=>letter in extra);
  function ink(value,x,y,color,small){
-  const render=small?bitmap.drawCompact:bitmap.draw;
-  if(!needsExtras(value)){
-   canvas.width=Math.max(1,textWidth(value,small));canvas.height=small?5:8;render(canvas,value,color);
-   ctx.drawImage(canvas,x,y);return;
-  }
-  for(const letter of value){
-   if(extra[letter]){
-    const rows=small?[...extra[letter]].map(Number):fullExtra[letter],cols=small?3:5;
-    ctx.fillStyle=color;
-    rows.forEach((row,iy)=>{for(let ix=0;ix<cols;ix++)if(row&(1<<(cols-ix-1)))ctx.fillRect(x+ix,y+iy,1,1);});
-   }else if(letter!==' '){
-    canvas.width=Math.max(1,textWidth(letter,small));canvas.height=small?5:8;render(canvas,letter,color);ctx.drawImage(canvas,x,y);
+  const key=JSON.stringify([value,color,small]);
+  let sprite=sprites.get(key);
+  if(!sprite){
+   sprite=document.createElement('canvas');sprite.width=Math.max(1,textWidth(value,small));sprite.height=small?5:8;
+   const render=small?bitmap.drawCompact:bitmap.draw;
+   if(!needsExtras(value))render(sprite,value,color);
+   else{
+    const g=sprite.getContext('2d'),cell=document.createElement('canvas');let dx=0;
+    for(const letter of value){
+     if(extra[letter]){
+      const rows=small?[...extra[letter]].map(Number):fullExtra[letter],cols=small?3:5;
+      g.fillStyle=color;
+      rows.forEach((row,iy)=>{for(let ix=0;ix<cols;ix++)if(row&(1<<(cols-ix-1)))g.fillRect(dx+ix,iy,1,1);});
+     }else if(letter!==' '){
+      cell.width=Math.max(1,textWidth(letter,small));cell.height=small?5:8;render(cell,letter,color);g.drawImage(cell,dx,0);
+     }
+     dx+=small?bitmap.compactWidth(letter):bitmap.width(letter);
+    }
    }
-   x+=small?bitmap.compactWidth(letter):bitmap.width(letter);
+   if(sprites.size>=96)sprites.delete(sprites.keys().next().value);
+   sprites.set(key,sprite);
   }
+  ctx.drawImage(sprite,x,y);
  }
  function wrap(value,available,small){
   const lines=[];
@@ -207,8 +215,8 @@ export function createSettingsSurface(bitmap,ctx){
   const size=new ResizeObserver(draw);for(const node of [win,pane,help])size.observe(node);
   const changes=new MutationObserver(draw);changes.observe(win,{attributes:true,attributeFilter:['hidden']});
   changes.observe(zoom,{childList:true,characterData:true,subtree:true});
-  for(const type of ['pointermove','focusin','focusout','input','change','scroll','toggle'])win.addEventListener(type,draw,true);
-  return ()=>{size.disconnect();changes.disconnect();for(const type of ['pointermove','focusin','focusout','input','change','scroll','toggle'])win.removeEventListener(type,draw,true);};
+  for(const type of ['focusin','focusout','input','change','scroll','toggle'])win.addEventListener(type,draw,true);
+  return ()=>{size.disconnect();changes.disconnect();for(const type of ['focusin','focusout','input','change','scroll','toggle'])win.removeEventListener(type,draw,true);};
  }
  return {paint,stop,watch};
 }

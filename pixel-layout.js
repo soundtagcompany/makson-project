@@ -196,18 +196,26 @@ function drawOrbitNodes(){
   ctx.globalAlpha=1;
  }
 }
+const grainTexture=document.createElement('canvas'),grainCtx=grainTexture.getContext('2d');
+let grainKey='';
 function sceneGrain(top,start,stop){
- // A fixed spatial seed: not a second animation or a translucent CSS layer.
- const grain=['#100b16','#0b0810','#09060d','#15101c'];
- const sx=Math.max(0,start),ex=Math.max(sx,stop),height=H-top;
- if(ex-sx<1||height<1)return;
- ctx.globalCompositeOperation='lighten';
- let seed=0x2bb954d;
- const random=()=>{seed^=seed<<13;seed^=seed>>>17;seed^=seed<<5;return seed>>>0};
- for(let i=0,count=Math.min(375,Math.round((ex-sx)*height*.011));i<count;i++){
-  const x=sx+random()%(ex-sx),y=top+random()%height;
-  dot(x,y,grain[i%grain.length]);
+ // Draw stationary grain once per geometry; blend the entire tiny texture in one operation.
+ const sx=Math.max(0,start),ex=Math.max(sx,stop),height=H-top,w=ex-sx;
+ if(w<1||height<1)return;
+ const key=w+':'+height;
+ if(key!==grainKey){
+  grainKey=key;grainTexture.width=w;grainTexture.height=height;
+  grainCtx.globalCompositeOperation='lighten';
+  const grain=['#100b16','#0b0810','#09060d','#15101c'];
+  let seed=0x2bb954d;
+  const random=()=>{seed^=seed<<13;seed^=seed>>>17;seed^=seed<<5;return seed>>>0};
+  for(let i=0,count=Math.min(375,Math.round(w*height*.011));i<count;i++){
+   const x=random()%w,y=random()%height;
+   grainCtx.fillStyle=grain[i%grain.length];grainCtx.fillRect(x,y,1,1);
+  }
  }
+ ctx.globalCompositeOperation='lighten';
+ ctx.drawImage(grainTexture,sx,top);
  ctx.globalCompositeOperation='source-over';
 }
 function drawSpeed(scene){
@@ -327,7 +335,7 @@ function draw(buttons,focusKey){
 }
 function queue(){if(!pending)pending=requestAnimationFrame(()=>{pending=0;if(!native||!c.parentElement.hidden)draw(false)})}
 if(native){
- for(const e of ['makson-native-frame','makson-pixel-screen-change','focusin','focusout','pointerover','pointerout','accountchange'])document.addEventListener(e,queue);
+ for(const e of ['makson-native-frame','makson-pixel-screen-change','makson-pixel-repaint','focusin','focusout','pointerover','pointerout','accountchange'])document.addEventListener(e,queue);
 }
 
 document.addEventListener('makson-preview-focus',e=>{
