@@ -1782,7 +1782,7 @@ body.console-desktop{--header-height:calc(16 * var(--screen-dot));--terminal-ste
   padding-block:clamp(6px,2vh,14px);
  }
 }
-@media (orientation:landscape) and (min-width:600px) and (max-width:950px) and (max-height:480px) and (pointer:coarse){
+@media (orientation:landscape) and (min-width:740px) and (max-width:950px) and (max-height:480px) and (pointer:coarse){
  .console-desktop #window-svyaz #svyaz-root .sv-form[data-form=login]{
   display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:var(--screen-pad);
  }
@@ -2612,5 +2612,48 @@ html[data-makson-pixel-screen] {filter:none!important}
  }
  .console-desktop.catalog-collapsed #console-shell #app-workspace #window-editor>.titlebar{
   padding-inline-start:calc(54px / var(--ui-scale,1));
+ }
+}
+
+/* Phone naval match: controls in one row; charts keep a proper square grid. */
+@media(max-width:950px) and (pointer:coarse){
+ .console-desktop #console-shell #window-naval:not([data-phase=setup]) .naval-weapons:not([hidden]){
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));padding-inline-end:calc(10px / var(--ui-scale,1));
+ }
+ .console-desktop #console-shell #window-naval:not([data-phase=setup]) .naval-weapons>span{
+  grid-column:1/-1;color:#a9c7d1;
+ }
+ .console-desktop #console-shell #window-naval:not([data-phase=setup]) #naval-detail{
+  position:absolute;inline-size:1px;block-size:1px;overflow:hidden;
+  padding:0;margin:0;clip-path:inset(50%);white-space:nowrap;
+ }
+ .console-desktop #console-shell #window-naval:not([data-phase=setup]) .naval-board-panel{
+  box-shadow:none;padding:calc(7px / var(--ui-scale,1));
+ }
+}
+@media(orientation:landscape) and (min-width:740px) and (max-width:950px) and (max-height:550px) and (pointer:coarse){
+ .console-desktop #console-shell #window-naval:not([data-phase=setup]) .naval-boards{
+  width:100%;max-width:none;gap:calc(10px / var(--ui-scale,1));
+  padding:calc(6px / var(--ui-scale,1)) calc(10px / var(--ui-scale,1)) 0 calc(51px / var(--ui-scale,1));
+  grid-template-columns:repeat(2,minmax(0,1fr));
+ }
+ .console-desktop #console-shell #window-naval:not([data-phase=setup]) .naval-board-panel{
+  max-width:calc(324px / var(--ui-scale,1));justify-self:center;
+ }
+ .console-desktop #console-shell #window-naval:not([data-phase=setup]) .naval-board-panel>header{
+  gap:4px;font-size:clamp(10px,calc(16px / var(--ui-scale,1)),16px)!important;line-height:1.15;padding:2px 4px;margin:0;
+ }
+ .console-desktop #console-shell #window-naval:not([data-phase=setup]) .naval-board-panel>header>span{
+  font-size:inherit!important;white-space:nowrap;
+ }
+}
+@media(orientation:landscape) and (min-width:600px) and (max-width:739px) and (max-height:550px) and (pointer:coarse){
+ .console-desktop #console-shell #window-naval:not([data-phase=setup]) .naval-boards{
+  width:min(100%,calc(350px / var(--ui-scale,1)));max-width:none;
+ }
+}
+@media(max-width:360px) and (pointer:coarse){
+ .console-desktop #console-shell #window-naval:not([data-phase=setup]) .naval-weapons>button{
+  font-size:calc(15px / var(--ui-scale,1))!important;padding-inline:2px;
  }
 }
