@@ -103,4 +103,9 @@
 <div class="toast" id="toast" role="status" hidden><b>MAKSON PROJECT</b><span id="toast-text"></span><button id="toast-close" aria-label="Закрыть уведомление">×</button></div>
 <footer class="taskbar"></footer>
 <noscript><div class="noscript">Для рабочего стола и игры нужен JavaScript.</div></noscript>
+<script type="module">
+ if(new URLSearchParams(location.search).get('pixel')==='1'){
+  import('./pixel-shell.js').catch(()=>{ /* Keep the native desktop if the optional scene cannot load. */ });
+ }
+</script>
 </body></html>
