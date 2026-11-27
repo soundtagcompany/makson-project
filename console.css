@@ -3114,3 +3114,33 @@ html[data-makson-pixel-screen] {filter:none!important}
  }
  .console-desktop #window-buffer #buffer-file{inline-size:100%;min-inline-size:0!important}
 }
+
+/* Keep complete labels in a one-row game titlebar on phone screens.
+   Full accessible names stay on the windows, and catalog labels never change. */
+@media (orientation:portrait) and (max-width:430px) and (pointer:coarse){
+ .console-desktop #window-game{--compact-game-title:"ГИПНОРОЙДЕР"}
+ .console-desktop #window-naval{--compact-game-title:"МОРСКОЙ БОЙ"}
+ .console-desktop #window-pulse{--compact-game-title:"ПУЛЬС.EXE"}
+ @container app-title-viewport (min-width:241px){
+  @layer readable-ui{
+   .console-desktop #console-shell #app-workspace :is(#window-game,#window-naval,#window-pulse)>.titlebar>span{
+    --ui-text-min:0px;font-size:0!important;
+   }
+  }
+  .console-desktop #console-shell #app-workspace :is(#window-game,#window-naval,#window-pulse)>.titlebar>span{
+   gap:0;white-space:nowrap;-webkit-text-size-adjust:none;text-size-adjust:none;
+  }
+  .console-desktop #console-shell #app-workspace :is(#window-game,#window-naval,#window-pulse)>.titlebar>span>svg{display:none}
+  .console-desktop #console-shell #app-workspace #window-game>.titlebar>span::before{content:none}
+  .console-desktop #console-shell #app-workspace :is(#window-game,#window-naval,#window-pulse)>.titlebar>span::after{
+   content:var(--compact-game-title);content:var(--compact-game-title) / "";
+   font-size:calc(16px / var(--ui-scale,1));
+   color:currentColor;white-space:nowrap;
+  }
+ }
+}
+@media (orientation:portrait) and (max-width:375px) and (pointer:coarse){
+ .console-desktop #window-game{--compact-game-title:"ПОЛЁТ"}
+ .console-desktop #window-naval{--compact-game-title:"ФЛОТ"}
+ .console-desktop #window-pulse{--compact-game-title:"ПУЛЬС"}
+}
