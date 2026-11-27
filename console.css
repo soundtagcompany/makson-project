@@ -2737,3 +2737,56 @@ html[data-makson-pixel-screen] {filter:none!important}
  .console-desktop #console-shell #window-game.racing .game-hud>div{padding-block:calc(2px / var(--ui-scale,1))}
  .console-desktop #console-shell #window-game.racing :is(.flight-stick,.flight-nitro){bottom:45%}
 }
+
+/* Keep the entire settings switch row tappable; align the scale buttons. */
+@media(max-width:950px) and (pointer:coarse){
+ .console-desktop #window-settings .screen-settings .console-zoom button{
+  min-width:calc(44px / var(--ui-scale,1))!important;
+ }
+ .console-desktop #window-settings .setting{cursor:pointer}
+}
+@media(orientation:landscape) and (min-width:620px) and (max-width:950px) and (max-height:440px) and (pointer:coarse){
+ .console-desktop #window-settings{--settings-hit:calc(44px / var(--ui-scale,1))}
+ .console-desktop #window-settings>.titlebar{
+  min-height:calc(var(--settings-hit) + 4px / var(--ui-scale,1))!important;
+  padding-block:0;
+ }
+ .console-desktop #window-settings>.titlebar .window-controls button{
+  width:var(--settings-hit);height:var(--settings-hit);
+  min-width:var(--settings-hit)!important;min-height:var(--settings-hit)!important;
+ }
+ .console-desktop #window-settings .screen-settings{
+  grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:calc(12px / var(--ui-scale,1));
+ }
+ .console-desktop #window-settings .console-zoom{
+  grid-template-columns:minmax(0,1fr) var(--settings-hit) minmax(3ch,auto) var(--settings-hit);
+  gap:calc(6px / var(--ui-scale,1));
+ }
+ .console-desktop #window-settings .console-zoom>span{grid-column:auto}
+ .console-desktop #window-settings .console-zoom output{
+  font-size:calc(17px / var(--ui-scale,1))!important;
+ }
+ .console-desktop #window-settings :is(.console-zoom>span:after,.settings-fullscreen>span,.setting b){
+  font-size:calc(18px / var(--ui-scale,1))!important;line-height:1.2!important;
+ }
+ .console-desktop #window-settings :is(.setting,.console-zoom,.settings-fullscreen){
+  min-height:var(--settings-hit);
+ }
+ .console-desktop #window-settings :is(.screen-settings,.settings-footer)>* button,
+ .console-desktop #window-settings .screen-settings button,
+ .console-desktop #window-settings #reset-settings{
+  height:auto;min-height:var(--settings-hit)!important;
+  font-size:calc(17px / var(--ui-scale,1))!important;line-height:1.2!important;
+ }
+}
+@media(orientation:landscape) and (min-width:620px) and (max-width:950px) and (max-height:440px) and (pointer:coarse){
+ .console-desktop #window-settings :is(#zoom-in,#zoom-out,#site-fullscreen,#reset-settings){
+  --ui-control-height:var(--settings-hit);
+  height:var(--settings-hit)!important;min-height:var(--settings-hit)!important;
+  padding-block:0;
+ }
+}
+@media(orientation:landscape) and (min-width:620px) and (max-width:950px) and (max-height:440px) and (pointer:coarse){
+ .console-desktop #window-settings .screen-settings{--ui-text-min:calc(18px / var(--ui-scale,1))}
+ .console-desktop #window-settings .settings-fullscreen>span{white-space:nowrap}
+}
