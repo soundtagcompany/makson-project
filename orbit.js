@@ -7,11 +7,19 @@ const grid=document.createElement('canvas'),lines=grid.getContext('2d');
 const TAU=Math.PI*2,MAX_SPIN=TAU*60;
 const clamp=(value,min,max)=>Math.max(min,Math.min(max,value));
 const smooth=value=>{const t=clamp(value,0,1);return t*t*(3-2*t);};
+const SHAKE_START_TURNS=3.67,SHAKE_STRESS=4,FLY_OUT_STRESS=9;
+export const SPHERE_FLY_OUT_TURNS_PER_SECOND=20;
 // Effects follow angular speed, never a timer or accumulated revolutions.
 // The short response time only softens the visual change when speed changes.
 export function sphereStressStep(current,speed,coherence,dt){
  const turns=speed/TAU,steady=smooth((coherence-.55)/.4);
- const target=10*smooth((turns-.75)/6.75)*steady;
+ // Preserve the light-spin feel, spread the stronger shake out until 20 full turns/s.
+ const shape=turns<SHAKE_START_TURNS
+  ?SHAKE_STRESS*smooth((turns-.75)/(SHAKE_START_TURNS-.75))
+  :turns<SPHERE_FLY_OUT_TURNS_PER_SECOND
+   ?Math.min(FLY_OUT_STRESS-.001,SHAKE_STRESS+(FLY_OUT_STRESS-SHAKE_STRESS)*smooth((turns-SHAKE_START_TURNS)/(SPHERE_FLY_OUT_TURNS_PER_SECOND-SHAKE_START_TURNS)))
+   :FLY_OUT_STRESS+.12+.88*smooth((turns-SPHERE_FLY_OUT_TURNS_PER_SECOND)/2.5);
+ const target=shape*steady;
  const response=1-Math.exp(-clamp(dt,0,.1)/.18);
  const next=current+(target-current)*response;
  return next<.001?0:clamp(next,0,10);
@@ -24,7 +32,7 @@ export function sphereSpinImpulse(arc,elapsed){
 }
 const speedHud=document.createElement('output');speedHud.id='sphere-speed';speedHud.hidden=true;speedHud.textContent='0.0 об/с';speedHud.setAttribute('aria-label','Скорость вращения сферы');speedHud.setAttribute('aria-live','off');stage.append(speedHud);
 const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)'),motion=()=>settings.motion&&!reducedMotion.matches;
-reducedMotion.addEventListener('change',()=>{tween=null;if(!motion())resetSpin();wake();});
+reducedMotion.addEventListener('change',()=>{tween=null;if(!motion()){intro=null;resetSpin();}wake();});
 const nodes=[...stage.querySelectorAll('[data-sphere-app]')].map((el,i,all)=>{const y=1-2*(i+.5)/all.length,a=i*2.39996323+.7,r=Math.sqrt(1-y*y);return {el,p:[Math.cos(a)*r,y,Math.sin(a)*r]};});
 const curves=[];
 for(let m=0;m<6;m++){const a=m*Math.PI/6,points=[];for(let i=0;i<=48;i++){const t=i/48*TAU;points.push([Math.cos(t)*Math.cos(a),Math.sin(t),Math.cos(t)*Math.sin(a)]);}curves.push(points);}
@@ -34,8 +42,18 @@ let intro=null,velocity=0,velocityPitch=0,velocityRoll=0,activity=performance.no
 const touchScene=()=>{activity=performance.now();wake();};
 let w=1,h=1,cssW=1,cssH=1,yaw=.25,pitch=-.16,roll=0,rollCos=1,rollSin=0,selected='',frame=0,tween=null,drag=null,suppressClick=false,lastTick=0,starTime=0,hovered=false,offsetX=0,offsetY=0,targetX=0,targetY=0;
 const project=(p,cy,sy,cp,sp)=>{const x=p[0]*cy+p[2]*sy,z=-p[0]*sy+p[2]*cy,y=p[1]*cp-z*sp,depth=p[1]*sp+z*cp,k=3.6/(3.6-depth),r=Math.min(w*.34,h*.34);return {x:w/2+(x*rollCos+y*rollSin)*r*k,y:h/2-(-x*rollSin+y*rollCos)*r*k,z:depth};};
+function sweepState(now){
+ const progress=intro&&motion()?clamp((now-intro.start)/intro.duration,0,1):1;
+ return {active:!!intro&&progress<1,progress};
+}
+function currentTurnsPerSecond(){return motion()?energy/TAU:0;}
+export function readSphereTelemetry(now=performance.now()){
+ const turnsPerSecond=currentTurnsPerSecond();
+ return {turnsPerSecond,spinning:spinStarted&&turnsPerSecond>=.05,sweep:sweepState(now),flyOutActive:motion()&&flightStars};
+}
+window.MaksonSphereTelemetry=Object.freeze({read:readSphereTelemetry});
 function draw(dt=1/60,now=performance.now()){
- const progress=intro?Math.min(1,Math.max(0,(now-intro.start)/intro.duration)):1;
+ const {progress}=sweepState(now);
  const smooth=t=>{t=Math.max(0,Math.min(1,t));return t*t*(3-2*t);};
  ctx.fillStyle='#000';ctx.fillRect(0,0,w,h);
  ctx.globalAlpha=smooth(progress/.35);
@@ -70,11 +88,12 @@ function draw(dt=1/60,now=performance.now()){
  } if(document.body.classList.contains('preview-native-home'))document.dispatchEvent(new Event('makson-native-frame'));
 }
 function sendStress(){
- if(Math.abs(stress-energySent)>.025||(stress===0&&energySent!==0)){energySent=stress;document.dispatchEvent(new CustomEvent('sphere-energy',{detail:stress}));}
+ const crossed=(stress>=SHAKE_STRESS)!==(energySent>=SHAKE_STRESS)||(stress>=FLY_OUT_STRESS)!==(energySent>=FLY_OUT_STRESS);
+ if(crossed||Math.abs(stress-energySent)>.025||(stress===0&&energySent!==0)){energySent=stress;document.dispatchEvent(new CustomEvent('sphere-energy',{detail:stress}));}
 }
 function showSpeed(now,force=false){
  if(!force&&now-speedAt<200)return;speedAt=now;
- const turns=motion()?energy/TAU:0,label=turns.toFixed(1)+' об/с';
+ const turns=currentTurnsPerSecond(),label=turns.toFixed(1)+' об/с';
  speedHud.hidden=!spinStarted||turns<.05;
  if(speedHud.textContent!==label)speedHud.textContent=label;speedHud.dataset.speed=turns.toFixed(3);
 }

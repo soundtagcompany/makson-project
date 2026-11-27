@@ -1,5 +1,6 @@
 import {openWindow} from '/app.js';
 import {setCatalogCollapsed} from '/console-shell.js';
+const appModule=import('/pixel-settings.js').catch(()=>null);
 const params=new URLSearchParams(location.search);
 if(params.has('app')||params.get('pixel')==='0')throw Error('Only mount the shared pixel scene on home');
 const root=document.createElement('section');
@@ -12,6 +13,7 @@ style.textContent=`
 #framebuffer-preview[hidden]{display:none!important}
 body.preview-native-home #app-catalog,body.preview-native-home #catalog-toggle{visibility:hidden!important}
 body.preview-native-home .desktop-header,body.preview-native-home #sphere-stage{opacity:0!important}
+body.matrix-settings-painted>.console-focus-frame{z-index:2147482499!important}
 body.preview-native-home #framebuffer-preview #controls button:focus-visible{outline-width:var(--preview-cell);outline-offset:calc(-1 * var(--preview-cell))}
 
 #framebuffer-preview canvas{position:absolute;inset:0 auto auto 0;image-rendering:pixelated;pointer-events:none}
@@ -20,6 +22,19 @@ body.preview-native-home #framebuffer-preview #controls button:focus-visible{out
 #framebuffer-preview #controls button:focus-visible{outline:2px solid white!important;outline-offset:-2px}
 /* Keep the original sphere and its touch controls in the visible work area. */
 body.preview-native-home #console-shell{transition:none!important}
+@media (max-width:420px){
+ /* The chat button is the same sign-in entry point; keep the title clear of a duplicate hint. */
+ body.preview-native-home #svyaz-signin-hint{display:none!important}
+}
+@media (min-width:951px), (orientation:landscape){
+ body.console-desktop.preview-native-home #console-shell{
+  grid-template-columns:var(--pixel-home-side,32%) minmax(0,1fr)!important;
+  grid-template-rows:minmax(0,1fr)!important;
+ }
+ body.console-desktop.preview-native-home #console-shell>#app-workspace{
+  grid-column:2!important;grid-row:1!important;
+ }
+}
 @media (orientation:portrait) and (max-width:950px){
  body.preview-native-home #console-shell{
   grid-template-rows:minmax(0,1fr) var(--pixel-home-drawer,0px)!important;
@@ -29,8 +44,34 @@ body.preview-native-home #console-shell{transition:none!important}
 document.head.append(style);
 const windows=[...document.querySelectorAll('.window[id^="window-"]')], allowed=new Set(windows.map(w=>w.id.slice(7)));
 const dock=document.querySelector('#console-dock'),contrast=matchMedia('(forced-colors:active)'),previousInert=new Map();
+const motion=matchMedia('(prefers-reduced-motion:reduce)');
+const settingsWin=document.querySelector('#window-settings'),nav=root.querySelector('nav');
+let painter=null,revealStart=0,settingsVisible=false,revealFrame=0;
+function leaveSettings(){
+ if(!settingsVisible)return;
+ settingsVisible=false;nav.hidden=false;
+ cancelAnimationFrame(revealFrame);revealFrame=0;painter?.stop();
+}
+window.MaksonPixelApp=Object.freeze({
+ hasSettings:()=>!!painter,
+ paintSettings(frame){
+  if(!settingsVisible||!painter)return false;
+  const {ctx,width,height,headerRows,pitch}=frame;
+  const progress=revealStart?Math.min(1,(performance.now()-revealStart)/235):1;
+  const opened=Math.ceil((height-headerRows)*(1-(1-progress)**3));
+  ctx.save();ctx.beginPath();ctx.rect(0,headerRows,width,opened);ctx.clip();
+  let painted=false;
+  try{painted=painter.paint({pitch,width,height,headerRows,active:true})}
+  catch(error){console.warn('Settings canvas fallback',error);leaveSettings();hide();return false;}
+  finally{ctx.restore()}
+  if(!painted){leaveSettings();hide();return false;}
+  if(progress<1&&!revealFrame)revealFrame=requestAnimationFrame(()=>{revealFrame=0;repaint()});
+  return true;
+ }
+});
+function repaint(){document.dispatchEvent(new Event('makson-pixel-screen-change'));}
 let ready=false,didSchedule=false,restore=null,drawer=null,contrastReturn=null;
-function hide(){if(root.hidden)return;root.hidden=true;document.body.classList.remove('preview-native-home');document.dispatchEvent(new Event('makson-pixel-screen-change'));for(const [el,old] of previousInert)el.inert=old;previousInert.clear();}
+function hide(){leaveSettings();if(root.hidden)return;root.hidden=true;document.body.classList.remove('preview-native-home');document.dispatchEvent(new Event('makson-pixel-screen-change'));for(const [el,old] of previousInert)el.inert=old;previousInert.clear();}
 function show(){
  if(!root.hidden)return;
  for(const el of [document.querySelector('#app-catalog'),document.querySelector('#catalog-toggle')]){
@@ -43,8 +84,17 @@ function sync(){
  if(didSchedule)return;
  didSchedule=true;queueMicrotask(()=>{
   didSchedule=false;
-  const active=windows.some(w=>w.isConnected&&!w.hidden);
-  if(!ready||active||dock?.childElementCount){hide();return}
+  const active=windows.filter(w=>w.isConnected&&!w.hidden);
+  if(ready&&painter&&!contrast.matches&&active.length===1&&active[0]===settingsWin&&!dock?.childElementCount){
+   show();
+   if(!settingsVisible){
+    settingsVisible=true;nav.hidden=true;
+    revealStart=motion.matches||document.body.classList.contains('reduced-motion')?0:performance.now();
+   }
+   repaint();return;
+  }
+  leaveSettings();
+  if(!ready||active.length||dock?.childElementCount){hide();return}
   if(drawer!==null){setCatalogCollapsed(drawer);drawer=null}
   if(contrast.matches){
    const focused=document.activeElement;
@@ -68,7 +118,7 @@ function sync(){
 function open(evt){
  const {id,keyboard}=evt.detail;
  if(root.hidden||!allowed.has(id))return;
- evt.preventDefault();hide();restore=id;
+ evt.preventDefault();restore=id;
  if(drawer===null)drawer=document.body.classList.contains('catalog-collapsed');
  if(!drawer)setCatalogCollapsed(true);
  openWindow(id);
@@ -76,9 +126,9 @@ function open(evt){
  sync();
 }
 document.addEventListener('makson-preview-open',open);
-document.addEventListener('makson-preview-visibility',e=>{if(!root.hidden)setCatalogCollapsed(!e.detail)});
+document.addEventListener('makson-preview-visibility',e=>{if(!root.hidden&&!settingsVisible)setCatalogCollapsed(!e.detail)});
 window.addEventListener('keydown',e=>{
- if(e.key!=='F6'||root.hidden||contrast.matches)return;
+ if(e.key!=='F6'||root.hidden||settingsVisible||contrast.matches)return;
  e.preventDefault();e.stopImmediatePropagation();
  document.dispatchEvent(new Event('makson-preview-keyboard-home'));
 },true);
@@ -90,5 +140,14 @@ if(dock)watcher.observe(dock,{childList:true});
 function contrastChanged(){sync()}
 contrast.addEventListener('change',contrastChanged);
 const script=document.createElement('script');script.src='/pixel-layout.js';
-script.onload=()=>{if(!window.MaksonPreviewBitmap){watcher.disconnect();hide();return;}ready=true;contrastChanged()};
+script.onload=()=>{
+ if(!window.MaksonPreviewBitmap){watcher.disconnect();hide();return;}
+ ready=true;contrastChanged();
+ appModule.then(mod=>{
+  if(!mod)return;
+  try{painter=mod.createSettingsSurface(window.MaksonPreviewBitmap,root.querySelector('canvas').getContext('2d'));painter?.watch(repaint);}
+  catch(error){console.warn('Settings module unavailable',error);}
+  sync();
+ });
+};
 script.onerror=()=>{watcher.disconnect();hide()};document.head.append(script);

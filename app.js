@@ -53,6 +53,14 @@ function animateDock(win,from,to,restoring=false){
 function reveal(win,origin){
  if(!motionEnabled()||isPictureInPicture(win))return;
  win.getAnimations().forEach(a=>a.cancel());const panel=panelIds.has(win.id.slice(7));
+ if(document.body.classList.contains('preview-native-home')){
+  if(win.id==='window-settings'&&window.MaksonPixelApp?.hasSettings())return;
+  win.classList.add('window-opening');
+  const wipe=win.animate([{clipPath:'inset(0 0 100% 0)'},{clipPath:'inset(0 0 0% 0)'}],
+   {duration:230,easing:'cubic-bezier(.24,.81,.27,1)'});
+  wipe.finished.then(()=>win.classList.remove('window-opening'),()=>win.classList.remove('window-opening'));
+  return;
+ }
  win.classList.add('window-opening');
  const box=win.getBoundingClientRect(),z=Number(document.body.style.zoom)||1;const travel=origin&&!panel?`${(origin.x+origin.width/2-box.x-box.width/2)/z}px ${(origin.y+origin.height/2-box.y-box.height/2)/z}px`:'0 8px';
  const animation=win.animate([{scale:panel?'.985':'.88',translate:panel?(win.id==='window-settings'?'-8px -6px':'8px -6px'):travel,opacity:0},{scale:'1',translate:'0 0',opacity:1}],{duration:panel?250:440,easing:'cubic-bezier(.22,1,.36,1)'});

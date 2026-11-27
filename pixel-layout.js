@@ -18,6 +18,10 @@ const letters={
  '.':[0,0,0,0,0,12,12],' ':[]};
 const alias={M:'М',A:'А',K:'К',O:'О',P:'Р',E:'Е',C:'С',T:'Т'};
 const sprites={folder:[24,31,17,17,31],chat:[31,17,31,8,16],gear:[4,14,27,14,4],edit:[17,10,4,10,17],swap:[2,31,2,8,31,8],down:[4,21,21,31],photo:[31,17,21,27,31],copy:[15,9,29,21,31],rocket:[4,14,14,27,4],board:[31,21,31,21,31],pulse:[4,6,27,4],naval:[4,6,21,14]};
+const settingsGear=[0b000110000,0b010110010,0b011111110,0b111000111,0b110000011,0b111000111,0b011111110,0b010110010,0b000110000];
+function gearGlyph(x,y){
+ settingsGear.forEach((row,j)=>{for(let i=0;i<9;i++)if(row&(256>>i))dot(x+i,y+j,ink.red)});
+}
 let W,H,n,folder='root',shown=true,page=0,cap=1,angle=0,tilt=.31,pointer=null,pending=0;
 function rect(x,y,w,h,color){ctx.fillStyle=color;ctx.fillRect(x|0,y|0,w|0,h|0)}
 function dot(x,y,color){rect(x,y,1,1,color)}
@@ -125,15 +129,23 @@ function drawHeader(top){
  const signin=document.querySelector('#svyaz-signin-hint'),hint=anchor(signin);
  const hintVisible=hint&&hint.w>=3&&hint.h>=3&&getComputedStyle(signin).visibility!=='hidden';
  const titleSpace=[g?g.x+g.w+1:3,hintVisible?hint.x-1:a?a.x-2:W-3];
- const mid=(titleSpace[0]+titleSpace[1])/2,full='MAKSON PROJECT';
- function centered(text,y){label(text,Math.round(mid-width(text)/2),y,ink.red);}
- if(width(full)<=titleSpace[1]-titleSpace[0])centered(full,Math.max(1,Math.floor((top-7)/2)));
- else if(top>=17){centered('MAKSON',Math.floor((top-15)/2));centered('PROJECT',Math.floor((top-15)/2)+8);}
- else compact(full,Math.round(mid-compactWidth(full)/2),Math.floor((top-5)/2),ink.red);
+ const mid=W/2,full='MAKSON PROJECT';
+ const room=2*Math.min(mid-titleSpace[0],titleSpace[1]-mid);
+ function centered(text,y){label(text,Math.round((W-width(text)+1)/2),y,ink.red);}
+ if(width(full)<=room)centered(full,Math.max(1,Math.floor((top-7)/2)));
+ else if(compactWidth(full)<=room||top<17)compact(full,Math.round((W-compactWidth(full)+1)/2),Math.max(1,Math.floor((top-5)/2)),ink.red);
+ else {centered('MAKSON',Math.floor((top-15)/2));centered('PROJECT',Math.floor((top-15)/2)+8);}
  if(g){
-  if(gear.getAttribute('aria-expanded')==='true'||gear.matches(':hover,:focus-visible'))edge(g.x+1,g.y+1,g.w-2,g.h-2,'#291619');
-  iconAt('settings',g.x+Math.round((g.w-9)/2),g.y+Math.round((g.h-9)/2),ink.red,'gear');
-  if(gear.matches(':focus-visible'))edge(g.x+1,g.y+1,g.w-2,g.h-2,'#432025');}
+  const hot=gear.getAttribute('aria-expanded')==='true'||gear.matches(':hover,:focus-visible');
+  const gw=Math.min(g.w-2,14),gh=Math.min(g.h-2,13),gx=g.x+Math.floor((g.w-gw)/2),gy=g.y+Math.floor((g.h-gh)/2);
+  if(gw>=9&&gh>=9){
+   rect(gx,gy,gw,gh,hot?'#2b151a':'#12080b');
+   rect(gx,gy,gw,1,hot?'#e87a80':'#602d35');
+   rect(gx,gy+gh-1,gw,1,hot?'#b84b54':'#351a21');
+   if(hot){rect(gx,gy,1,gh,'#b84b54');rect(gx+gw-1,gy,1,gh,'#b84b54');}
+  }
+  gearGlyph(g.x+Math.floor((g.w-9)/2),g.y+Math.floor((g.h-9)/2));
+ }
  if(a){
   rect(a.x+1,a.y+1,a.w-2,a.h-2,chat.matches(':focus-visible')?'#482225':chat.getAttribute('aria-expanded')==='true'||chat.matches(':hover')?'#311317':'#190b0e');
   const text=compactWidth('СВЯЗЬ'),fullChat=a.w>=text+11,ix=fullChat?a.x+1:a.x+Math.round((a.w-9)/2);
@@ -154,7 +166,7 @@ const tiny={
  'А':'25755','Б':'74656','В':'65656','Г':'74444','Д':'25577','Е':'74647','Ё':'50767','Ж':'55755','З':'71617',
  'И':'55575','Й':'20575','К':'55655','Л':'35555','М':'57555','Н':'55755','О':'25552','П':'75555','Р':'65644',
  'С':'34443','Т':'72222','У':'55316','Ф':'27772','Х':'55255','Ц':'55571','Ч':'55311','Ш':'55557','Щ':'55571','Ы':'55755',
- 'Ь':'44656','Э':'61216','Ю':'55755','Я':'35355',R:'65655',J:'31152',N:'57755',S:'34216','.':'00002'
+ 'Ь':'44656','Э':'61216','Ю':'55755','Я':'35355',R:'65655',J:'31152',N:'57755',S:'34216','.':'00002','0':'75557','1':'26227','2':'71247','3':'71217','4':'55711','5':'74617','6':'74657','7':'71244','8':'75757','9':'75717','/':'11244'
 };
 function compactWidth(text){return [...text].reduce((x,k)=>x+(k===' '?2:4),0)}
 function compact(text,x,y,col){
@@ -184,7 +196,33 @@ function drawOrbitNodes(){
   ctx.globalAlpha=1;
  }
 }
-function draw(buttons,anchor){
+function sceneGrain(top,start,stop){
+ // A fixed spatial seed: not a second animation or a translucent CSS layer.
+ const grain=['#100b16','#0b0810','#09060d','#15101c'];
+ const sx=Math.max(0,start),ex=Math.max(sx,stop),height=H-top;
+ if(ex-sx<1||height<1)return;
+ ctx.globalCompositeOperation='lighten';
+ let seed=0x2bb954d;
+ const random=()=>{seed^=seed<<13;seed^=seed>>>17;seed^=seed<<5;return seed>>>0};
+ for(let i=0,count=Math.min(375,Math.round((ex-sx)*height*.011));i<count;i++){
+  const x=sx+random()%(ex-sx),y=top+random()%height;
+  dot(x,y,grain[i%grain.length]);
+ }
+ ctx.globalCompositeOperation='source-over';
+}
+function drawSpeed(scene){
+ const value=window.MaksonSphereTelemetry?.read?.();
+ const hud=document.querySelector('#sphere-speed');
+ const speed=value?.turnsPerSecond??Number(hud?.dataset.speed||0);
+ if(!scene||!Number.isFinite(speed)||speed<.05||(value?!value.spinning:hud?.hidden))return;
+ const text=speed.toFixed(1)+' ОБ/С';
+ const length=compactWidth(text),center=(scene.left+scene.right)/n/2;
+ const x=Math.round(center-length/2),y=Math.floor(scene.bottom/n)-12;
+ rect(x-4,y-3,length+7,11,'#0d0714');
+ rect(x-4,y+7,length+7,1,'#46265a');
+ compact(text,x,y,'#d9a1f4');
+}
+function draw(buttons,focusKey){
  if(buttons)nav.replaceChildren();
  n=innerWidth<490||(innerHeight<490&&matchMedia('(pointer:coarse)').matches)?3:4;
  W=Math.ceil(innerWidth/n);H=Math.ceil(innerHeight/n);
@@ -194,12 +232,34 @@ function draw(buttons,anchor){
  if(!native)for(let i=0;i<Math.min(170,W*H/96);i++)dot(rnd(i)*W,rnd(i+500)*H,i%7===0?ink.star:ink.distant);
  const nativeHeader=document.querySelector('.desktop-header');
  const top=native&&nativeHeader?Math.ceil(nativeHeader.getBoundingClientRect().bottom/n):18;
+ if(native&&window.MaksonPixelApp?.paintSettings({ctx,pitch:n,width:W,height:H,headerRows:top})){
+  drawHeader(top);
+  const win=document.querySelector('#window-settings');
+  const title=anchor(win?.querySelector('.titlebar')),close=anchor(win?.querySelector('[data-action=close]'));
+  if(title){
+   const name='НАСТРОЙКИ',x=title.x+4,r=title.x+title.w-3,y=title.y+Math.floor((title.h-8)/2);
+   if(width(name)<(close?.x||r)-x)label(name,x,y,ink.green);
+   else compact(name,x,y+1,ink.green);
+  }
+  if(close){
+   const real=win.querySelector('[data-action=close]'),hi=real.matches(':hover,:focus-visible');
+   const x=close.x+Math.floor(close.w/2),y=close.y+Math.floor(close.h/2);
+   edge(close.x+1,close.y+1,close.w-2,close.h-2,hi?'#294b37':'#102519');
+   stroke(x-3,y-3,x+3,y+3,ink.green);stroke(x+3,y-3,x-3,y+3,ink.green);
+  }
+  return;
+ }
  const narrow=innerWidth<=950&&matchMedia('(orientation:portrait)').matches,list=lists[folder],head=16,length=head+list.length*15+4,side=Math.min(Math.floor(W*.54),112);
- const panel=narrow?Math.min(Math.floor(H*.55),length):Math.min(H-top-8,length);
+ const panel=narrow?Math.min(Math.floor(H*.55),length):native?Math.max(1,H-top):Math.min(H-top-8,length);
+ const sidebar=Math.min(Math.floor((W-5)*.42),Math.max(Math.ceil(160/n),Math.min(Math.floor(W*.28),Math.floor(372/n))));
  const shell=document.querySelector('#console-shell');
  if(native&&shell){
-  const zoom=Number(document.body.style.zoom)||1,drawer=(narrow&&shown?(panel+2)*n/zoom:0)+'px';
-  if(shell.style.getPropertyValue('--pixel-home-drawer')!==drawer)shell.style.setProperty('--pixel-home-drawer',drawer);
+  const zoom=Number(document.body.style.zoom)||1;
+  const drawer=(narrow&&shown?(panel+2)*n/zoom:0)+'px';
+  const sideWidth=(!narrow&&shown?sidebar*n/zoom:0)+'px';
+  for(const [key,value] of [['--pixel-home-drawer',drawer],['--pixel-home-side',sideWidth]]){
+   if(shell.style.getPropertyValue(key)!==value)shell.style.setProperty(key,value);
+  }
  }
  if(native){
   const source=document.querySelector('#sphere-canvas'),stage=source?.getBoundingClientRect();
@@ -211,35 +271,41 @@ function draw(buttons,anchor){
   if(stage&&source.width&&source.height){
    ctx.imageSmoothingEnabled=false;
    ctx.drawImage(source,Math.round(stage.left/n),Math.round(stage.top/n),source.width,source.height);
+   sceneGrain(top,!narrow&&shown?sidebar:0,W);
    drawOrbitNodes();
+   drawSpeed(stage);
   }
  }
 
  if(native)drawHeader(top);
  else {rect(0,0,W,top,ink.header);rect(0,top-1,W,1,ink.rule);const brand='MAKSON PROJECT';label(brand,Math.max(4,(W-width(brand))/2),5,ink.red);}
 
- const left=document.querySelector('#app-catalog')?.getBoundingClientRect();
- const nativeSide=native&&left?Math.max(76,Math.floor(left.width/n)-5):side;
- const box=narrow?{x:3,y:H-panel-2,w:W-6,h:panel}:{x:3,y:native?top+2:22,w:nativeSide,h:panel};
+ const box=narrow?{x:3,y:H-panel-2,w:W-6,h:panel}:native?{x:0,y:top,w:sidebar,h:panel}:{x:3,y:22,w:side,h:panel};
  const sx=narrow?Math.floor(W/2):Math.floor((W+(shown?side+6:0))/2);
  const sy=Math.floor((top+H-(narrow&&shown?panel:0))/2);
  const r=Math.max(18,Math.floor(Math.min(narrow?W*.37:(W-(shown?side:0))*.31,(narrow&&shown?box.y-top-15:H-top-28)*.46)));
  if(!native)sphere(sx,sy,r);
  if(shown){
-  edge(box.x,box.y,box.w,box.h,ink.catalog);
+  if(native&&!narrow){
+   rect(box.x,box.y,box.w,box.h,ink.catalog);
+   rect(box.w-1,box.y,1,box.h,ink.edge);
+  }else edge(box.x,box.y,box.w,box.h,ink.catalog);
+  rect(box.x+3,box.y+15,box.w-6,1,ink.edge);
   if(folder!=='root'){
-   stroke(box.x+8,box.y+5,box.x+5,box.y+8,ink.mint);stroke(box.x+5,box.y+8,box.x+8,box.y+11,ink.mint);
-   if(buttons)btn('back','В каталог',box.x,box.y+1,15,15,back);
+   stroke(box.x+24,box.y+5,box.x+21,box.y+8,ink.mint);stroke(box.x+21,box.y+8,box.x+24,box.y+11,ink.mint);
+   if(buttons)btn('back','В каталог',box.x+16,box.y+1,15,15,back);
   }
-  cap=Math.max(1,Math.floor((box.h-head-2)/15));const pages=Math.ceil(list.length/cap),i=list.findIndex(r=>r[2]===anchor);
+  cap=Math.max(1,Math.floor((box.h-head-2)/15));const pages=Math.ceil(list.length/cap),i=list.findIndex(r=>r[2]===focusKey);
   if(i>=0)page=Math.floor(i/cap);page=Math.min(page,pages-1);
-  const headingX=box.x+(folder==='root'?5:16);
-  const headingEnd=box.x+box.w-(pages>1?31:16)-1;
-  const heading=titles[folder].find(text=>width(text)<=headingEnd-headingX);
-  if(heading)label(heading,headingX,box.y+5,ink.muted);
+  const headingX=box.x+(folder==='root'?18:32),headingEnd=box.x+box.w-(pages>1?16:3);
+  const heading=titles[folder].find(text=>compactWidth(text)<=headingEnd-headingX);
+  if(heading){
+   if(width(heading)<=headingEnd-headingX)label(heading,headingX,box.y+5,ink.muted);
+   else compact(heading,headingX,box.y+6,ink.muted);
+  }
 
   if(pages>1){
-   const x=box.x+box.w-31;stroke(x+5,box.y+5,x+9,box.y+8,ink.mint);stroke(x+9,box.y+8,x+5,box.y+11,ink.mint);
+   const x=box.x+box.w-16;stroke(x+5,box.y+5,x+9,box.y+8,ink.mint);stroke(x+9,box.y+8,x+5,box.y+11,ink.mint);
    if(buttons)btn('next','Следующая страница каталога',x,box.y+1,15,15,kbd=>{page=(page+1)%pages;draw(true);if(kbd)focus(list[page*cap][2])})
   }
   list.slice(page*cap,(page+1)*cap).forEach(([name,icon,key],i)=>{
@@ -247,13 +313,15 @@ function draw(buttons,anchor){
    if(art.has(key)){for(const [ix,iy] of art.get(key))dot(box.x+5+ix,y+3+iy,ink.green);}
    else glyph(sprites[icon],box.x+7,y+5,ink.green);
    let nameOnScreen=name.toUpperCase(),limit=box.w-(icon==='folder'?22:17);
-   if(width(nameOnScreen)>limit){while(nameOnScreen&&width(nameOnScreen+'...')>limit)nameOnScreen=nameOnScreen.slice(0,-1);nameOnScreen+='...'}
-   label(nameOnScreen,box.x+15,y+4,ink.green);
+   if(width(nameOnScreen)>limit){
+    if(compactWidth(nameOnScreen)>limit){while(nameOnScreen&&compactWidth(nameOnScreen+'...')>limit)nameOnScreen=nameOnScreen.slice(0,-1);nameOnScreen+='...'}
+    compact(nameOnScreen,box.x+15,y+5,ink.green);
+   }else label(nameOnScreen,box.x+15,y+4,ink.green);
    if(icon==='folder'){const q=box.x+box.w-7;stroke(q,y+5,q+3,y+8,ink.muted);stroke(q+3,y+8,q,y+11,ink.muted)}
    if(buttons)btn(key,name,box.x+3,y,box.w-6,15,kbd=>pick(name,key,kbd));
   });
  }
- const x=shown?box.x+box.w-16:W-19,y=shown?box.y+1:top+3;
+ const x=shown?box.x+1:2,y=shown?box.y+1:narrow?H-18:top+3;
  edge(x,y,15,15,'#090f0c');stroke(x+4,y+7,x+10,y+7,ink.mint);if(!shown)stroke(x+7,y+4,x+7,y+10,ink.mint);
  if(buttons)btn('toggle',shown?'Свернуть каталог':'Открыть каталог',x,y,15,15,kbd=>{setShown(!shown);if(kbd)focus('toggle')});
 }
