@@ -2601,3 +2601,16 @@ html[data-makson-pixel-screen] {filter:none!important}
   padding-inline-start:calc(54px / var(--ui-scale,1));
  }
 }
+
+/* Keep the closed catalog tab in Montage's outer toolbar, away from the game canvas. */
+@media (orientation:landscape) and (min-width:620px) and (max-width:950px) and (max-height:500px) and (pointer:coarse){
+ .console-desktop.catalog-collapsed:has(#window-editor:not([hidden])) #console-shell>#catalog-toggle{
+  align-self:start;justify-self:start;
+  width:calc(44px / var(--ui-scale,1));height:calc(44px / var(--ui-scale,1));
+  margin-block-start:calc(5px / var(--ui-scale,1));
+  border-radius:0;
+ }
+ .console-desktop.catalog-collapsed #console-shell #app-workspace #window-editor>.titlebar{
+  padding-inline-start:calc(54px / var(--ui-scale,1));
+ }
+}
