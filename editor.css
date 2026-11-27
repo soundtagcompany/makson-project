@@ -29,3 +29,43 @@
  .editor-root.is-portrait #edit-export{grid-column:2;grid-row:3;position:static}
  .editor-root.is-portrait .edit-status{grid-column:2;grid-row:4}
 }
+
+/* Hide tools that cannot act yet; keep the same native picker and media surface. */
+.editor-root.edit-await-source :is(.edit-inspector,.edit-timeline-panel,.edit-transport,#edit-export){display:none}
+.editor-root.edit-await-source .edit-work{display:flex;flex:1;min-height:0}
+.editor-root.edit-await-source .edit-preview{width:100%;min-height:0;border-right:0}
+.editor-root.edit-await-source .edit-stage{flex:1;height:auto;min-height:180px;background:#07120d}
+.editor-root.edit-await-source .edit-preview>.edit-panel-head{display:none}
+.editor-root.edit-await-source .edit-stage>#edit-empty{padding:10px;gap:8px}
+.editor-root #edit-open{color:#cbffd5;border-color:#72bb86;background:#112b1b}
+.editor-root .edit-panel-head #edit-replace{min-height:44px!important}
+.editor-root .edit-panel-head:has(#edit-replace:not([hidden])){height:auto;min-height:44px}
+.editor-root .edit-tabs button{min-height:44px!important}
+.editor-root .edit-track,.edit-track-lane{min-height:44px!important}
+.editor-root .edit-track-empty{color:#9fbea7}
+.editor-root #edit-export #edit-submit{background:#96cda1;border-color:#96cda1;color:#081a0e}
+.editor-root .edit-timeline-selection{border-color:#9debac}
+.editor-root .edit-timeline-handle{background:#9debac}
+.editor-root .edit-timeline-handle:enabled:hover,.editor-root .edit-timeline.is-dragging .edit-timeline-handle{background:#c2f5ca}
+@container(max-width:740px){
+ .editor-root #edit-export{position:static;box-shadow:none}
+ .editor-root #edit-export select{max-width:100%}
+ .editor-root .edit-inspector{min-height:0}
+ .editor-root .edit-preview{min-height:0}
+ .editor-root .edit-tabs{position:static}
+}
+.editor-root .edit-transport button{width:55px;min-height:55px}
+.editor-root .edit-panel-head #edit-replace,.editor-root .edit-tabs button,.editor-root .edit-track,.edit-track-lane,.editor-root #edit-open,.editor-root #edit-export :is(button,select,a){min-height:55px!important}
+.editor-root .edit-panel-head:has(#edit-replace:not([hidden])){min-height:55px}
+.editor-root .edit-track:enabled:is(:hover,:active){background:#102719;border-color:#315b3b}
+.editor-root #edit-overlay-clip{color:#d0e9d5;background:#193d27;border-color:#557f61}
+.editor-root .edit-track-main>.edit-track-label{white-space:nowrap}
+.editor-root .edit-transport :is(#edit-to-start,#edit-play){height:55px!important;min-height:55px!important}
+/* A rejected browser preview need not make the export workflow look broken. */
+.editor-root #edit-preview-note{margin:0;padding:7px 10px;color:#cae9cf;background:#10261a;border-block-start:1px solid #48684d;overflow-wrap:anywhere}
+.editor-root.edit-no-preview #edit-stage:not(:has(#edit-stage-busy:not([hidden]))){display:none}
+@media(orientation:landscape) and (max-height:500px){
+ .editor-root #edit-preview-note{order:-2;padding-inline-start:calc(52px / var(--ui-scale,1))}
+}
+
+.editor-root #edit-source-error{margin:0;padding:7px 10px;color:#ffe1c2;background:#2a1f14;border-block-start:1px solid #715438;overflow-wrap:anywhere;order:-3}
