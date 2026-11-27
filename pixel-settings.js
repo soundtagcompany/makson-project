@@ -2,7 +2,7 @@
 const extra={
 '0':'75557','1':'26227','2':'71247','3':'71317','4':'55711','5':'74617','6':'74757','7':'71122','8':'75757','9':'75717',
 '…':'00005','∨':'00052','/':'11244','→':'02720','×':'50500','?':'71202',B:'65656',F:'74644',G:'34553',H:'55755',I:'72227',L:'44447',Q:'25573',U:'55557',V:'55552',W:'55575',X:'55255',Y:'55222',Z:'71247','·':'00200','—':'00700','%':'51545','+':'02720','−':'00700',':':'02020',',':'00024',
-'Ц':'55571','Щ':'55571','Э':'61216','Ю':'55755',
+'∞':'02520','Ц':'55571','Щ':'55571','Э':'61216','Ю':'55755',
 };
 const fullExtra={
  '…':[0,0,0,0,0,0,21],'∨':[0,0,0,17,17,10,4],'/':[1,1,2,4,8,16,16],'→':[0,4,2,31,2,4,0],'×':[0,17,10,4,10,17,0],'?':[14,17,2,4,4,0,4],B:[30,17,17,30,17,17,30],F:[31,16,16,30,16,16,16],G:[14,17,16,23,17,17,15],H:[17,17,17,31,17,17,17],I:[31,4,4,4,4,4,31],L:[16,16,16,16,16,16,31],Q:[14,17,17,17,21,18,13],U:[17,17,17,17,17,17,14],V:[17,17,17,17,17,10,4],W:[17,17,17,21,21,21,10],X:[17,17,10,4,10,17,17],Y:[17,17,10,4,4,4,4],Z:[31,1,2,4,8,16,31],'·':[0,0,0,4,0,0,0],'—':[0,0,0,31,0,0,0],'0':[14,17,17,17,17,17,14],'1':[4,12,4,4,4,4,14],'2':[14,17,1,2,4,8,31],
@@ -10,7 +10,7 @@ const fullExtra={
  '6':[14,16,16,30,17,17,14],'7':[31,1,2,4,8,8,8],'8':[14,17,17,14,17,17,14],
  '9':[14,17,17,15,1,1,14],'%':[25,26,4,4,4,11,19],'+':[0,4,4,31,4,4,0],
  '−':[0,0,0,31,0,0,0],':':[0,0,4,0,0,4,0],',':[0,0,0,0,0,4,8],
- 'Ц':[17,17,17,17,17,17,31,1],'Щ':[21,21,21,21,21,21,31,1],
+ '∞':[0,0,10,21,10,0,0],'Ц':[17,17,17,17,17,17,31,1],'Щ':[21,21,21,21,21,21,31,1],
  'Э':[30,1,1,15,1,1,30],'Ю':[18,21,21,29,21,21,18],
 };
 export function makeText(bitmap,ctx){
@@ -436,7 +436,7 @@ body.matrix-buffer>.console-focus-frame{z-index:2147482499!important}
 export function createToolSurfaces(bitmap,ctx){
  const body=document.body,style=document.createElement('style');
  style.textContent=`
-body.matrix-tool #console-shell #app-workspace :is(.tools-window,.meme-window,.editor-window,.svyaz-window).matrix-tool-window{
+body.matrix-tool #console-shell #app-workspace :is(.tools-window,.meme-window,.editor-window,.svyaz-window,.game-window).matrix-tool-window{
  position:fixed!important;inset:var(--mtop) 0 0!important;width:100%!important;max-width:none!important;
  height:calc(var(--viewport-height,100dvh) - var(--mtop))!important;max-height:none!important;
  min-height:0!important;margin:0!important;border:0!important;box-shadow:none!important;
@@ -501,8 +501,8 @@ body.matrix-tool #console-shell #app-workspace .matrix-tool-window .tools-body .
 body.matrix-tool #console-shell #app-workspace .matrix-tool-window .tools-body .tool-progress progress{
  display:block;width:100%;height:calc(4 * var(--mt));margin:0 0 calc(2 * var(--mt));
 }
-body.matrix-tool #console-shell #app-workspace :is(.tools-window,.meme-window,.editor-window,.svyaz-window).matrix-tool-window .tools-body [hidden][hidden],
-body.matrix-tool #console-shell #app-workspace :is(.tools-window,.meme-window,.editor-window,.svyaz-window).matrix-tool-window .tools-body :is(p:empty,details:not([open])>:not(summary)){
+body.matrix-tool #console-shell #app-workspace :is(.tools-window,.meme-window,.editor-window,.svyaz-window,.game-window).matrix-tool-window .tools-body [hidden][hidden],
+body.matrix-tool #console-shell #app-workspace :is(.tools-window,.meme-window,.editor-window,.svyaz-window,.game-window).matrix-tool-window .tools-body :is(p:empty,details:not([open])>:not(summary)){
  display:none!important;
 }
 body.matrix-tool #console-shell #app-workspace .matrix-tool-window .tools-body form>:is(.tool-note,.tool-details,h3,p){
@@ -666,16 +666,78 @@ body.matrix-tool :is(.social-picker,.sv-voice-floating,.sv-photo-viewer){z-index
  }
  body.console-desktop.matrix-tool #window-svyaz.matrix-tool-window #svyaz-chat .sv-bottom{display:none}
 }
+body.console-desktop.matrix-tool #console-shell #app-workspace #window-game.matrix-tool-window{
+ inset:var(--mtop) 0 0!important;height:calc(var(--viewport-height,100dvh) - var(--mtop))!important;
+}
+body.console-desktop.matrix-tool #window-game.matrix-tool-window>.titlebar,
+body.console-desktop.matrix-tool #window-game.matrix-tool-window .game-toolbar{
+ min-height:max(calc(16 * var(--mt)),calc(44px / var(--ui-scale,1)))!important;
+ flex:0 0 auto!important;padding-inline:calc(3 * var(--mt))!important;
+}
+body.console-desktop.matrix-tool #window-game.matrix-tool-window .game-toolbar button{
+ min-height:calc(44px / var(--ui-scale,1))!important;min-width:calc(24 * var(--mt));
+}
+body.console-desktop.matrix-tool #window-game.matrix-tool-window>.titlebar button{
+ min-width:calc(44px / var(--ui-scale,1))!important;min-height:calc(44px / var(--ui-scale,1))!important;
+}
+body.console-desktop.matrix-tool #window-game.matrix-tool-window .game-layout{
+ flex:1 1 0%;min-height:0!important;max-height:none!important;scrollbar-width:none;
+}
+body.console-desktop.matrix-tool #window-game.matrix-tool-window:not(.racing) :is(.game-overlay,.race-sidebar){
+ width:min(100%,calc(232 * var(--mt)))!important;max-width:none!important;margin-inline:auto!important;
+}
+body.console-desktop.matrix-tool #window-game.matrix-tool-window:not(.racing) .game-overlay{
+ padding:calc(6 * var(--mt)) calc(4 * var(--mt))!important;gap:calc(3 * var(--mt));
+}
+body.console-desktop.matrix-tool #window-game.matrix-tool-window:not(.racing) .game-overlay h2{
+ min-height:calc(12 * var(--mt));inline-size:100%!important;block-size:auto!important;margin:0!important;
+ position:static!important;clip-path:none!important;
+}
+body.console-desktop.matrix-tool #window-game.matrix-tool-window:not(.racing) .game-overlay p{
+ min-height:calc(17 * var(--mt));width:100%;font:500 calc(5 * var(--mt)) / calc(8 * var(--mt)) ConsoleMono,monospace!important;
+}
+body.console-desktop.matrix-tool #window-game.matrix-tool-window .race-sidebar{
+ padding:calc(3 * var(--mt)) calc(4 * var(--mt))!important;
+}
+body.console-desktop.matrix-tool #window-game.matrix-tool-window .race-sidebar :is(summary,button,input,select){
+ min-height:max(calc(15 * var(--mt)),calc(44px / var(--ui-scale,1)))!important;
+}
+body.console-desktop.matrix-tool #window-game.matrix-tool-window .race-sidebar input{
+ color:#eee0ff!important;background:#1e132d!important;border-radius:0!important;
+}
+body.console-desktop.matrix-tool #window-game.matrix-tool-window .race-sidebar :is(p,label){
+ min-height:calc(10 * var(--mt));font:500 calc(5 * var(--mt)) / calc(8 * var(--mt)) ConsoleMono,monospace!important;
+}
+body.console-desktop.matrix-tool #window-game.matrix-tool-window.racing #race-canvas[data-matrix-width]{
+ position:absolute!important;inset:var(--matrix-race-top) auto auto var(--matrix-race-left)!important;
+ width:var(--matrix-race-width)!important;height:var(--matrix-race-height)!important;
+ max-width:none!important;max-height:none!important;image-rendering:pixelated!important;
+}
+body.console-desktop.matrix-tool #window-game.matrix-tool-window .game-hud>div{
+ min-width:calc(22 * var(--mt));padding-inline:calc(2 * var(--mt))!important;
+}
+body.console-desktop.matrix-tool #window-game.matrix-tool-window .game-hud b{
+ white-space:nowrap;
+}
+body.console-desktop.matrix-tool #window-game.matrix-tool-window .lobby-ship{display:none}
+body.console-desktop.matrix-tool #window-game.matrix-tool-window>.window-status:empty{display:none}
+@media (orientation:landscape) and (max-height:480px) and (pointer:coarse){
+ body.console-desktop.matrix-tool #window-game.matrix-tool-window.racing :is(.titlebar,.game-toolbar){
+  min-height:calc(44px / var(--ui-scale,1))!important;height:calc(44px / var(--ui-scale,1))!important;
+ }
+}
 `;
  document.head.append(style);
  const toolsColors={page:'#020704',surface:'#08130d',input:'#0b1c12',edge:'#2d5840',text:'#b5eccc',muted:'#80ae91',on:'#76e6a7'};
  const font=makeText(bitmap,ctx);
- return Object.fromEntries(['convert','download','meme','editor','svyaz'].map(id=>{
-  const media=id==='meme',editor=id==='editor',chat=id==='svyaz';
-  const colors=media?{page:'#090609',surface:'#170e16',input:'#241421',edge:'#673951',text:'#f6c2df',muted:'#bd8aa6',on:'#fd9fca'}:editor?{page:'#040a09',surface:'#0c1a15',input:'#13271e',edge:'#34604d',text:'#cbf5e2',muted:'#93b9a8',on:'#b6e777'}:chat?{page:'#050a09',surface:'#0a1713',input:'#10251b',edge:'#305a48',text:'#d1f3de',muted:'#91b5a5',on:'#8ce4b8'}:toolsColors;
-  const win=document.getElementById('window-'+id),pane=chat?win:document.getElementById(media?'meme-root':editor?'editor-root':id+'-tool'),title=win?.querySelector('.titlebar');
+ return Object.fromEntries(['convert','download','meme','editor','svyaz','game'].map(id=>{
+  const media=id==='meme',editor=id==='editor',chat=id==='svyaz',race=id==='game';
+  const colors=media?{page:'#090609',surface:'#170e16',input:'#241421',edge:'#673951',text:'#f6c2df',muted:'#bd8aa6',on:'#fd9fca'}:editor?{page:'#040a09',surface:'#0c1a15',input:'#13271e',edge:'#34604d',text:'#cbf5e2',muted:'#93b9a8',on:'#b6e777'}:chat?{page:'#050a09',surface:'#0a1713',input:'#10251b',edge:'#305a48',text:'#d1f3de',muted:'#91b5a5',on:'#8ce4b8'}:race?{page:'#090711',surface:'#151022',input:'#201630',edge:'#514067',text:'#edddff',muted:'#b8a7cb',on:'#bd9df8'}:toolsColors;
+  const win=document.getElementById('window-'+id),pane=chat||race?win:document.getElementById(media?'meme-root':editor?'editor-root':id+'-tool'),title=win?.querySelector('.titlebar');
   if(!win||!pane||!title)return [id,null];
-  const stop=()=>{win.classList.remove('matrix-tool-window');body.classList.remove('matrix-tool');};
+  const field=race?win.querySelector('#race-canvas'):null;
+  const clearRaceGrid=()=>{if(field){delete field.dataset.matrixWidth;delete field.dataset.matrixHeight;}};
+  const stop=()=>{win.classList.remove('matrix-tool-window');body.classList.remove('matrix-tool');if(race)clearRaceGrid();};
   function paint({pitch,width:w,height:h,headerRows:top,active}){
    if(!active||win.hidden||win.ownerDocument!==document){stop();return false;}
    const zoom=Number(body.style.zoom)||1,cell=pitch/zoom+'px',offset=top*pitch/zoom+'px';
@@ -696,13 +758,13 @@ body.matrix-tool :is(.social-picker,.sv-voice-floating,.sv-photo-viewer){z-index
     }
     font.text(name,b,{center,pad:1,compact:!full,color:quiet?colors.muted:colors.text});
    }
-   const tb=bounds(title),pb=chat?{...bounds(pane),t:tb.b}:bounds(pane);
+   const tb=bounds(title),pb=chat||race?{...bounds(pane),t:tb.b}:bounds(pane);
    if(pb.b<=pb.t||tb.b<=top){stop();return false;}
    fill({l:0,t:top,r:w,b:h},colors.page);
    fill({l:0,t:top,r:w,b:tb.b},colors.surface);
    fill({l:0,t:tb.b-1,r:w,b:tb.b},colors.edge);
    const control=bounds(title.querySelector('.window-controls'));
-   const titleText=win.dataset.title;
+   const titleText=race?'ГИПНОРОЙДЕР':win.dataset.title;
    if(chat){
     const textBounds={l:3,r:control.l-1,t:tb.t,b:tb.b};
     words('СВЯЗЬ',textBounds,{full:control.l>=58,primary:true});
@@ -713,6 +775,9 @@ body.matrix-tool :is(.social-picker,.sv-voice-floating,.sv-photo-viewer){z-index
      const y=Math.floor((tb.t+tb.b)/2);
      if(l>=24){const b={l,r,t:y-4,b:y+4};box(b,colors.on,colors.input);words(n,b,{center:true});}
     }
+   }else if(race){
+    const room={l:3,r:control.l-1,t:tb.t,b:tb.b};
+    words(bitmap.compactWidth(titleText)+3<=room.r-room.l?titleText:'ПОЛЁТ',room,{primary:true,full:true});
    }else words(titleText,{l:3,r:control.l-1,t:tb.t,b:tb.b},{full:true});
    for(const el of title.querySelectorAll('button')){
     const b=bounds(el),x=Math.floor((b.l+b.r)/2),y=Math.floor((b.t+b.b)/2);
@@ -741,6 +806,114 @@ body.matrix-tool :is(.social-picker,.sv-voice-floating,.sv-photo-viewer){z-index
       const image=bounds(bitmap);box({l:image.l-1,r:image.r+1,t:image.t-1,b:image.b+1},colors.edge,colors.page);
       ctx.clearRect(image.l,image.t,image.r-image.l,image.b-image.t);
      }
+    }
+    if(race){
+     const visible=el=>!!el&&!!el.getClientRects().length&&getComputedStyle(el).visibility!=='hidden';
+     const get=sel=>pane.querySelector(sel);
+     const show=(sel,fn)=>{const el=get(sel);if(visible(el))fn(el,bounds(el));};
+     const clipping=(b,fn)=>{
+      if(b.r<=b.l||b.b<=b.t)return;ctx.save();try{ctx.beginPath();ctx.rect(b.l,b.t,b.r-b.l,b.b-b.t);ctx.clip();fn()}finally{ctx.restore();}
+     };
+     const cut=(b,n=0)=>{const a=inset(b,n);ctx.clearRect(a.l,a.t,Math.max(0,a.r-a.l),Math.max(0,a.b-a.t))};
+     const textOf=el=>el.innerText?.trim()||el.textContent.trim();
+     const draw=(el,b,options={})=>{
+      if(b.b<=pb.t||b.t>=pb.b)return;
+      if(el.matches('button,summary')){
+       const active=el.matches('.launch-button,[aria-pressed=true],.selected');
+       const blocked=el.matches(':disabled');
+       box(b,active||hot(el)?colors.on:colors.edge,active&&!blocked?'#36224d':colors.input);
+       if(el.matches('.pilot-colors button')){fill(inset(b,2),el.style.getPropertyValue('--ship-color'));return}
+       const clean=textOf(el).replace(/^[✚Ⅱ▶]+\s*/, '').replace(/\s*→$/,'');
+       const line=el.localName==='summary'?(el.parentElement.open?'− ':'+ ')+clean:clean;
+       words(line,b,{primary:true,center:el.localName!=='summary',quiet:blocked});return;
+      }
+      if(el.matches('input,select')){
+       box(b,hot(el)?colors.on:colors.edge,colors.input);
+       if(el.localName==='input')cut(b,1);
+       else{words(el.selectedOptions[0]?.textContent||'',{...b,r:b.r-6},{primary:true});
+        const x=b.r-4,y=Math.floor((b.t+b.b)/2);
+        fill({l:x-1,r:x+2,t:y-1,b:y},colors.on);fill({l:x,r:x+1,t:y,b:y+1},colors.on);}
+       return;
+      }
+      words(textOf(el),b,options);
+     };
+     show('.game-toolbar',(bar,b)=>{
+      fill(b,colors.surface);fill({...b,t:b.b-1},colors.edge);
+      for(const button of bar.querySelectorAll('button'))if(visible(button))draw(button,bounds(button));
+      const room=bounds(bar.lastElementChild);
+      words(get('#game-mode').textContent,{...b,l:b.l+3,r:Math.max(4,room.l-1)},{primary:true});
+     });
+     show('.game-layout',(_,lb)=>clipping(lb,()=>{
+      if(win.classList.contains('racing')){
+       // Each WebGL output pixel maps to one physical screen cell on supported viewport sizes.
+       show('.game-screen',(stage,b)=>{
+        const rect=stage.getBoundingClientRect();
+        const l=Math.ceil(rect.left/pitch),t=Math.ceil(rect.top/pitch);
+        const r=Math.floor(rect.right/pitch),bottom=Math.floor(rect.bottom/pitch),cols=r-l,rows=bottom-t;
+        if(field&&cols>=1&&rows>=1&&cols<=640&&cols*rows<=230400){
+         const set=(prop,physical)=>{const value=physical/zoom+'px';if(field.style.getPropertyValue(prop)!==value)field.style.setProperty(prop,value)};
+         set('--matrix-race-left',l*pitch-rect.left);set('--matrix-race-top',t*pitch-rect.top);
+         set('--matrix-race-width',cols*pitch);set('--matrix-race-height',rows*pitch);
+         if(field.dataset.matrixWidth!==String(cols))field.dataset.matrixWidth=cols;
+         if(field.dataset.matrixHeight!==String(rows))field.dataset.matrixHeight=rows;
+        }else clearRaceGrid();
+        cut(b);
+       });
+       for(const el of pane.querySelectorAll('.game-hud>div,.flight-stats>span')){
+        if(!visible(el))continue;
+        const b=bounds(el);box(b,colors.edge,colors.page);
+        const small=el.querySelector('small'),strong=el.querySelector('b');
+        if(small&&strong&&strong.id==='hud-shield'){
+         draw(small,{...bounds(small),l:b.l,r:b.r},{center:true,quiet:true});
+         const y=Math.floor((bounds(strong).t+bounds(strong).b)/2);
+         const value=strong.textContent.trim();
+         if(value==='∞')words('∞',{...bounds(strong),l:b.l,r:b.r},{center:true});
+         else [...value].filter(v=>v==='◆'||v==='◇').forEach((v,i,all)=>{
+          const x=Math.floor((b.l+b.r)/2)-Math.floor((all.length-1)*3)+i*6;
+          box({l:x-2,r:x+3,t:y-2,b:y+3},colors.on,v==='◆'?colors.on:colors.page);
+         });
+        }else if(small&&strong){
+         draw(small,{...bounds(small),l:b.l,r:b.r},{primary:true,center:true,quiet:true});
+         draw(strong,{...bounds(strong),l:b.l,r:b.r},{primary:true,center:true});
+        }else{
+         const value=el.id==='hud-speed'?textOf(el).replace(/\s*м\/с$/i,'М/С'):textOf(el);
+         if(el.id==='hud-upgrades'&&bitmap.compactWidth(value)>b.r-b.l-2){
+          const short=value.replace('РЕАКТОР','РКТ');words(short,b,{primary:true,center:true});
+         }else words(value,b,{primary:true,center:true});
+        }
+       }
+       show('.boost-meter',(bar,b)=>{
+        box(b,colors.edge,colors.page);
+        const track=bar.querySelector('div'),level=bar.querySelector('#boost-fill');
+        if(!track||!level)return;
+        const a={l:b.l+25,r:b.r-2,t:b.t+2,b:b.b-2},unit=Number(level.style.transform.match(/scaleX\(([^)]+)\)/)?.[1]??1);
+        box(a,colors.edge,colors.input);
+        const max=Math.max(0,a.r-a.l-2);
+        fill({l:a.l+1,r:a.l+1+Math.round(Math.min(1,Math.max(0,unit))*max),t:a.t+1,b:a.b-1},colors.on);
+        words('НИТРО',{...b,l:b.l+1,r:a.l},{primary:true,center:true});
+       });
+      }else clearRaceGrid();
+      show('#game-overlay',(overlay,b)=>{
+       box(b,colors.edge,colors.page);
+       for(const el of overlay.querySelectorAll('h2,p,button')){
+        if(visible(el))draw(el,bounds(el),{center:true,full:el.localName==='h2',quiet:el.localName==='p'});
+       }
+      });
+      show('.race-sidebar',(side,b)=>{
+       fill(b,colors.page);
+       for(const el of side.querySelectorAll('button,summary,input,select,label,small,p,.race-record,#room-code-display,#room-players')){
+        if(!visible(el))continue;
+        const fold=el.closest('details');if(fold&&!fold.open&&el.localName!=='summary')continue;
+        const a=bounds(el);
+        draw(el,a,{primary:!el.matches('p'),quiet:el.matches('p,label,small')});
+       }
+      });
+     }));
+     show('.window-status',(bar,b)=>{
+      fill(b,colors.surface);fill({...b,b:b.t+1},colors.edge);
+      const status=bar.querySelector('#race-status');
+      if(visible(status))draw(status,{...b,l:b.l+3,r:Math.round(b.r*.72)},{primary:true,quiet:true});
+     });
     }
     if(chat){
      const visible=el=>!!el&&el.getClientRects().length&&getComputedStyle(el).visibility!=='hidden';
@@ -949,7 +1122,7 @@ body.matrix-tool :is(.social-picker,.sv-voice-floating,.sv-photo-viewer){z-index
       }});
      }
     }
-    const nodes=editor||chat?[]:pane.querySelectorAll('p,h3,summary,label,button,select,input,progress,a.tool-primary'+(media?',h2,b,output,textarea,.meme-file-name,.meme-empty small':''));
+    const nodes=editor||chat||race?[]:pane.querySelectorAll('p,h3,summary,label,button,select,input,progress,a.tool-primary'+(media?',h2,b,output,textarea,.meme-file-name,.meme-empty small':''));
     for(const el of nodes){
      if(el.closest('[hidden]')||!el.getClientRects().length)continue;
      const fold=el.closest('details');if(fold&&!fold.open&&el!==fold.querySelector('summary'))continue;
@@ -1016,9 +1189,16 @@ body.matrix-tool :is(.social-picker,.sv-voice-floating,.sv-photo-viewer){z-index
   function watch(repaint){
    const draw=()=>{if(!win.hidden)repaint()};
    const resize=new ResizeObserver(draw);resize.observe(win);if(pane!==win)resize.observe(pane);
-   if(chat){for(const region of pane.querySelectorAll('.sv-surface,.overview-tabs,.sv-voice-panel'))resize.observe(region);}
-   const observer=new MutationObserver(draw);
-   for(const region of chat?pane.querySelectorAll('.sv-surface,.overview-tabs,.sv-voice-panel'):[pane]){
+   if(chat||race)for(const region of pane.querySelectorAll(chat?'.sv-surface,.overview-tabs,.sv-voice-panel':'.game-toolbar,.game-layout,.race-sidebar,.game-overlay'))resize.observe(region);
+   let raceTimer=0,lastRacePaint=0;
+   const observer=new MutationObserver(records=>{
+    if(!race||!win.classList.contains('racing'))return draw();
+    const hudOnly=records.every(({target})=>(target.nodeType===1?target:target.parentElement)?.closest('.game-hud,.flight-stats,#race-status,#countdown'));
+    if(!hudOnly)return draw();
+    if(raceTimer)return;
+    raceTimer=setTimeout(()=>{raceTimer=0;lastRacePaint=performance.now();draw();},Math.max(0,85-(performance.now()-lastRacePaint)));
+   });
+   for(const region of chat||race?pane.querySelectorAll(chat?'.sv-surface,.overview-tabs,.sv-voice-panel':'.game-toolbar,.game-layout,.window-status'):[pane]){
     observer.observe(region,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['hidden','open','disabled','value','class','aria-selected','aria-current']});
    }
    if(editor){
@@ -1028,6 +1208,9 @@ body.matrix-tool :is(.social-picker,.sv-voice-floating,.sv-photo-viewer){z-index
    }
    observer.observe(title,{subtree:true,childList:true});
    observer.observe(win,{childList:true});
+   if(race){
+    const state=new MutationObserver(draw);state.observe(win,{attributes:true,attributeFilter:['class']});
+   }
    for(const event of ['scroll','pointerover','pointerout','focusin','focusout','input','change','toggle'])win.addEventListener(event,draw,true);
   }
   return [id,{paint,stop,watch}];

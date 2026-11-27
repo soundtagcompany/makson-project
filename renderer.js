@@ -154,7 +154,10 @@ export class SpaceRenderer {
     // Lower pixel resolution on slow devices rather than slowing down input/physics.
     if(r?.state==='racing'&&dt>.04)this.slowFrames++;else this.slowFrames=Math.max(0,this.slowFrames-1);
     if(this.slowFrames>24&&this.quality>.55){this.quality=Math.max(.55,this.quality-.06);this.slowFrames=0;}
-    const ratio=Math.min(this.quality,640/Math.max(this.cssWidth,1),Math.sqrt(230400/Math.max(this.cssWidth*this.cssHeight,1))),w=Math.max(1,Math.floor(this.cssWidth*ratio)),h=Math.max(1,Math.floor(this.cssHeight*ratio));
+    const matrixW=+c.dataset.matrixWidth,matrixH=+c.dataset.matrixHeight,
+      useMatrix=Number.isInteger(matrixW)&&Number.isInteger(matrixH)&&matrixW>0&&matrixH>0&&matrixW<=640&&matrixW*matrixH<=230400;
+    const ratio=Math.min(this.quality,640/Math.max(this.cssWidth,1),Math.sqrt(230400/Math.max(this.cssWidth*this.cssHeight,1))),
+      w=useMatrix?matrixW:Math.max(1,Math.floor(this.cssWidth*ratio)),h=useMatrix?matrixH:Math.max(1,Math.floor(this.cssHeight*ratio));
     if(c.width!==w||c.height!==h){c.width=w;c.height=h;}this.sizeTarget(w,h);gl.bindFramebuffer(gl.FRAMEBUFFER,this.target);gl.viewport(0,0,w,h);gl.enable(gl.DEPTH_TEST);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.useProgram(this.program);gl.enableVertexAttribArray(this.pos);gl.enableVertexAttribArray(this.normal);gl.uniform2f(this.u.PixelGrid,w*.5,h*.5);gl.uniform1f(this.u.Time,time);
     const distance=p?.distance??time*160,x=p?(p.x-320)/28:Math.sin(time*.2)*2,y=p?(p.y-240)/28:Math.cos(time*.2);
     const smooth=1-Math.exp(-dt*14);this.smoothX+=(x-this.smoothX)*smooth;this.smoothY+=(y-this.smoothY)*smooth;
