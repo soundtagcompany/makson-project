@@ -33,6 +33,20 @@ body.preview-chrome :is(#console-shell .window,#window-svyaz,#window-settings)>.
  body.preview-chrome #console-shell #app-workspace #window-importopoly:not(:fullscreen):not(.fullscreen-fallback)>.titlebar>span{flex:1 0 100%}
  body.preview-chrome #console-shell #app-workspace #window-importopoly:not(:fullscreen):not(.fullscreen-fallback)>.titlebar>.window-controls{flex:1 0 100%;justify-content:flex-end}
 }
+@media (orientation:portrait) and (max-width:430px) and (pointer:coarse){
+ body.preview-chrome #window-buffer>.utility-body[data-preview-writing]>.field-heading{margin:0 0 calc(6px / var(--ui-scale,1))}
+ body.preview-chrome #window-buffer>.utility-body[data-preview-writing]>#buffer-text{
+  min-height:calc(112px / var(--ui-scale,1));height:calc(clamp(124px,22dvh,188px) / var(--ui-scale,1));
+  line-height:1.45;scroll-margin-block:calc(8px / var(--ui-scale,1));
+ }
+ body.preview-chrome #window-buffer>.utility-body[data-preview-writing]>.utility-intro{
+  margin-block:calc(16px / var(--ui-scale,1)) calc(8px / var(--ui-scale,1));
+  padding-block-start:calc(10px / var(--ui-scale,1));border-block-start:1px solid var(--console-rule,#26472e);
+ }
+ body.preview-chrome #window-buffer>.utility-body[data-preview-writing]>.field-heading>label{
+  color:var(--console-green,#96eeb3);letter-spacing:.02em;
+ }
+}
 @media(forced-colors:active){#preview-window-grid{display:none!important}}
 
 `;
@@ -97,6 +111,30 @@ window.addEventListener('keydown',e=>{
 for(const evt of ['windowfocus','windowhide'])document.addEventListener(evt,sync);
 const watcher=new MutationObserver(sync);windows.forEach(el=>watcher.observe(el,{attributes:true,attributeFilter:['hidden']}));
 if(dock)watcher.observe(dock,{childList:true});
+// In portrait, put the draft first in both visual order and keyboard order.
+function setupWritingPane(){
+ const win=document.querySelector('#window-buffer'),body=win?.querySelector(':scope>.utility-body');
+ const heading=body?.querySelector(':scope>.field-heading'),field=body?.querySelector(':scope>#buffer-text');
+ if(!heading||!field)return;
+ const originalNext=field.nextSibling;
+ const narrow=matchMedia('(orientation:portrait) and (max-width:430px) and (pointer:coarse)');
+ function arrange(){
+  if(win.ownerDocument!==document)return;
+  const writing=narrow.matches&&!contrast.matches,active=document.activeElement;
+  if(writing===body.hasAttribute('data-preview-writing'))return;
+  if(writing){
+   body.prepend(heading,field);
+  }else{
+   body.insertBefore(heading,originalNext);
+   body.insertBefore(field,originalNext);
+  }
+  body.toggleAttribute('data-preview-writing',writing);
+  if(active?.isConnected&&(active===field||heading.contains(active)))active.focus({preventScroll:true});
+ }
+ narrow.addEventListener('change',arrange);contrast.addEventListener('change',arrange);
+ document.addEventListener('windowfocus',e=>{if(e.detail==='buffer')arrange()});
+ arrange();
+}
 function contrastChanged(){document.body.classList.toggle('preview-chrome',ready&&!contrast.matches);sync()}
 contrast.addEventListener('change',contrastChanged);
 function setupBitmapTitles(){
@@ -206,5 +244,5 @@ function setupBitmapTitles(){
  addEventListener('resize',draw,{passive:true});draw();
 }
 const script=document.createElement('script');script.src='/pixel-layout.js';
-script.onload=()=>{if(!window.MaksonPreviewBitmap){watcher.disconnect();hide();return;}ready=true;setupBitmapTitles();contrastChanged()};
+script.onload=()=>{if(!window.MaksonPreviewBitmap){watcher.disconnect();hide();return;}ready=true;setupBitmapTitles();setupWritingPane();contrastChanged()};
 script.onerror=()=>{watcher.disconnect();hide()};document.head.append(script);
