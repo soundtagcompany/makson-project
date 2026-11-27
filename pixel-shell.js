@@ -90,7 +90,10 @@ function sync(){
  didSchedule=true;queueMicrotask(()=>{
   didSchedule=false;
   const active=windows.filter(w=>w.isConnected&&!w.hidden);
-  const target=active.length===1&&!dock?.childElementCount&&active[0].ownerDocument===document&&!document.fullscreenElement&&
+  // Only an app's own fullscreen needs the native window. The site root still contains the pixel surface.
+  const fullscreen=document.fullscreenElement||document.webkitFullscreenElement;
+  const appFullscreen=fullscreen&&fullscreen!==document.documentElement;
+  const target=active.length===1&&!dock?.childElementCount&&active[0].ownerDocument===document&&!appFullscreen&&
    !active[0].classList.contains('fullscreen-fallback')?(active[0]===settingsWin?painter:active[0]===bufferWin?buffer:tools[active[0].id.slice(7)]):null;
   if(ready&&target&&!contrast.matches){
    show();

@@ -257,9 +257,8 @@ function drawSpeed(scene){
  compact(text,x,y,'#d9a1f4');
 }
 const staticLayer=document.createElement('canvas'),staticCtx=staticLayer.getContext('2d');
-let staticDirty=true;
+let staticDirty=true,catalogNeedsLayout=false;
 function draw(buttons,focusKey){
- if(buttons)nav.replaceChildren();
  n=innerWidth<490||(innerHeight<490&&matchMedia('(pointer:coarse)').matches)?3:4;
  W=Math.ceil(innerWidth/n);H=Math.ceil(innerHeight/n);
  if(c.width!==W||c.height!==H){c.width=W;c.height=H;c.style.width=W*n+'px';c.style.height=H*n+'px';c.parentElement.style.setProperty('--preview-cell',n+'px')}
@@ -271,6 +270,7 @@ function draw(buttons,focusKey){
  const appFrame={ctx,pitch:n,width:W,height:H,headerRows:top},app=native&&window.MaksonPixelApp;
  const rasterApp=app?.paintApp?app.paintApp(appFrame):app?.paintSettings?.(appFrame)?'settings':'';
  if(rasterApp){
+  if(buttons)catalogNeedsLayout=true;
   drawHeader(top);
   if(rasterApp!=='settings')return;
   const win=document.querySelector('#window-settings');
@@ -288,6 +288,7 @@ function draw(buttons,focusKey){
   }
   return;
  }
+ if(buttons||catalogNeedsLayout){buttons=true;catalogNeedsLayout=false;nav.replaceChildren();}
  const narrow=innerWidth<=950&&matchMedia('(orientation:portrait)').matches,list=lists[folder],head=16,length=head+list.length*15+4,side=Math.min(Math.floor(W*.54),112);
  const panel=narrow?Math.min(Math.floor(H*.55),length):native?Math.max(1,H-top):Math.min(H-top-8,length);
  const sidebar=Math.min(Math.floor((W-5)*.42),Math.max(Math.ceil(160/n),Math.min(Math.floor(W*.28),Math.floor(372/n))));
