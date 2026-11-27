@@ -436,7 +436,7 @@ body.matrix-buffer>.console-focus-frame{z-index:2147482499!important}
 export function createToolSurfaces(bitmap,ctx){
  const body=document.body,style=document.createElement('style');
  style.textContent=`
-body.matrix-tool #console-shell #app-workspace :is(.tools-window,.meme-window).matrix-tool-window{
+body.matrix-tool #console-shell #app-workspace :is(.tools-window,.meme-window,.editor-window).matrix-tool-window{
  position:fixed!important;inset:var(--mtop) 0 0!important;width:100%!important;max-width:none!important;
  height:calc(var(--viewport-height,100dvh) - var(--mtop))!important;max-height:none!important;
  min-height:0!important;margin:0!important;border:0!important;box-shadow:none!important;
@@ -501,8 +501,8 @@ body.matrix-tool #console-shell #app-workspace .matrix-tool-window .tools-body .
 body.matrix-tool #console-shell #app-workspace .matrix-tool-window .tools-body .tool-progress progress{
  display:block;width:100%;height:calc(4 * var(--mt));margin:0 0 calc(2 * var(--mt));
 }
-body.matrix-tool #console-shell #app-workspace :is(.tools-window,.meme-window).matrix-tool-window .tools-body [hidden][hidden],
-body.matrix-tool #console-shell #app-workspace :is(.tools-window,.meme-window).matrix-tool-window .tools-body :is(p:empty,details:not([open])>:not(summary)){
+body.matrix-tool #console-shell #app-workspace :is(.tools-window,.meme-window,.editor-window).matrix-tool-window .tools-body [hidden][hidden],
+body.matrix-tool #console-shell #app-workspace :is(.tools-window,.meme-window,.editor-window).matrix-tool-window .tools-body :is(p:empty,details:not([open])>:not(summary)){
  display:none!important;
 }
 body.matrix-tool #console-shell #app-workspace .matrix-tool-window .tools-body form>:is(.tool-note,.tool-details,h3,p){
@@ -540,14 +540,48 @@ body.matrix-tool #console-shell #app-workspace #window-meme.matrix-tool-window .
 @media(max-width:470px){
  body.matrix-tool #console-shell #app-workspace #window-meme.matrix-tool-window>.titlebar button{width:calc(10 * var(--mt))!important}
 }
+body.matrix-tool #window-editor.matrix-tool-window .editor-root {
+ zoom:1;overflow:auto;overscroll-behavior:contain;scrollbar-width:none;
+ font:500 calc(5 * var(--mt)) / calc(8 * var(--mt)) ConsoleMono,monospace!important;
+}
+body.matrix-tool #window-editor.matrix-tool-window .editor-root :is(button,select,input:not([type=file]),textarea,a) {
+ font:inherit!important;min-height:max(44px,calc(14 * var(--mt)));border-radius:0;
+}
+body.matrix-tool #window-editor.matrix-tool-window .editor-root :is(input:not([type=range]):not([type=color]),textarea) {
+ color:#d4f6e5;background:#13271e;border:0;opacity:1;
+}
+body.matrix-tool #window-editor.matrix-tool-window .editor-root :is(.edit-panel-head,.edit-transport,.edit-status,#edit-export,.edit-properties) {
+ padding-inline:calc(4 * var(--mt));
+}
+body.matrix-tool #window-editor.matrix-tool-window .edit-panel-head{min-height:calc(16 * var(--mt));height:auto}
+body.matrix-tool #window-editor.matrix-tool-window .edit-transport button{min-width:44px}
+body.matrix-tool #window-editor.matrix-tool-window .editor-root .edit-timeline-handle{
+ min-height:0;width:max(22px,calc(7 * var(--mt)))!important
+}
+body.matrix-tool #window-editor.matrix-tool-window .editor-root :is(#edit-empty,#edit-audio-preview) svg{display:none}
+body.matrix-tool #window-editor.matrix-tool-window .editor-root #edit-stage-busy{padding:calc(3 * var(--mt))}
+body.matrix-tool #window-editor.matrix-tool-window .editor-root :is(.edit-status p,#edit-source-info,.edit-help){min-height:calc(15 * var(--mt))}
+body.matrix-tool #window-editor.matrix-tool-window .editor-root .edit-track-label{padding-inline:calc(2 * var(--mt))}
+body.matrix-tool #window-editor.matrix-tool-window .editor-root :is(.edit-timeline-ruler span,.edit-timeline-labels span,.edit-panel-head output){min-width:calc(36 * var(--mt))}
+body.matrix-tool #window-editor.matrix-tool-window  .editor-root .edit-transport>span{flex:0 0 calc(5 * var(--mt));text-align:center}
+body.matrix-tool #window-editor.matrix-tool-window .editor-root #edit-replace{min-width:calc(28 * var(--mt))}
+body.matrix-tool #window-editor.matrix-tool-window .editor-root #edit-export :is(button,a){min-width:calc(36 * var(--mt))}
+body.matrix-tool #window-editor.matrix-tool-window .editor-root #edit-export label>span{min-width:calc(27 * var(--mt))}
+body.matrix-tool #window-editor.matrix-tool-window .editor-root #edit-export select{min-width:calc(24 * var(--mt))}
+
+
+@container(max-width:740px){
+ body.matrix-tool #window-editor.matrix-tool-window .editor-root :is(#edit-export,.edit-tabs){position:static}
+ body.matrix-tool #window-editor.matrix-tool-window .edit-transport button{width:44px}
+}
 `;
  document.head.append(style);
  const toolsColors={page:'#020704',surface:'#08130d',input:'#0b1c12',edge:'#2d5840',text:'#b5eccc',muted:'#80ae91',on:'#76e6a7'};
  const font=makeText(bitmap,ctx);
- return Object.fromEntries(['convert','download','meme'].map(id=>{
-  const media=id==='meme';
-  const colors=media?{page:'#090609',surface:'#170e16',input:'#241421',edge:'#673951',text:'#f6c2df',muted:'#bd8aa6',on:'#fd9fca'}:toolsColors;
-  const win=document.getElementById('window-'+id),pane=document.getElementById(media?'meme-root':id+'-tool'),title=win?.querySelector('.titlebar');
+ return Object.fromEntries(['convert','download','meme','editor'].map(id=>{
+  const media=id==='meme',editor=id==='editor';
+  const colors=media?{page:'#090609',surface:'#170e16',input:'#241421',edge:'#673951',text:'#f6c2df',muted:'#bd8aa6',on:'#fd9fca'}:editor?{page:'#040a09',surface:'#0c1a15',input:'#13271e',edge:'#34604d',text:'#cbf5e2',muted:'#93b9a8',on:'#b6e777'}:toolsColors;
+  const win=document.getElementById('window-'+id),pane=document.getElementById(media?'meme-root':editor?'editor-root':id+'-tool'),title=win?.querySelector('.titlebar');
   if(!win||!pane||!title)return [id,null];
   const stop=()=>{win.classList.remove('matrix-tool-window');body.classList.remove('matrix-tool');};
   function paint({pitch,width:w,height:h,headerRows:top,active}){
@@ -606,7 +640,114 @@ body.matrix-tool #console-shell #app-workspace #window-meme.matrix-tool-window .
       ctx.clearRect(image.l,image.t,image.r-image.l,image.b-image.t);
      }
     }
-    const nodes=pane.querySelectorAll('p,h3,summary,label,button,select,input,progress,a.tool-primary'+(media?',h2,b,output,textarea,.meme-file-name,.meme-empty small':''));
+    if(editor){
+     const visible=el=>!!el&&el.getClientRects().length&&getComputedStyle(el).visibility!=='hidden';
+     const get=sel=>pane.querySelector(sel);
+     const show=(sel,fn)=>{const el=get(sel);if(visible(el))fn(bounds(el),el)};
+     const clip=(b,fn)=>{
+      if(b.b<=pb.t||b.t>=pb.b||b.l>=b.r||b.t>=b.b)return;
+      ctx.save();try{ctx.beginPath();ctx.rect(b.l,b.t,b.r-b.l,b.b-b.t);ctx.clip();fn()}finally{ctx.restore()}
+     };
+     const cut=b=>ctx.clearRect(b.l,b.t,Math.max(0,b.r-b.l),Math.max(0,b.b-b.t));
+     const drawLabel=(el,b,options={})=>words(el.textContent,b,{primary:true,...options});
+     function editNodes(root,selector){
+      for(const el of root.querySelectorAll(selector)){
+       if(!visible(el))continue;
+       const b=bounds(el);if(b.b<=pb.t||b.t>=pb.b)continue;
+       const tag=el.localName,disabled=el.matches(':disabled');
+       if(tag==='button'||tag==='a'){
+        const primary=el.matches('#edit-open,#edit-submit,#edit-result,[aria-selected=true]');
+        box(b,hot(el)||primary&&!disabled?colors.on:colors.edge,primary&&!disabled?'#203b2c':colors.input);
+        if(el.id==='edit-play'){
+         const x=Math.floor((b.l+b.r)/2),y=Math.floor((b.t+b.b)/2),color=disabled?colors.muted:colors.text;
+         if(el.textContent==='Ⅱ'){fill({l:x-2,r:x-1,t:y-3,b:y+4},color);fill({l:x+1,r:x+2,t:y-3,b:y+4},color)}
+         else for(let j=0;j<5;j++)fill({l:x-2+j,r:x-1+j,t:y-3+Math.floor(j/1.5),b:y+4-Math.floor(j/1.5)},color);
+        }else if(el.id==='edit-to-start'){
+         const x=Math.floor((b.l+b.r)/2),y=Math.floor((b.t+b.b)/2),color=disabled?colors.muted:colors.text;
+         fill({l:x-4,r:x-3,t:y-3,b:y+4},color);fill({l:x-2,r:x+4,t:y,b:y+1},color);
+         for(let j=0;j<3;j++)fill({l:x-2+j,r:x-1+j,t:y-j,b:y+j+1},color);
+        }else drawLabel(el,b,{center:true,quiet:disabled});
+       }else if(tag==='select'){
+        box(b,hot(el)?colors.on:colors.edge,colors.input);
+        words(el.selectedOptions[0]?.textContent||'',{...b,r:b.r-3},{primary:true,quiet:disabled});
+        const x=b.r-3,y=Math.floor((b.t+b.b)/2);
+        fill({l:x-1,r:x+2,t:y-1,b:y},colors.muted);fill({l:x,r:x+1,t:y,b:y+1},colors.muted);
+       }else if(tag==='textarea'||tag==='input'){
+        if(el.type==='file')continue;
+        box(b,hot(el)?colors.on:colors.edge,colors.input);
+        if(el.type==='range'){
+         const x=b.l+3,r=b.r-3,y=Math.floor((b.t+b.b)/2),current=Math.round(x+(r-x)*(+el.value- +el.min)/(+el.max- +el.min||1));
+         fill({l:x,r,t:y,b:y+1},colors.edge);fill({l:x,r:current,t:y,b:y+1},colors.on);
+         fill({l:current-1,r:current+2,t:y-2,b:y+3},disabled?colors.muted:colors.on);
+        }else if(el.type==='color') fill(inset(b,3),el.value);
+        else cut(inset(b,1));
+       }else if(tag==='progress'){
+        box(b,colors.edge,colors.input);
+        fill({l:b.l+1,r:b.l+1+Math.round((b.r-b.l-2)*Math.max(0,el.position)),t:b.t+1,b:b.b-1},colors.on);
+       }else if(tag==='label'){
+        const field=el.querySelector('input,textarea');
+        if(field&&visible(field))words(elText(el),{...b,b:field.type==='color'?b.b:bounds(field).t,r:field.type==='color'?bounds(field).l:b.r},{primary:true,quiet:true});
+       }else if(el.matches('.edit-status p,#edit-source-info,.edit-help')){
+        words(el.textContent,b,{quiet:true});
+       }else if(el.matches('#edit-empty>span')){
+        words('ДО 256 МБ · ДО 10 МИН',b,{center:true,quiet:true});
+       }else if(el.id==='edit-main-label'){
+        words(el.textContent==='Видео'?'КЛИП':el.textContent,b,{quiet:true});
+       }else if(el.matches('.edit-transport>span')){
+        const x=Math.floor((b.l+b.r)/2),y=Math.floor((b.t+b.b)/2);
+        fill({l:x,r:x+1,t:y-1,b:y+1},colors.muted);
+       }else drawLabel(el,b,{quiet:!el.matches('output,#edit-name,.edit-property-heading')});
+      }
+     }
+     for(const [sel,color] of [['.edit-preview',colors.page],['.edit-panel-head',colors.surface],['.edit-inspector',colors.surface],['.edit-timeline-panel',colors.surface],['.edit-transport',colors.surface],['#edit-export',colors.surface]]) {
+      for(const region of pane.querySelectorAll(sel))if(visible(region)){const rb=bounds(region);fill(rb,color);fill({...rb,b:rb.t+1},colors.edge);}
+     }
+     show('#edit-frame',b=>cut(b));
+     if(visible(get('.edit-drag-over .edit-drop-hint'))){
+      show('.edit-drop-hint',(b,el)=>{box(b,colors.on,colors.input);drawLabel(el,b,{center:true})});
+     }else if(visible(get('#edit-stage-busy'))){
+      show('#edit-stage-busy',(b,el)=>{fill(b,colors.page);clip(b,()=>editNodes(el,'span,progress,button'))});
+     }else{
+      for(const sel of ['#edit-empty','#edit-audio-preview'])show(sel,(b,el)=>clip(b,()=>editNodes(el,'span,p,button')));
+     }
+     show('.edit-preview',(_,el)=>editNodes(el,'.edit-panel-head span,#edit-replace,.edit-transport button'));
+     show('.edit-transport',b=>{
+      const last=get('#edit-play'),now=get('#edit-clock'),total=get('#edit-total');
+      if(last&&now&&total)words(now.value+' / '+total.value,{...b,l:bounds(last).r+3,r:b.r-3},{center:true,primary:true});
+     });
+     show('.edit-tabs',(_,el)=>editNodes(el,'button'));
+     show('.edit-properties',(b,el)=>clip(b,()=>editNodes(el,'label,textarea,button,input,p')));
+     show('#edit-export',(_,el)=>editNodes(el,'label>span,button,select,a'));
+     show('.edit-status',(_,el)=>editNodes(el,'p,progress'));
+     show('.edit-timeline-panel',(_,el)=>editNodes(el,'.edit-panel-head span,output,.edit-track-label,.edit-timeline-ruler span,.edit-timeline-labels span'));
+     show('.edit-timeline-track',(b,track)=>{
+      box(b,colors.edge,colors.input);
+      if(track.querySelector('.edit-timeline-filmstrip canvas'))cut(inset(b,1));
+      if(!track.parentElement.classList.contains('has-source')){
+       words('КЛИП ПОЯВИТСЯ ЗДЕСЬ',b,{center:true,quiet:true,primary:true});return;
+      }
+      clip({...b,t:b.t-1,b:b.b+1},()=>{
+       for(const sel of ['.edit-timeline-shade-before','.edit-timeline-shade-after'])show(sel,sb=>fill(sb,'#010905ad'));
+       show('.edit-timeline-selection',sb=>{fill({...sb,b:sb.t+1},colors.on);fill({...sb,t:sb.b-1},colors.on)});
+       for(const handle of track.querySelectorAll('.edit-timeline-handle')){
+        const hb=bounds(handle),x=Math.floor((hb.l+hb.r)/2),y=Math.floor((hb.t+hb.b)/2);
+        box(hb,hot(handle)?colors.text:colors.edge,colors.on);
+        for(const offset of [-1,1])fill({l:x+offset,r:x+offset+1,t:y-2,b:y+3},colors.page);
+       }
+       show('.edit-timeline-playhead',ph=>fill({...ph,r:ph.l+1},colors.text));
+      });
+     });
+     for(const lane of pane.querySelectorAll('.edit-track-lane')){
+      if(!visible(lane))continue;
+      const lb=bounds(lane);box(lb,colors.edge,colors.input);
+      clip(lb,()=>{for(const el of lane.children){
+       if(!visible(el))continue;
+       const b=bounds(el);if(el.id.endsWith('-clip'))box(b,colors.edge,'#254a38');
+       drawLabel(el,el.id.endsWith('-clip')?b:{...lb,l:lb.l+2},{quiet:!el.id.endsWith('-clip')});
+      }});
+     }
+    }
+    const nodes=editor?[]:pane.querySelectorAll('p,h3,summary,label,button,select,input,progress,a.tool-primary'+(media?',h2,b,output,textarea,.meme-file-name,.meme-empty small':''));
     for(const el of nodes){
      if(el.closest('[hidden]')||!el.getClientRects().length)continue;
      const fold=el.closest('details');if(fold&&!fold.open&&el!==fold.querySelector('summary'))continue;
@@ -675,6 +816,11 @@ body.matrix-tool #console-shell #app-workspace #window-meme.matrix-tool-window .
    const resize=new ResizeObserver(draw);resize.observe(win);resize.observe(pane);
    const observer=new MutationObserver(draw);
    observer.observe(pane,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['hidden','open','disabled','value','class']});
+   if(editor){
+    // Observe timeline geometry only; ordinary playback/pointer changes coalesce in the shared frame scheduler.
+    const timeline=new MutationObserver(records=>{if(records.some(({target})=>target.matches('.edit-timeline,[id$="-clip"]')))draw()});
+    timeline.observe(pane,{subtree:true,attributes:true,attributeFilter:['style']});
+   }
    observer.observe(title,{subtree:true,childList:true});
    observer.observe(win,{childList:true});
    for(const event of ['scroll','pointerover','pointerout','focusin','focusout','input','change','toggle'])win.addEventListener(event,draw,true);
