@@ -59,7 +59,17 @@ nav.addEventListener('keydown',e=>{
 if(document.querySelector('#framebuffer-preview')){
  window.MaksonPreviewBitmap=Object.freeze({
   pitch:()=>innerWidth<490||(innerHeight<490&&matchMedia('(pointer:coarse)').matches)?3:4,
-  width,
+  width,compactWidth,
+  drawCompact(target,text,color){
+   const t=target.getContext('2d');t.fillStyle=color;
+   let x=0;
+   for(const k of text){
+    if(k===' '){x+=2;continue;}
+    const rows=tiny[k]||tiny[alias[k]]||'71202';
+    [...rows].forEach((r,j)=>{for(let i=0;i<3;i++)if(Number(r)&(4>>i))t.fillRect(x+i,j,1,1)});
+    x+=4;
+   }
+  },
   draw(target,text,color){
    const t=target.getContext('2d');
    let x=0;t.fillStyle=color;

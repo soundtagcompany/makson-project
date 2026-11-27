@@ -20,12 +20,10 @@ body.preview-native-home #framebuffer-preview #controls button:focus-visible{out
 #framebuffer-preview #controls button:focus-visible{outline:2px solid white!important;outline-offset:-2px}
 body.preview-chrome .window[id^='window-']>.titlebar{background:#020906!important;background-image:none!important;box-shadow:none!important;text-shadow:none!important}
 body.preview-chrome .window[id^='window-']>.titlebar>.window-controls button{background:#090f0c!important;border-radius:0!important;box-shadow:none!important;text-shadow:none!important}
-body.preview-chrome .preview-bitmap-label{position:relative;min-height:var(--preview-title-min,0px);flex:1 1 0;min-width:0}
-body.preview-chrome .preview-bitmap-label>.preview-native-text{display:contents}
-body.preview-chrome .preview-bitmap-label:not([data-native-label])>.preview-native-text{color:transparent!important;text-shadow:none!important}
-body.preview-chrome .preview-bitmap-label:not([data-native-label])>.preview-native-text svg{opacity:0!important}
-body.preview-chrome .preview-bitmap-label canvas{position:absolute;visibility:visible;inset:calc((100% - var(--preview-title-min)) / 2) auto auto 0;translate:none;image-rendering:pixelated!important;pointer-events:none}
-body.preview-chrome .preview-bitmap-label[data-native-label] canvas{display:none}
+#preview-window-grid{position:fixed;left:0;top:0;z-index:2147482500;pointer-events:none;image-rendering:pixelated;zoom:calc(1 / var(--ui-scale,1))}
+#preview-window-grid[hidden]{display:none!important}
+body.preview-chrome .window>.titlebar>span[data-preview-grid-ink]{opacity:0!important}
+
 `;
 document.head.append(style);
 const windows=[...document.querySelectorAll('.window[id^="window-"]')], allowed=new Set(windows.map(w=>w.id.slice(7)));
@@ -93,39 +91,52 @@ contrast.addEventListener('change',contrastChanged);
 function setupBitmapTitles(){
  const bitmap=window.MaksonPreviewBitmap;
  if(!bitmap)return;
- const titles=new Map([['editor','МОНТАЖКА'],['download','ЗАГРУЗЧИК'],['convert','КОНВЕРТЕР'],['buffer','БУФЕР']]);
+ const titles=new Map([['editor','МОНТАЖКА'],['download','ЗАГРУЗЧИК'],['convert','КОНВЕРТЕР'],['buffer','БУФЕР'],
+  ['meme','МЕМОИНАТОР'],['game','ГИПНОРОЙДЕР'],['importopoly','СДВГПОЛИЯ'],['pulse','ПУЛЬС'],
+  ['naval','МОРСКОЙ БОЙ'],['svyaz','СВЯЗЬ'],['settings','НАСТРОЙКИ']]);
  const labels=[];
  for(const [id,text] of titles){
-  const title=document.querySelector('#window-'+id+'>.titlebar>span');
-  if(!title)continue;
-  const c=document.createElement('canvas');c.setAttribute('aria-hidden','true');c.dataset.pixelExempt='';
-  const native=document.createElement('span');native.className='preview-native-text';
-  native.append(...title.childNodes);title.append(native,c);
-  title.classList.add('preview-bitmap-label');title.dataset.nativeLabel='';
-  labels.push({title,text,c});
+  const win=document.querySelector('#window-'+id), title=win?.querySelector(':scope>.titlebar>span');
+  if(title)labels.push({win,title,text,canvas:document.createElement('canvas')});
  }
+ const screen=document.createElement('canvas');screen.id='preview-window-grid';screen.setAttribute('aria-hidden','true');screen.hidden=true;
+ document.body.append(screen);
+ const ctx=screen.getContext('2d');
  let pending=false;
  function draw(){
   if(pending)return;
   pending=true;requestAnimationFrame(()=>{
    pending=false;
-   for(const {title,text,c} of labels){
-    const pitch=bitmap.pitch(),size=bitmap.width(text);
-    const bar=title.parentElement;
-    const zoom=bar.offsetWidth?bar.getBoundingClientRect().width/bar.offsetWidth:1;
-    if(zoom)title.style.setProperty('--preview-title-min',pitch*8/zoom+'px');
-    const bounds=title.getBoundingClientRect();
-    const fallback=contrast.matches||!bounds.width||pitch*size>bounds.width-1||pitch*8>bounds.height+.1;
-    if(title.hasAttribute('data-native-label')!==fallback)title.toggleAttribute('data-native-label',fallback);
-    if(fallback)continue;
-    c.width=size;c.height=8;c.style.width=pitch*size/zoom+'px';c.style.height=8*pitch/zoom+'px';
+   const pitch=bitmap.pitch(),w=Math.floor(innerWidth/pitch),h=Math.floor(innerHeight/pitch);
+   if(screen.width!==w||screen.height!==h){screen.width=w;screen.height=h;screen.style.width=w*pitch+'px';screen.style.height=h*pitch+'px';}
+   ctx.clearRect(0,0,w,h);
+   const playing=document.fullscreenElement||document.querySelector('.fullscreen-fallback');
+   let rendered=false;
+   for(const {win,title,text,canvas} of labels){
+    const r=title.getBoundingClientRect(),bar=title.parentElement.getBoundingClientRect();
+    const gx=Math.max(0,Math.ceil((r.left+1)/pitch)),end=Math.min(w,Math.floor((r.right-2)/pitch));
+    const compact=gx+bitmap.width(text)>end || r.height<8*pitch;
+    const size=compact?bitmap.compactWidth(text):bitmap.width(text),rows=compact?5:8;
+    const gy=Math.floor((r.top+(r.height-rows*pitch)/2)/pitch);
+    const room=gy*pitch>=bar.top&&((gy+rows)*pitch)<=bar.bottom&&gx+size<=end;
+    const onTop=room&&[gx+1,gx+Math.floor(size/2),gx+size-1].every(x=>
+     title.parentElement.contains(document.elementFromPoint(x*pitch+pitch/2,(gy+Math.floor(rows/2))*pitch)));
+    const paint=!contrast.matches&&root.hidden&&!playing&&!win.hidden&&win.ownerDocument===document&&r.width>0&&room&&onTop
+      &&gy>=0&&gy+rows<=h;
+    title.toggleAttribute('data-preview-grid-ink',paint);
+    if(!paint)continue;
     const color=getComputedStyle(title).getPropertyValue('--app-color').trim()||'#96eeb3';
-    bitmap.draw(c,text,color);
+    canvas.width=size;canvas.height=rows;
+    (compact?bitmap.drawCompact:bitmap.draw)(canvas,text,color);ctx.drawImage(canvas,gx,gy);rendered=true;
    }
+   screen.hidden=!rendered;
   });
  }
- const ro=new ResizeObserver(draw);labels.forEach(({title})=>ro.observe(title));
- contrast.addEventListener('change',draw);document.addEventListener('windowfocus',draw);
+ const ro=new ResizeObserver(draw);labels.forEach(({title,win})=>{ro.observe(title);ro.observe(win)});
+ const mo=new MutationObserver(draw);labels.forEach(({win})=>mo.observe(win,{attributes:true,attributeFilter:['hidden','style','class']}));
+ contrast.addEventListener('change',draw);
+ for(const e of ['windowfocus','windowhide','fullscreenchange','windowresize','console-scale-change','makson-pixel-screen-change'])document.addEventListener(e,draw);
+ document.addEventListener('scroll',draw,true);
  addEventListener('resize',draw,{passive:true});draw();
 }
 const script=document.createElement('script');script.src='/__preview/prototype.js';
