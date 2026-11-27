@@ -1,5 +1,6 @@
 (() => {
-const c=document.querySelector('#screen'),native=!!c.closest('[data-preview-native]'),ctx=c.getContext('2d',{alpha:native}),nav=document.querySelector('#controls'),status=document.querySelector('#status');
+const c=document.querySelector('#screen'),native=!!c.closest('[data-preview-native]'),nav=document.querySelector('#controls'),status=document.querySelector('#status');
+let ctx=c.getContext('2d',{alpha:native});
 const ink={bg:'#000000',star:'#6e508e',distant:'#242031',red:'#ff4b50',header:'#050303',rule:'#452025',catalog:'#020906',edge:'#203b27',green:'#96eeb3',mint:'#4bf89b',muted:'#72a285',front:'#ab52e7',back:'#46216a'};
 const lists={root:[['Программы','folder','tools'],['Игры','folder','games']],
  tools:[['Монтажка','edit','editor'],['Конвертер','swap','convert'],['Загрузчик','down','download'],['Мемоинатор','photo','meme'],['Буфер','copy','buffer']],
@@ -60,6 +61,11 @@ if(document.querySelector('#framebuffer-preview')){
  window.MaksonPreviewBitmap=Object.freeze({
   pitch:()=>innerWidth<490||(innerHeight<490&&matchMedia('(pointer:coarse)').matches)?3:4,
   width,compactWidth,
+  drawDesktopHeader(target,pitch,cols,rows){
+   const previous=[ctx,n,W];
+   ctx=target;n=pitch;W=cols;
+   try{drawHeader(rows);}finally{[ctx,n,W]=previous;}
+  },
   drawCompact(target,text,color){
    const t=target.getContext('2d');t.fillStyle=color;
    let x=0;
@@ -113,25 +119,35 @@ function iconAt(key,x,y,color,fallback){
  else if(fallback)glyph(sprites[fallback],x+2,y+2,color);
 }
 function drawHeader(top){
+ rect(0,0,W,top,ink.header);rect(0,top-1,W,1,ink.rule);
  const gear=document.querySelector('#console-settings'),chat=document.querySelector('#chat-launcher');
  const g=anchor(gear),a=anchor(chat);
- const titleSpace=[g?g.x+g.w+1:3,a?a.x-2:W-3];
+ const signin=document.querySelector('#svyaz-signin-hint'),hint=anchor(signin);
+ const hintVisible=hint&&hint.w>=3&&hint.h>=3&&getComputedStyle(signin).visibility!=='hidden';
+ const titleSpace=[g?g.x+g.w+1:3,hintVisible?hint.x-1:a?a.x-2:W-3];
  const mid=(titleSpace[0]+titleSpace[1])/2,full='MAKSON PROJECT';
  function centered(text,y){label(text,Math.round(mid-width(text)/2),y,ink.red);}
  if(width(full)<=titleSpace[1]-titleSpace[0])centered(full,Math.max(1,Math.floor((top-7)/2)));
  else if(top>=17){centered('MAKSON',Math.floor((top-15)/2));centered('PROJECT',Math.floor((top-15)/2)+8);}
  else compact(full,Math.round(mid-compactWidth(full)/2),Math.floor((top-5)/2),ink.red);
- if(g){iconAt('settings',g.x+Math.round((g.w-9)/2),g.y+Math.round((g.h-9)/2),ink.red,'gear');
+ if(g){
+  if(gear.getAttribute('aria-expanded')==='true'||gear.matches(':hover,:focus-visible'))edge(g.x+1,g.y+1,g.w-2,g.h-2,'#291619');
+  iconAt('settings',g.x+Math.round((g.w-9)/2),g.y+Math.round((g.h-9)/2),ink.red,'gear');
   if(gear.matches(':focus-visible'))edge(g.x+1,g.y+1,g.w-2,g.h-2,'#432025');}
  if(a){
-  rect(a.x+1,a.y+1,a.w-2,a.h-2,chat.matches(':focus-visible')?'#482225':'#190b0e');
+  rect(a.x+1,a.y+1,a.w-2,a.h-2,chat.matches(':focus-visible')?'#482225':chat.getAttribute('aria-expanded')==='true'||chat.matches(':hover')?'#311317':'#190b0e');
   const text=compactWidth('СВЯЗЬ'),fullChat=a.w>=text+11,ix=fullChat?a.x+1:a.x+Math.round((a.w-9)/2);
   iconAt('svyaz',ix,a.y+Math.round((a.h-9)/2),ink.red,'chat');
   if(fullChat)compact('СВЯЗЬ',ix+9,a.y+Math.floor((a.h-5)/2),ink.red);
+  const unread=chat.querySelector('b')?.textContent.trim();
+  if(unread||chat.classList.contains('sv-call-active'))rect(a.x+a.w-4,a.y+2,2,2,chat.classList.contains('sv-call-active')?ink.mint:'#ff9296');
  }
- const signin=document.querySelector('#svyaz-signin-hint'),hint=anchor(signin);
- if(hint&&hint.w>=width('ВОЙТИ')+2&&hint.x>=titleSpace[0]+width(full)+5&&getComputedStyle(signin).visibility!=='hidden')
-  label('ВОЙТИ',hint.x+1,hint.y+Math.floor((hint.h-7)/2),'#b66367');
+ if(hintVisible){
+  const len=compactWidth('ВОЙТИ'),right=hint.x+hint.w,cy=hint.y+Math.floor(hint.h/2);
+  if(hint.w>=len+3)compact('ВОЙТИ',hint.x+1,cy-2,'#e58b8e');
+  else {stroke(right-4,cy-2,right-2,cy,'#e58b8e');stroke(right-2,cy,right-4,cy+2,'#e58b8e');}
+  if(signin.matches(':focus-visible'))edge(hint.x,hint.y,hint.w,hint.h,'#432025');
+ }
 }
 const tiny={
  'А':'25755','Б':'74656','В':'65656','Г':'74444','Д':'25577','Е':'74647','Ё':'50767','Ж':'55755','З':'71617',
@@ -191,9 +207,8 @@ function draw(buttons,anchor){
   }
  }
 
- rect(0,0,W,top,ink.header);rect(0,top-1,W,1,ink.rule);
  if(native)drawHeader(top);
- else {const brand='MAKSON PROJECT';label(brand,Math.max(4,(W-width(brand))/2),5,ink.red);}
+ else {rect(0,0,W,top,ink.header);rect(0,top-1,W,1,ink.rule);const brand='MAKSON PROJECT';label(brand,Math.max(4,(W-width(brand))/2),5,ink.red);}
 
  const narrow=innerWidth<560,list=lists[folder],head=16,length=head+list.length*15+4,side=Math.min(Math.floor(W*.54),112);
  const panel=narrow?Math.min(Math.floor(H*.58),length):Math.min(H-top-8,length);
@@ -238,7 +253,7 @@ function draw(buttons,anchor){
 }
 function queue(){if(!pending)pending=requestAnimationFrame(()=>{pending=0;if(!native||!c.parentElement.hidden)draw(false)})}
 if(native){
- for(const e of ['makson-native-frame','makson-pixel-screen-change','focusin','focusout'])document.addEventListener(e,queue);
+ for(const e of ['makson-native-frame','makson-pixel-screen-change','focusin','focusout','pointerover','pointerout','accountchange'])document.addEventListener(e,queue);
 }
 
 document.addEventListener('makson-preview-focus',e=>{

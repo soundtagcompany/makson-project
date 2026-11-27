@@ -11,7 +11,7 @@ style.textContent=`
 #framebuffer-preview{position:fixed;inset:0;z-index:2147483640;overflow:hidden;background:transparent;pointer-events:none;zoom:calc(1 / var(--ui-scale,1))}
 #framebuffer-preview[hidden]{display:none!important}
 body.preview-native-home #app-catalog,body.preview-native-home #catalog-toggle{visibility:hidden!important}
-body.preview-native-home .desktop-header,body.preview-native-home #sphere-stage{opacity:0!important}
+body.preview-native-home .desktop-header,body.preview-app-header .desktop-header,body.preview-native-home #sphere-stage{opacity:0!important}
 body.preview-native-home #framebuffer-preview #controls button:focus-visible{outline-width:var(--preview-cell);outline-offset:calc(-1 * var(--preview-cell))}
 
 #framebuffer-preview canvas{position:absolute;inset:0 auto auto 0;image-rendering:pixelated;pointer-events:none}
@@ -22,6 +22,7 @@ body.preview-chrome .window[id^='window-']>.titlebar{background:#020906!importan
 body.preview-chrome .window[id^='window-']>.titlebar>.window-controls button{background:#090f0c!important;border-radius:0!important;box-shadow:none!important;text-shadow:none!important}
 #preview-window-grid{position:fixed;left:0;top:0;z-index:2147482500;pointer-events:none;image-rendering:pixelated;zoom:calc(1 / var(--ui-scale,1))}
 #preview-window-grid[hidden]{display:none!important}
+body.preview-app-header>.console-focus-frame{z-index:2147482499!important}
 body.preview-chrome .window>.titlebar>span[data-preview-grid-ink]{opacity:0!important}
 body.preview-chrome :is(#console-shell .window,#window-svyaz,#window-settings)>.titlebar>.window-controls button[data-preview-grid-control]{color:transparent!important;text-shadow:none!important}
 body.preview-chrome :is(#console-shell .window,#window-svyaz,#window-settings)>.titlebar>.window-controls button[data-preview-grid-control]>svg{visibility:hidden!important}
@@ -114,7 +115,7 @@ function setupBitmapTitles(){
  const buttonGroups=labels.map(({win})=>({win,strip:win.querySelector(':scope>.titlebar>.window-controls')})).filter(({strip})=>strip);
  const screen=document.createElement('canvas');screen.id='preview-window-grid';screen.setAttribute('aria-hidden','true');screen.hidden=true;
  document.body.append(screen);
- const ctx=screen.getContext('2d');
+ const ctx=screen.getContext('2d'),header=document.querySelector('.desktop-header');
  let pending=false;
  function draw(){
   if(pending)return;
@@ -123,9 +124,15 @@ function setupBitmapTitles(){
    const pitch=bitmap.pitch(),w=Math.floor(innerWidth/pitch),h=Math.floor(innerHeight/pitch);
    if(screen.width!==w||screen.height!==h){screen.width=w;screen.height=h;screen.style.width=w*pitch+'px';screen.style.height=h*pitch+'px';}
    ctx.clearRect(0,0,w,h);
-   const playing=document.fullscreenElement||document.querySelector('.fullscreen-fallback');
+   const playing=document.fullscreenElement||document.webkitFullscreenElement||document.querySelector('.fullscreen-fallback');
    const moving=new Set(labels.map(({win})=>win).filter(win=>!win.hidden&&win.getAnimations().some(a=>a.playState==='running'&&Number.isFinite(a.effect?.getComputedTiming().endTime))));
    let rendered=false;
+   const bounds=header?.getBoundingClientRect(),rows=Math.ceil((bounds?.bottom||0)/pitch);
+   const headerVisible=bitmap.drawDesktopHeader&&root.hidden&&!playing&&!contrast.matches&&bounds
+    &&Math.abs(bounds.left)<1&&Math.abs(bounds.top)<1&&bounds.width>=w*pitch-pitch&&rows>2&&rows<h
+    &&[2,Math.floor(bounds.right/2),Math.floor(bounds.right)-2].every(x=>header.contains(document.elementFromPoint(x,bounds.bottom/2)));
+   if(headerVisible){bitmap.drawDesktopHeader(ctx,pitch,w,rows);rendered=true;}
+   document.body.classList.toggle('preview-app-header',!!headerVisible);
    for(const {win,title,text,canvas} of labels){
     const r=title.getBoundingClientRect(),bar=title.parentElement.getBoundingClientRect();
     const gx=Math.max(0,Math.ceil((r.left+1)/pitch)),end=Math.min(w,Math.floor((r.right-2)/pitch));
@@ -169,11 +176,16 @@ function setupBitmapTitles(){
  }
  const ro=new ResizeObserver(draw);labels.forEach(({title,win})=>{ro.observe(title);ro.observe(win)});
  const mo=new MutationObserver(draw);labels.forEach(({win})=>mo.observe(win,{attributes:true,attributeFilter:['hidden','style','class']}));
+ if(header){
+  ro.observe(header);for(const button of header.querySelectorAll('button'))ro.observe(button);
+  const headerChanges=new MutationObserver(draw);
+  headerChanges.observe(header,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['aria-expanded','hidden','class']});
+ }
  const controls=new MutationObserver(draw);
  buttonGroups.forEach(({strip})=>{ro.observe(strip);controls.observe(strip,{subtree:true,childList:true,attributes:true,attributeFilter:['aria-pressed','hidden','style','class']});});
  for(const e of ['focusin','focusout','pointerover','pointerout','click','beforetoggle','toggle'])document.addEventListener(e,draw,true);
  contrast.addEventListener('change',draw);
- for(const e of ['windowfocus','windowhide','fullscreenchange','desktopfullscreenchange','windowresize','console-scale-change','makson-pixel-screen-change'])document.addEventListener(e,draw);
+ for(const e of ['windowfocus','windowhide','fullscreenchange','desktopfullscreenchange','windowresize','console-scale-change','makson-pixel-screen-change','accountchange'])document.addEventListener(e,draw);
  document.addEventListener('scroll',draw,true);
  addEventListener('resize',draw,{passive:true});draw();
 }
