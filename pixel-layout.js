@@ -214,9 +214,10 @@ function sceneGrain(top,start,stop){
    grainCtx.fillStyle=grain[i%grain.length];grainCtx.fillRect(x,y,1,1);
   }
  }
- ctx.globalCompositeOperation='lighten';
+ // Source-over is accelerated; a blend mode here can read back the full raster on desktop.
+ ctx.globalAlpha=.72;
  ctx.drawImage(grainTexture,sx,top);
- ctx.globalCompositeOperation='source-over';
+ ctx.globalAlpha=1;
 }
 function drawSpeed(scene){
  const value=window.MaksonSphereTelemetry?.read?.();
