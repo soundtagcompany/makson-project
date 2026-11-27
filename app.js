@@ -131,7 +131,7 @@ $('toast').onclick=()=>{$('toast').hidden=true;clearTimeout(toastTimer);};$('toa
 document.addEventListener('console-notice',e=>toast(e.detail));
 attachFloatingPanel($('window-svyaz'));
 document.addEventListener('pointerdown',e=>{const panel=$('window-settings');if(!panel.hidden&&!e.target.closest('#window-settings,#console-settings'))hideWindow(panel);});
-attachConsoleInput({back:()=>{const panel=[...panelIds].find(id=>!$('window-'+id).hidden);if(panel)hideWindow($('window-'+panel));else if(active)hideWindow($('window-'+active));$('toast').hidden=true;},home:()=>{for(const id of panelIds)hideWindow($('window-'+id));document.querySelector('#app-catalog summary')?.focus();}});
+attachConsoleInput({back:()=>{const panel=[...panelIds].find(id=>!$('window-'+id).hidden);if(panel)hideWindow($('window-'+panel));else if(active)hideWindow($('window-'+active));$('toast').hidden=true;},home:(toCatalog=false)=>{for(const id of panelIds)hideWindow($('window-'+id));if(toCatalog)showDesktop();}});
 function applySettings(){
  Object.assign(settings,{blur:false,exposure:false,blurAmount:0,exposureAmount:0,crt:false,pixelated:true,wildEffects:false});
  document.body.classList.remove('crt-on');document.body.classList.add('exposure-off','blur-off');
