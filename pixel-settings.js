@@ -1,11 +1,11 @@
 /** App-specific paint and DOM alignment for the native Settings window. */
 const extra={
 '0':'75557','1':'26227','2':'71247','3':'71317','4':'55711','5':'74617','6':'74757','7':'71122','8':'75757','9':'75717',
-'%':'51545','+':'02720','−':'00700',':':'02020',',':'00024',
+'…':'00005','·':'00200','—':'00700','%':'51545','+':'02720','−':'00700',':':'02020',',':'00024',
 'Ц':'55571','Щ':'55571','Э':'61216','Ю':'55755',
 };
 const fullExtra={
- '0':[14,17,17,17,17,17,14],'1':[4,12,4,4,4,4,14],'2':[14,17,1,2,4,8,31],
+ '…':[0,0,0,0,0,0,21],'·':[0,0,0,4,0,0,0],'—':[0,0,0,31,0,0,0],'0':[14,17,17,17,17,17,14],'1':[4,12,4,4,4,4,14],'2':[14,17,1,2,4,8,31],
  '3':[30,1,1,14,1,1,30],'4':[2,6,10,18,31,2,2],'5':[31,16,16,30,1,1,30],
  '6':[14,16,16,30,17,17,14],'7':[31,1,2,4,8,8,8],'8':[14,17,17,14,17,17,14],
  '9':[14,17,17,15,1,1,14],'%':[25,26,4,4,4,11,19],'+':[0,4,4,31,4,4,0],
@@ -217,6 +217,217 @@ export function createSettingsSurface(bitmap,ctx){
   changes.observe(zoom,{childList:true,characterData:true,subtree:true});
   for(const type of ['pointerover','pointerout','focusin','focusout','input','change','scroll','toggle'])win.addEventListener(type,draw,true);
   return ()=>{size.disconnect();changes.disconnect();for(const type of ['pointerover','pointerout','focusin','focusout','input','change','scroll','toggle'])win.removeEventListener(type,draw,true);};
+ }
+ return {paint,stop,watch};
+}
+
+/** Buffer controls and status share the shell raster; real editable fields and native dialogs stay live. */
+export function createBufferSurface(bitmap,ctx){
+ const win=document.querySelector('#window-buffer'),pane=win?.querySelector('.utility-body'),desktop=document.querySelector('#console-shell');
+ if(!win||!pane||!desktop)return null;
+ const labels=makeText(bitmap,ctx);
+ const $=selector=>win.querySelector(selector);
+ const code=$('#buffer-code'),draft=$('#buffer-text'),status=$('#buffer-status'),files=$('#file-status'),header=$('.titlebar');
+ const body=document.body;
+ const colors={black:'#020704',panel:'#08130d',input:'#0b1c12',edge:'#2d5840',green:'#b5eccc',muted:'#78a88b',accent:'#76e6a7',focus:'#d3ffe6'};
+ const style=document.createElement('style');
+ style.textContent=`
+body.matrix-buffer #console-shell #window-buffer{
+ position:fixed!important;inset:var(--buffer-top) 0 0!important;margin:0!important;transform:none!important;translate:none!important;
+ width:100%!important;height:calc(var(--viewport-height,100dvh) - var(--buffer-top))!important;max-width:none!important;max-height:none!important;
+ min-height:0!important;border:0!important;box-shadow:none!important;display:flex!important;flex-direction:column!important;
+ overflow:hidden!important;background:#08130d!important;
+}
+body.matrix-buffer #console-shell #window-buffer>.titlebar{
+ min-height:calc(16 * var(--bp))!important;max-height:none!important;
+ flex:0 0 calc(16 * var(--bp))!important;padding:0 calc(4 * var(--bp))!important;
+ display:flex!important;flex-wrap:nowrap!important;justify-content:space-between!important;gap:0!important;
+}
+body.matrix-buffer #console-shell #window-buffer>.titlebar>span,
+body.matrix-buffer #console-shell #window-buffer>.titlebar>.window-controls{flex:initial!important;min-height:0!important}
+body.matrix-buffer #console-shell #window-buffer>.titlebar>.window-controls>button{
+ position:static!important;min-width:0!important;min-height:0!important;
+ width:calc(15 * var(--bp))!important;height:calc(14 * var(--bp))!important;
+}
+body.matrix-buffer #console-shell #window-buffer>.utility-body{
+ display:grid!important;grid-template-columns:minmax(0,1fr)!important;grid-template-rows:none!important;
+ align-content:start!important;flex:1 1 auto!important;overscroll-behavior:contain;overflow:auto!important;scrollbar-width:none;
+ box-sizing:border-box;width:100%;max-width:calc(200 * var(--bp));margin-inline:auto;
+ gap:calc(3 * var(--bp))!important;padding:calc(4 * var(--bp))!important;
+}
+body.matrix-buffer #console-shell #window-buffer>.utility-body>*{grid-area:auto!important;order:0!important;margin:0!important;min-width:0}
+body.matrix-buffer #console-shell #window-buffer>.utility-body>.utility-intro,
+body.matrix-buffer #console-shell #window-buffer>.utility-body>.subtle{display:none!important}
+body.matrix-buffer #console-shell #window-buffer .field-heading{order:-2!important;display:flex!important;justify-content:space-between}
+body.matrix-buffer #console-shell #window-buffer #buffer-text{
+ order:-1!important;box-sizing:border-box;margin:0!important;resize:none!important;min-height:0!important;
+ height:calc(44 * var(--bp))!important;width:100%!important;max-width:none!important;
+}
+body.matrix-buffer #console-shell #window-buffer .buffer-connect{
+ display:grid!important;grid-template-columns:minmax(0,.65fr) minmax(0,1.45fr) minmax(0,.7fr)!important;
+ align-items:end!important;gap:calc(2 * var(--bp))!important;
+}
+body.matrix-buffer #console-shell #window-buffer .buffer-connect label{
+ display:grid!important;grid-column:auto!important;grid-template-columns:minmax(0,1fr)!important;gap:0!important;font-size:calc(5 * var(--bp))!important;
+ line-height:calc(8 * var(--bp))!important;min-width:0!important;
+}
+body.matrix-buffer #console-shell #window-buffer :is(#buffer-code,.utility-body button,.upload-zone){
+ min-height:calc(15 * var(--bp))!important;height:calc(15 * var(--bp))!important;
+ min-width:0!important;max-width:none!important;box-sizing:border-box;
+}
+body.matrix-buffer #console-shell #window-buffer .upload-zone{display:grid!important;place-items:center!important}
+body.matrix-buffer #console-shell #window-buffer .upload-zone small{display:none}
+body.matrix-buffer #console-shell #window-buffer #file-status{display:block!important;min-height:calc(10 * var(--bp))}
+body.matrix-buffer #console-shell #window-buffer #file-status a{
+ min-height:calc(16 * var(--bp));display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;gap:calc(2 * var(--bp));align-items:center;
+}
+body.matrix-buffer #console-shell #window-buffer #file-status .buffer-file-glyph{display:none}
+body.matrix-buffer #console-shell #window-buffer #buffer-status{
+ flex:0 0 calc(11 * var(--bp))!important;min-height:0!important;box-sizing:border-box;padding:0 calc(4 * var(--bp))!important;
+}
+body.matrix-buffer #console-shell #window-buffer :is(#buffer-code,#buffer-text){
+ appearance:none!important;border:0!important;border-radius:0!important;background:#0b1c12!important;box-shadow:none!important;
+ color:#b5eccc!important;font:500 calc(5 * var(--bp)) / calc(7 * var(--bp)) ConsoleMono,monospace!important;
+ padding:calc(2 * var(--bp))!important;outline-offset:calc(-1 * var(--bp));
+}
+body.matrix-buffer #console-shell #window-buffer :is(#buffer-code,#buffer-text)::placeholder{color:#78a88b!important}
+body.matrix-buffer>#toast{z-index:2147483642!important}
+body.matrix-buffer>.console-focus-frame{z-index:2147482499!important}
+@media(max-width:370px){
+ body.matrix-buffer #console-shell #window-buffer>.titlebar>.window-controls>button{width:calc(12 * var(--bp))!important}
+}
+@media(min-width:600px) and (max-height:500px) and (orientation:landscape){
+ body.matrix-buffer #console-shell #window-buffer>.utility-body{
+  grid-template-columns:minmax(0,1.15fr) minmax(0,1fr)!important;max-width:calc(275 * var(--bp));
+  gap:calc(2 * var(--bp))!important;padding-block:calc(2 * var(--bp))!important;
+ }
+ body.matrix-buffer #console-shell #window-buffer>.utility-body>.field-heading{grid-area:1/1!important}
+ body.matrix-buffer #console-shell #window-buffer>.utility-body>#buffer-text{grid-area:2/1/6/2!important;height:100%!important;min-height:calc(28 * var(--bp))!important}
+ body.matrix-buffer #console-shell #window-buffer>.utility-body>.buffer-connect{
+  display:grid!important;grid-area:1/2/3/3!important;grid-template-columns:minmax(0,.62fr) minmax(0,1.45fr) minmax(0,.75fr)!important;
+ }
+ body.matrix-buffer #console-shell #window-buffer>.utility-body>[data-share-session=buffer]{grid-area:3/2!important}
+ body.matrix-buffer #console-shell #window-buffer>.utility-body>.upload-zone{grid-area:4/2!important}
+ body.matrix-buffer #console-shell #window-buffer>.utility-body>#file-status{grid-area:5/2!important}
+}
+`;
+ document.head.append(style);
+ // Place the edit entry point first in both sequences, without replacing the real textarea.
+ const heading=$('.field-heading'),oldNext=draft.nextSibling;
+ function arrange(active){
+  if(active===(pane.firstElementChild===heading))return;
+  const focused=document.activeElement;
+  const selection=focused===draft?[draft.selectionStart,draft.selectionEnd,draft.selectionDirection]:null;
+  if(active){pane.prepend(heading,draft);}
+  else{pane.insertBefore(heading,oldNext);pane.insertBefore(draft,oldNext);}
+  if((focused===draft||heading.contains(focused))&&document.activeElement!==focused){
+   focused.focus({preventScroll:true});if(selection)draft.setSelectionRange(...selection);
+  }
+ }
+ function stop(){
+  if(!body.classList.contains('matrix-buffer'))return;
+  body.classList.remove('matrix-buffer');arrange(false);
+ }
+ function paint({pitch,width:w,height:h,headerRows:top,active}){
+  if(!active||win.hidden||win.ownerDocument!==document){stop();return false;}
+  const zoom=Number(body.style.zoom)||1;
+  win.style.setProperty('--bp',pitch/zoom+'px');win.style.setProperty('--buffer-top',top*pitch/zoom+'px');
+  if(!body.classList.contains('matrix-buffer')){arrange(true);body.classList.add('matrix-buffer');}
+  function bounds(el,inset=0){
+   const r=el.getBoundingClientRect();
+   return {l:Math.round(r.left/pitch)+inset,t:Math.round(r.top/pitch)+inset,r:Math.round(r.right/pitch)-inset,b:Math.round(r.bottom/pitch)-inset};
+  }
+  const {text}=labels;
+  const fill=(l,t,r,b,color)=>{if(l<r&&t<b){ctx.fillStyle=color;ctx.fillRect(l,t,r-l,b-t);}};
+  const box=(b,edge,bg)=>{fill(b.l,b.t,b.r,b.b,edge);fill(b.l+1,b.t+1,b.r-1,b.b-1,bg)};
+  const isHot=el=>el.matches(':hover,:focus-visible,:focus-within');
+  const pb=bounds(pane),tb=bounds(header),sb=bounds(status);
+  if(pb.b<=pb.t||tb.b<=top||sb.b<=sb.t){stop();return false;}
+  function single(value,b,options={}){
+   let s=String(value).toUpperCase(), available=b.r-b.l-2;
+   if(bitmap.compactWidth(s)>available){
+    let shorter='';
+    for(const c of s){if(bitmap.compactWidth(shorter+c+'…')>available)break;shorter+=c;}
+    s=shorter+'…';
+   }
+   text(s,b,{compact:true,pad:1,color:colors.green,...options});
+  }
+  function button(el,value){
+   const b=bounds(el),hot=isHot(el);
+   box(b,hot?colors.accent:colors.edge,hot?'#173c29':colors.input);
+   single(value??el.textContent.trim(),b,{center:true,color:el.disabled?colors.muted:colors.green});
+  }
+  function field(el){
+   const b=bounds(el);
+   box(b,isHot(el)?colors.accent:colors.edge,colors.input);
+   ctx.clearRect(b.l+1,b.t+1,Math.max(0,b.r-b.l-2),Math.max(0,b.b-b.t-2));
+  }
+  fill(0,top,w,h,colors.black);
+  fill(0,top,w,tb.b,colors.panel);
+  fill(0,tb.b-1,w,tb.b,colors.edge);
+  const controls=header.querySelector('.window-controls'),titleRight=bounds(controls).l-2;
+  text('БУФЕР',{l:4,t:tb.t,r:titleRight,b:tb.b},{color:colors.green,compact:titleRight-4<bitmap.width('БУФЕР')});
+  for(const el of header.querySelectorAll('button')){
+   const b=bounds(el),x=Math.floor((b.l+b.r)/2),y=Math.floor((b.t+b.b)/2),color=colors.green;
+   box(b,isHot(el)?colors.accent:colors.edge,colors.input);
+   if(el.hasAttribute('data-app-link')){
+    fill(x-3,y-2,x+3,y-1,color);fill(x-3,y+2,x+3,y+3,color);
+    fill(x-4,y-1,x-3,y+2,color);fill(x+3,y-1,x+4,y+2,color);fill(x-1,y,x+2,y+1,color);
+   }else if(el.dataset.action==='pip'){
+    fill(x-3,y-2,x+4,y-1,color);fill(x-3,y-1,x-2,y+2,color);fill(x+3,y-1,x+4,y+2,color);
+    fill(x-3,y+2,x+4,y+3,color);fill(x,y,x+3,y+2,color);
+   }else if(el.dataset.action==='close'){
+    for(let i=-2;i<3;i++){fill(x+i,y+i,x+i+1,y+i+1,color);fill(x-i,y+i,x-i+1,y+i+1,color);}
+   }else{fill(x-3,y+2,x+4,y+3,color);
+    if(el.dataset.action==='maximize'){
+     fill(x-3,y-2,x+4,y-1,color);fill(x-3,y-1,x-2,y+2,color);fill(x+3,y-1,x+4,y+2,color);
+    }
+   }
+  }
+  ctx.save();ctx.beginPath();ctx.rect(pb.l,pb.t,pb.r-pb.l,pb.b-pb.t);ctx.clip();
+  fill(pb.l,pb.t,pb.r,pb.b,colors.panel);
+  const row=bounds(heading),copy=$('#copy-buffer'),copyBounds=bounds(copy);
+  const textBox={...row,r:copyBounds.l-1};
+  text(textBox.r-textBox.l>=bitmap.width('ОБЩИЙ ТЕКСТ')?'ОБЩИЙ ТЕКСТ':'ТЕКСТ',textBox,{pad:0,color:colors.accent});
+  button(copy,copyBounds.r-copyBounds.l>=bitmap.compactWidth('КОПИРОВАТЬ')+2?'КОПИРОВАТЬ':'КОПИЯ');
+  field(draft);
+  const cb=bounds(code),caption=bounds(code.closest('label'));caption.b=cb.t;
+  single(caption.r-caption.l>bitmap.compactWidth('КОД СВЯЗИ')+2?'КОД СВЯЗИ':'КОД',caption,{color:colors.muted});
+  field(code);
+  button($('#buffer-connect'));button($('#buffer-new'));button($('[data-share-session=buffer]'));
+  const upload=$('.upload-zone');
+  button(upload,bounds(upload).r-bounds(upload).l>=bitmap.compactWidth('ВЫБРАТЬ ФАЙЛЫ · ДО 20 МБ')+2?'ВЫБРАТЬ ФАЙЛЫ · ДО 20 МБ':'ВЫБРАТЬ ФАЙЛЫ');
+  const links=files.querySelectorAll('a');
+  if(links.length){
+   for(const a of links){
+    const r=bounds(a); if(r.b<=pb.t||r.t>=pb.b)continue;
+    box(r,isHot(a)?colors.accent:colors.edge,colors.input);
+    single(a.querySelector('.buffer-file-name')?.textContent||'',bounds(a.querySelector('.buffer-file-name')));
+    single(a.querySelector('small')?.textContent||'',bounds(a.querySelector('small')),{color:colors.muted});
+   }
+  }else single(files.textContent,bounds(files),{color:colors.muted});
+  ctx.restore();
+  fill(0,sb.t,w,h,colors.panel);fill(0,sb.t,w,sb.t+1,colors.edge);
+  const statusText=status.textContent.startsWith('Локальный черновик')?'Локальный черновик':status.textContent;
+  single(statusText,{l:3,t:sb.t,r:w-3,b:sb.b},{color:colors.muted});
+  const dialog=win.querySelector('.app-link-panel');
+  if(dialog){
+   const r=bounds(dialog);ctx.clearRect(r.l,r.t,r.r-r.l,r.b-r.t);
+  }
+  if(win.classList.contains('buffer-drag-over')){
+   const r={l:4,t:top+4,r:w-4,b:h-4};box(r,colors.accent,colors.panel);
+   text('ОТПУСТИ ФАЙЛЫ',r,{center:true,pad:2,color:colors.focus});
+  }
+  return true;
+ }
+ function watch(repaint){
+  const rerender=()=>{if(!win.hidden)repaint();};
+  const size=new ResizeObserver(rerender);for(const el of [win,pane,files,draft])size.observe(el);
+  const changes=new MutationObserver(rerender);
+  for(const el of [pane,status])changes.observe(el,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['disabled']});
+  changes.observe(win,{childList:true,attributes:true,attributeFilter:['class']});
+  changes.observe(header,{subtree:true,childList:true});
+  for(const event of ['pointerover','pointerout','focusin','focusout','scroll','input','change'])win.addEventListener(event,rerender,true);
  }
  return {paint,stop,watch};
 }

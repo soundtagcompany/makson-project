@@ -45,35 +45,37 @@ document.head.append(style);
 const windows=[...document.querySelectorAll('.window[id^="window-"]')], allowed=new Set(windows.map(w=>w.id.slice(7)));
 const dock=document.querySelector('#console-dock'),contrast=matchMedia('(forced-colors:active)'),previousInert=new Map();
 const motion=matchMedia('(prefers-reduced-motion:reduce)');
-const settingsWin=document.querySelector('#window-settings'),nav=root.querySelector('nav');
-let painter=null,revealStart=0,settingsVisible=false,revealFrame=0;
-function leaveSettings(){
- if(!settingsVisible)return;
- settingsVisible=false;nav.hidden=false;
+const settingsWin=document.querySelector('#window-settings'),bufferWin=document.querySelector('#window-buffer'),nav=root.querySelector('nav');
+let painter=null,buffer=null,activeSurface=null,revealStart=0,revealFrame=0;
+function leaveSurface(){
+ if(!activeSurface)return;
+ const prior=activeSurface;activeSurface=null;nav.hidden=false;
  document.body.classList.remove('pixel-app-cover');
  document.dispatchEvent(new Event('makson-sphere-cover-change'));
- cancelAnimationFrame(revealFrame);revealFrame=0;painter?.stop();
+ cancelAnimationFrame(revealFrame);revealFrame=0;prior.stop();
 }
 window.MaksonPixelApp=Object.freeze({
- hasSettings:()=>!!painter,
- paintSettings(frame){
-  if(!settingsVisible||!painter)return false;
+ hasSettings:()=>!!painter&&!contrast.matches,
+ hasBuffer:()=>!!buffer&&!contrast.matches,
+ paintSettings(frame){return activeSurface===painter&&painter&&this.paintApp(frame)==='settings';},
+ paintApp(frame){
+  if(!activeSurface)return '';
   const {ctx,width,height,headerRows,pitch}=frame;
   const progress=revealStart?Math.min(1,(performance.now()-revealStart)/235):1;
   const opened=Math.ceil((height-headerRows)*(1-(1-progress)**3));
   ctx.save();ctx.beginPath();ctx.rect(0,headerRows,width,opened);ctx.clip();
   let painted=false;
-  try{painted=painter.paint({pitch,width,height,headerRows,active:true})}
-  catch(error){console.warn('Settings canvas fallback',error);leaveSettings();hide();return false;}
+  try{painted=activeSurface.paint({pitch,width,height,headerRows,active:true})}
+  catch(error){console.warn('Pixel app fallback',error);}
   finally{ctx.restore()}
-  if(!painted){leaveSettings();hide();return false;}
+  if(!painted){hide();return '';}
   if(progress<1&&!revealFrame)revealFrame=requestAnimationFrame(()=>{revealFrame=0;repaint()});
-  return true;
+  return activeSurface===painter?'settings':'buffer';
  }
 });
 function repaint(){document.dispatchEvent(new Event('makson-pixel-repaint'));}
 let ready=false,didSchedule=false,restore=null,drawer=null,contrastReturn=null;
-function hide(){leaveSettings();if(root.hidden)return;root.hidden=true;document.body.classList.remove('preview-native-home');document.dispatchEvent(new Event('makson-pixel-screen-change'));for(const [el,old] of previousInert)el.inert=old;previousInert.clear();}
+function hide(){leaveSurface();if(root.hidden)return;root.hidden=true;document.body.classList.remove('preview-native-home');document.dispatchEvent(new Event('makson-pixel-screen-change'));for(const [el,old] of previousInert)el.inert=old;previousInert.clear();}
 function show(){
  if(!root.hidden)return;
  for(const el of [document.querySelector('#app-catalog'),document.querySelector('#catalog-toggle')]){
@@ -87,17 +89,19 @@ function sync(){
  didSchedule=true;queueMicrotask(()=>{
   didSchedule=false;
   const active=windows.filter(w=>w.isConnected&&!w.hidden);
-  if(ready&&painter&&!contrast.matches&&active.length===1&&active[0]===settingsWin&&!dock?.childElementCount){
+  const target=active.length===1&&!dock?.childElementCount&&active[0].ownerDocument===document&&!document.fullscreenElement&&
+   !active[0].classList.contains('fullscreen-fallback')?(active[0]===settingsWin?painter:active[0]===bufferWin?buffer:null):null;
+  if(ready&&target&&!contrast.matches){
    show();
-   if(!settingsVisible){
-    settingsVisible=true;nav.hidden=true;
+   if(activeSurface!==target){
+    leaveSurface();activeSurface=target;nav.hidden=true;
     document.body.classList.add('pixel-app-cover');
     document.dispatchEvent(new Event('makson-sphere-cover-change'));
     revealStart=motion.matches||document.body.classList.contains('reduced-motion')?0:performance.now();
    }
    repaint();return;
   }
-  leaveSettings();
+  leaveSurface();
   if(!ready||active.length||dock?.childElementCount){hide();return}
   if(drawer!==null){setCatalogCollapsed(drawer);drawer=null}
   if(contrast.matches){
@@ -130,14 +134,14 @@ function open(evt){
  sync();
 }
 document.addEventListener('makson-preview-open',open);
-document.addEventListener('makson-preview-visibility',e=>{if(!root.hidden&&!settingsVisible)setCatalogCollapsed(!e.detail)});
+document.addEventListener('makson-preview-visibility',e=>{if(!root.hidden&&!activeSurface)setCatalogCollapsed(!e.detail)});
 window.addEventListener('keydown',e=>{
- if(e.key!=='F6'||root.hidden||settingsVisible||contrast.matches)return;
+ if(e.key!=='F6'||root.hidden||activeSurface||contrast.matches)return;
  e.preventDefault();e.stopImmediatePropagation();
  document.dispatchEvent(new Event('makson-preview-keyboard-home'));
 },true);
 
-for(const evt of ['windowfocus','windowhide'])document.addEventListener(evt,sync);
+for(const evt of ['windowfocus','windowhide','desktopfullscreenchange','fullscreenchange'])document.addEventListener(evt,sync);
 const watcher=new MutationObserver(sync);windows.forEach(el=>watcher.observe(el,{attributes:true,attributeFilter:['hidden']}));
 if(dock)watcher.observe(dock,{childList:true});
 // In portrait, put the draft first in both visual order and keyboard order.
@@ -149,7 +153,11 @@ script.onload=()=>{
  ready=true;contrastChanged();
  appModule.then(mod=>{
   if(!mod)return;
-  try{painter=mod.createSettingsSurface(window.MaksonPreviewBitmap,root.querySelector('canvas').getContext('2d'));painter?.watch(repaint);}
+  try{
+   const bitmap=window.MaksonPreviewBitmap,ctx=root.querySelector('canvas').getContext('2d');
+   painter=mod.createSettingsSurface(bitmap,ctx);painter?.watch(repaint);
+   buffer=mod.createBufferSurface?.(bitmap,ctx);buffer?.watch(repaint);
+  }
   catch(error){console.warn('Settings module unavailable',error);}
   sync();
  });

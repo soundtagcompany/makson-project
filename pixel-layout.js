@@ -268,8 +268,11 @@ function draw(buttons,focusKey){
  if(!native)for(let i=0;i<Math.min(170,W*H/96);i++)dot(rnd(i)*W,rnd(i+500)*H,i%7===0?ink.star:ink.distant);
  const nativeHeader=document.querySelector('.desktop-header');
  const top=native&&nativeHeader?Math.ceil(nativeHeader.getBoundingClientRect().bottom/n):18;
- if(native&&window.MaksonPixelApp?.paintSettings({ctx,pitch:n,width:W,height:H,headerRows:top})){
+ const appFrame={ctx,pitch:n,width:W,height:H,headerRows:top},app=native&&window.MaksonPixelApp;
+ const rasterApp=app?.paintApp?app.paintApp(appFrame):app?.paintSettings?.(appFrame)?'settings':'';
+ if(rasterApp){
   drawHeader(top);
+  if(rasterApp==='buffer')return;
   const win=document.querySelector('#window-settings');
   const title=anchor(win?.querySelector('.titlebar')),close=anchor(win?.querySelector('[data-action=close]'));
   if(title){
