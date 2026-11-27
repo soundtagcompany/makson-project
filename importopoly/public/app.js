@@ -112,6 +112,16 @@ $('#log-open').onclick=()=>dialog('ЖУРНАЛ ПАРТИИ',`<h2>Бумага 
 async function copy(text){try{await navigator.clipboard.writeText(text);toast('Код скопирован.');}catch{toast('Код комнаты: '+text);}}
 $('#home').onclick=()=>showMenu(true);$('#reset-camera').onclick=()=>scene?.interrupt(true);$('#follow-camera').onclick=()=>{if(scene){scene.followEnabled=!scene.followEnabled;localStorage.setItem('importopoly-follow',String(scene.followEnabled));$('#follow-camera').setAttribute('aria-pressed',String(scene.followEnabled));$('#follow-camera').textContent=scene.followEnabled?'◉ АВТОКАМЕРА':'○ АВТОКАМЕРА';if(!scene.followEnabled)scene.interrupt(true);else scene.resumeFollow();}};$('#sound').onclick=()=>{sound=!sound;localStorage.setItem('sdvg-muted',sound?'0':'1');$('#sound').textContent=sound?'♫':'♪';$('#sound').title=sound?'Выключить звук':'Включить звук';syncMusic();beep();};$('#fullscreen').onclick=async()=>{if(window.parent!==window){parent.postMessage({type:'importopoly-fullscreen'},location.origin);return;}try{if(document.fullscreenElement)await document.exitFullscreen();else await document.documentElement.requestFullscreen();}catch{toast('Этот браузер не поддерживает полный экран.');}};document.addEventListener('keydown',e=>{if(e.key==='Escape'){$('#modal').hidden=true;$('#interaction-panel').hidden=true;closeCard();scene?.interrupt(true);}});showMenu(true);
 
+// Only the owning desktop can choose the shared board raster.
+addEventListener('message',e=>{
+ if(parent===window||e.origin!==location.origin||e.source!==parent||e.data?.type!=='importopoly-matrix')return;
+ const supplied=Number(e.data.pitch);
+ const pitch=Number.isFinite(supplied)&&supplied>=1&&supplied<=6?supplied:0;
+ document.body.classList.toggle('matrix-embedded',!!pitch);
+ if(pitch)document.documentElement.style.setProperty('--board-cell',pitch+'px');
+ else document.documentElement.style.removeProperty('--board-cell');
+ scene?.setMatrixPitch(pitch);
+});
 // Only the owning desktop can supply effects, visibility and fullscreen state.
 addEventListener('message',e=>{if(e.origin!==location.origin||e.source!==parent||e.data?.type!=='importopoly-settings')return;const d=e.data;document.body.classList.toggle('host-reduced-motion',d.motion===false);hostVisible=d.visible!==false;if(scene){scene.hostHidden=menu||!hostVisible;if(!scene.hostHidden)scene.request();}document.documentElement.style.setProperty('--board-blur',Math.max(0,Math.min(2,Number(d.blur)||0))*.55+'px');document.documentElement.style.setProperty('--board-exposure',1+.08*Math.max(0,Math.min(2,Number(d.exposure)||0)));sound=!!d.sound;effectsVolume=Math.max(0,Math.min(1,Number(d.effectsVolume) || 0));musicVolume=Math.max(0,Math.min(1,Number(d.musicVolume) || 0));musicEnabled=d.music!==false;$('#sound').textContent=sound?'♫':'♪';if(ctx)ctx[hostVisible?'resume':'suspend']().catch(()=>{});syncMusic();});
 if(parent!==window){parent.postMessage({type:'importopoly-ready'},location.origin);document.addEventListener('pointerdown',()=>parent.postMessage({type:'importopoly-focus'},location.origin));}

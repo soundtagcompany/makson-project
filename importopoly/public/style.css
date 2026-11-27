@@ -153,3 +153,24 @@ body.embedded.menu #welcome.welcome-layer{top:0!important;bottom:0!important}
 #welcome .piece-button{min-height:96px}
 .card-launch{width:min(340px,calc(100% - 20px))}
 .join-line{flex-wrap:wrap}.join-line input{min-width:0}
+
+/* Shared console pitch changes only the embedded table; keep browser-native board controls. */
+body.matrix-embedded #scene{overflow:hidden}
+body.matrix-embedded :is(#reset-camera,#follow-camera){
+ left:calc(4 * var(--board-cell));padding:calc(2 * var(--board-cell)) calc(3 * var(--board-cell));
+ min-height:44px;border-width:var(--board-cell);border-color:#a0a58e;
+ background:#212a20;color:#eee7cf;font-size:12px;
+}
+body.matrix-embedded #follow-camera{bottom:calc(44px + 5 * var(--board-cell))}
+body.matrix-embedded #reset-camera{bottom:calc(3 * var(--board-cell))}
+body.matrix-embedded #follow-camera[aria-pressed=true]{border-color:#e4ca84;color:#ffe9ac}
+body.matrix-embedded #watch-card{
+ left:calc(3 * var(--board-cell));border:var(--board-cell) solid #92987e;
+}
+body.matrix-embedded #watch-card button{min-height:44px}
+@media (max-width:340px){
+ body.matrix-embedded #watch-card{max-width:65%;padding:calc(2 * var(--board-cell))}
+}
+@media (forced-colors:active){
+ body.matrix-embedded :is(#reset-camera,#follow-camera,#watch-card){border-color:ButtonText}
+}

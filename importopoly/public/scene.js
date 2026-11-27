@@ -49,7 +49,23 @@ export class BoardScene{
  const dice=elapsed<DICE_DURATION+DICE_PAUSE&&show.dice,offset=dice?new THREE.Vector3(0,9,8):new THREE.Vector3(focus.x*.2,9,7),position=focus.clone().add(offset),dt=Math.min(50,now-(this.lastCameraFrame||now-16)),alpha=1-Math.exp(-dt/190);
  this.lastCameraFrame=now;this.lookTarget.lerp(focus,alpha);this.camera.position.lerp(position,alpha);const targetZoom=dice?2.5:1.85;this.camera.zoom+=(targetZoom-this.camera.zoom)*alpha;const unsettled=this.camera.position.distanceToSquared(position)>.00001||this.lookTarget.distanceToSquared(focus)>.00001||Math.abs(targetZoom-this.camera.zoom)>.0001;if(!unsettled){this.camera.position.copy(position);this.lookTarget.copy(focus);this.camera.zoom=targetZoom;}this.camera.lookAt(this.lookTarget);this.camera.updateProjectionMatrix();return unsettled||dice||!!this.travel;
  }
- resize(){const w=this.container.clientWidth,h=this.container.clientHeight;if(!w||!h)return;const scale=Math.min(.65,640/w,400/h);this.renderer.setSize(Math.round(w*scale),Math.round(h*scale),false);Object.assign(this.renderer.domElement.style,{width:"100%",height:"100%",imageRendering:"pixelated"});const aspect=w/h,half=aspect<1.2?6.4/aspect:6.1;this.camera.left=-half*aspect;this.camera.right=half*aspect;this.camera.top=half;this.camera.bottom=-half;this.camera.updateProjectionMatrix();this.request();}
+ setMatrixPitch(pitch){
+  if(this.matrixPitch===pitch)return;
+  this.matrixPitch=pitch;
+  this.resize();
+ }
+ resize(){
+  const w=this.container.clientWidth,h=this.container.clientHeight;if(!w||!h)return;
+  const pitch=this.matrixPitch,scale=Math.min(.65,640/w,400/h);
+  const cols=Math.max(1,pitch?Math.ceil(w/pitch):Math.round(w*scale));
+  const rows=Math.max(1,pitch?Math.ceil(h/pitch):Math.round(h*scale));
+  const c=this.renderer.domElement,displayW=pitch?cols*pitch:w,displayH=pitch?rows*pitch:h;
+  if(c.width!==cols||c.height!==rows)this.renderer.setSize(cols,rows,false);
+  Object.assign(c.style,{width:pitch?displayW+'px':'100%',height:pitch?displayH+'px':'100%',imageRendering:'pixelated'});
+  const aspect=displayW/displayH,half=aspect<1.2?6.4/aspect:6.1;
+  this.camera.left=-half*aspect;this.camera.right=half*aspect;this.camera.top=half;this.camera.bottom=-half;
+  this.camera.updateProjectionMatrix();this.request();
+ }
  select(i,notify=false){const [x,z]=coord(i);this.selection.position.set(x,.018,z);this.selection.visible=true;this.request();if(notify)this.onSelect(i);}
  setState(s){const old=this.state;this.state=s;const rolled=!!(old&&s.log?.some(l=>l.id>(old.log?.at(-1)?.id??0)&&/\d \+ \d/.test(l.text))),newMove=old?.revision!==undefined&&s.animation&&s.animation.id!==old?.animation?.id;if(!old||old.players.length!==s.players.length||s.players.some((p,i)=>p.id!==old.players[i].id||p.piece!==old.players[i].piece)){for(const t of this.tokens)this.world.remove(t);this.tokens=s.players.map((p,i)=>{const t=token(p.piece,PLAYER_COLORS[i]);this.world.add(t);return t;});}
   const previousTravel=this.travel;this.travel=null;for(let i=0;i<s.players.length;i++){const p=s.players[i],t=this.tokens[i],at=coord(p.pos),offset=[[-.25,.22],[0,.22],[.25,.22],[-.25,-.18],[0,-.18],[.25,-.18]][i];t.visible=!p.out;t.scale.setScalar(s.players.length>4?.59:.72);const to=new THREE.Vector3(at[0]+offset[0],.06,at[1]+offset[1]);if(old?.revision!==undefined&&s.animation?.player===p.id&&old.players[i]?.pos!==p.pos){const anim=s.animation;this.travel={index:i,from:old.players[i].pos,to:anim.to??p.pos,steps:anim?.steps??0,start:performance.now()+(rolled?DICE_DURATION+DICE_PAUSE:0),duration:Math.max(500,Math.min(1500,Math.abs(anim?.steps||6)*110)),offset};}else if(previousTravel?.index===i&&old?.players[i]?.pos===p.pos&&!p.out){this.travel=previousTravel;}else t.position.copy(to);}
