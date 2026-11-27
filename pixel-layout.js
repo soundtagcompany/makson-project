@@ -178,6 +178,29 @@ function compact(text,x,y,col){
  }
 }
 const orbitNodes=[...document.querySelectorAll('#sphere-stage [data-sphere-app]')];
+// Rasterize each exact 1-bit sprite once; moving it then costs one draw call,
+// while the source stays on the same native framebuffer and pixel pitch.
+const orbitIcons=new Map(), orbitCaptions=new Map();
+function orbitIcon(id,color){
+ const pixels=art.get(id);
+ if(!pixels)return null;
+ let entry=orbitIcons.get(id);
+ if(entry?.pixels===pixels&&entry.color===color)return entry.canvas;
+ const canvas=document.createElement('canvas');canvas.width=canvas.height=9;
+ const paint=canvas.getContext('2d');paint.fillStyle=color;
+ for(const [x,y] of pixels)paint.fillRect(x,y,1,1);
+ orbitIcons.set(id,{pixels,color,canvas});
+ return canvas;
+}
+function orbitCaption(id,text,color){
+ let entry=orbitCaptions.get(id);
+ if(entry?.text===text&&entry.color===color)return entry.canvas;
+ const canvas=document.createElement('canvas');canvas.width=compactWidth(text);canvas.height=5;
+ if(!canvas.width)return canvas;
+ window.MaksonPreviewBitmap.drawCompact(canvas,text,color);
+ orbitCaptions.set(id,{text,color,canvas});
+ return canvas;
+}
 function drawOrbitNodes(){
  for(const node of [...orbitNodes].sort((a,b)=>(Number(a.style.zIndex)||0)-(Number(b.style.zIndex)||0))){
   const bounds=anchor(node.querySelector('.node-symbol')),style=getComputedStyle(node);
@@ -185,13 +208,15 @@ function drawOrbitNodes(){
   if(!bounds||bounds.w<2||opacity<.1||style.display==='none'||style.visibility==='hidden')continue;
   const id=node.dataset.sphereApp, color=node.style.getPropertyValue('--app-color')||'#d7b2ff';
   ctx.globalAlpha=opacity;
-  iconAt(id,bounds.x+Math.round((bounds.w-9)/2),bounds.y+Math.round((bounds.h-9)/2),color);
+  const sprite=orbitIcon(id,color);
+  if(sprite)ctx.drawImage(sprite,bounds.x+Math.round((bounds.w-9)/2),bounds.y+Math.round((bounds.h-9)/2));
   const caption=node.lastElementChild,r=anchor(caption),captionStyle=getComputedStyle(caption);
   if(r?.w&&r?.h&&captionStyle.display!=='none'&&captionStyle.visibility!=='hidden'){
    const names={meme:'МЕМОИНАТОР',game:'ГИПНОРОЙДЕР',naval:'МОРСКОЙ БОЙ'};
    const name=names[id]||caption.textContent.trim().toUpperCase();
    const span=compactWidth(name),xx=Math.max(1,Math.min(W-span-1,r.x+Math.round((r.w-span)/2)));
-   compact(name,xx,r.y+Math.floor((r.h-5)/2),color);
+   const text=orbitCaption(id,name,color);
+   if(text.width)ctx.drawImage(text,xx,r.y+Math.floor((r.h-5)/2));
   }
   ctx.globalAlpha=1;
  }
