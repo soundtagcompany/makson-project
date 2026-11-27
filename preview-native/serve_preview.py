@@ -47,7 +47,7 @@ class Handler(BaseHTTPRequestHandler):
    asset=montage/u.path[1:]
    return self.respond(asset.read_bytes(),'text/javascript' if asset.suffix=='.js' else 'text/css')
   asset=live/u.path.removeprefix('/')
-  if asset.parent==live and asset.name in {'console.css','console-effects.js','console-shell.js','app.js','orbit.js','tools-ui.js','game-core.js','meme.css','meme.js','editor.js','editor.css'}:
+  if asset.parent==live and asset.is_file() and asset.name in {'console.css','console-effects.js','console-shell.js','app.js','orbit.js','tools-ui.js','game-core.js','meme.css','meme.js','editor.js','editor.css'}:
    return self.respond(asset.read_bytes(),'text/javascript' if asset.suffix=='.js' else 'text/css')
   try:
    with opener.open('http://127.0.0.1:4357'+u.path+('?' + u.query if u.query else ''),timeout=8) as r:

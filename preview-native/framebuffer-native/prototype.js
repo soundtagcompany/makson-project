@@ -39,6 +39,7 @@ function btn(key,name,x,y,w,h,cb){
  node.onclick=()=>cb(node.matches(':focus-visible'));nav.append(node);
 }
 function focus(key){nav.querySelector('[data-key="'+key+'"]')?.focus({preventScroll:true})}
+function setShown(next){shown=next;draw(true);if(native)document.dispatchEvent(new CustomEvent('makson-preview-visibility',{detail:shown}));}
 function back(kbd){const old=folder;folder='root';page=0;draw(true);if(kbd)focus(old)}
 function pick(name,key,kbd){
  if(key==='tools'||key==='games'){folder=key;page=0;draw(true);if(kbd)focus(lists[folder][0][2]);return}
@@ -47,8 +48,10 @@ function pick(name,key,kbd){
 }
 nav.addEventListener('keydown',e=>{
  if(!shown||e.ctrlKey||e.metaKey||e.altKey)return;
- if(e.key==='Escape'&&folder!=='root'){e.preventDefault();back(true);return}
+ if((e.key==='Escape'||e.key==='ArrowLeft')&&folder!=='root'){e.preventDefault();back(true);return}
+ if(e.key==='Escape'){e.preventDefault();setShown(false);focus('toggle');return}
  const list=lists[folder],i=list.findIndex(a=>a[2]===e.target.dataset.key);
+ if(e.key==='ArrowRight'&&i>=0&&folder==='root'&&['tools','games'].includes(list[i][2])){e.preventDefault();pick(list[i][0],list[i][2],true);return}
  if(i<0||!['ArrowUp','ArrowDown','Home','End'].includes(e.key))return;
  e.preventDefault();const idx=e.key==='Home'?0:e.key==='End'?list.length-1:(i+(e.key==='ArrowDown'?1:-1)+list.length)%list.length;
  if(Math.floor(idx/cap)!==page){page=Math.floor(idx/cap);draw(true)}focus(list[idx][2])
@@ -150,7 +153,7 @@ function draw(buttons,anchor){
  }
  const x=shown?box.x+box.w-16:W-19,y=shown?box.y+1:top+3;
  edge(x,y,15,15,'#090f0c');stroke(x+4,y+7,x+10,y+7,ink.mint);if(!shown)stroke(x+7,y+4,x+7,y+10,ink.mint);
- if(buttons)btn('toggle',shown?'Свернуть каталог':'Открыть каталог',x,y,15,15,kbd=>{shown=!shown;draw(true);if(native)document.dispatchEvent(new CustomEvent('makson-preview-visibility',{detail:shown}));if(kbd)focus('toggle')});
+ if(buttons)btn('toggle',shown?'Свернуть каталог':'Открыть каталог',x,y,15,15,kbd=>{setShown(!shown);if(kbd)focus('toggle')});
 }
 function queue(){if(!pending)pending=requestAnimationFrame(()=>{pending=0;draw(false)})}
 document.addEventListener('makson-preview-focus',e=>{
@@ -158,6 +161,10 @@ document.addEventListener('makson-preview-focus',e=>{
  if(!dest)return;
  if(folder!==dest||!shown||!nav.querySelector('[data-key="'+id+'"]')){folder=dest;shown=true;draw(true,id)}
  focus(id)
+});
+document.addEventListener('makson-preview-keyboard-home',()=>{
+ if(!shown)setShown(true);
+ focus(lists[folder][page*cap][2]);
 });
 c.onpointerdown=e=>{if(native||e.button!==0)return;pointer=[e.clientX,e.clientY];c.setPointerCapture(e.pointerId)};
 c.onpointermove=e=>{if(!pointer)return;angle+=(e.clientX-pointer[0])*.013;tilt=Math.max(-1,Math.min(1,tilt+(e.clientY-pointer[1])*.01));pointer=[e.clientX,e.clientY];queue()};

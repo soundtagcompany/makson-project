@@ -4,7 +4,7 @@ const params=new URLSearchParams(location.search);
 if(location.hostname!=='127.0.0.1'||params.get('framebuffer')!=='1')throw Error('Local preview only');
 const root=document.createElement('section');
 root.id='framebuffer-preview';root.dataset.previewNative='1';root.hidden=true;root.setAttribute('aria-label','Пиксельный макет MAKSON PROJECT');
-root.innerHTML='<canvas id="screen" aria-hidden="true"></canvas><nav id="controls" aria-label="Пиксельный каталог"></nav><p id="status" role="status" hidden></p>';
+root.innerHTML='<canvas id="screen" aria-hidden="true"></canvas><nav id="controls" aria-label="Пиксельный каталог" data-native-keys></nav><p id="status" role="status" hidden></p>';
 document.body.append(root);
 const style=document.createElement('style');
 style.textContent=`
@@ -76,6 +76,12 @@ function open(evt){
 }
 document.addEventListener('makson-preview-open',open);
 document.addEventListener('makson-preview-visibility',e=>{if(!root.hidden)setCatalogCollapsed(!e.detail)});
+window.addEventListener('keydown',e=>{
+ if(e.key!=='F6'||root.hidden||contrast.matches)return;
+ e.preventDefault();e.stopImmediatePropagation();
+ document.dispatchEvent(new Event('makson-preview-keyboard-home'));
+},true);
+
 for(const evt of ['windowfocus','windowhide'])document.addEventListener(evt,sync);
 const watcher=new MutationObserver(sync);windows.forEach(el=>watcher.observe(el,{attributes:true,attributeFilter:['hidden']}));
 if(dock)watcher.observe(dock,{childList:true});
