@@ -215,8 +215,8 @@ export function createSettingsSurface(bitmap,ctx){
   const size=new ResizeObserver(draw);for(const node of [win,pane,help])size.observe(node);
   const changes=new MutationObserver(draw);changes.observe(win,{attributes:true,attributeFilter:['hidden']});
   changes.observe(zoom,{childList:true,characterData:true,subtree:true});
-  for(const type of ['focusin','focusout','input','change','scroll','toggle'])win.addEventListener(type,draw,true);
-  return ()=>{size.disconnect();changes.disconnect();for(const type of ['focusin','focusout','input','change','scroll','toggle'])win.removeEventListener(type,draw,true);};
+  for(const type of ['pointerover','pointerout','focusin','focusout','input','change','scroll','toggle'])win.addEventListener(type,draw,true);
+  return ()=>{size.disconnect();changes.disconnect();for(const type of ['pointerover','pointerout','focusin','focusout','input','change','scroll','toggle'])win.removeEventListener(type,draw,true);};
  }
  return {paint,stop,watch};
 }
