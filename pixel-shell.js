@@ -23,6 +23,9 @@ body.preview-chrome .window[id^='window-']>.titlebar>.window-controls button{bac
 #preview-window-grid{position:fixed;left:0;top:0;z-index:2147482500;pointer-events:none;image-rendering:pixelated;zoom:calc(1 / var(--ui-scale,1))}
 #preview-window-grid[hidden]{display:none!important}
 body.preview-chrome .window>.titlebar>span[data-preview-grid-ink]{opacity:0!important}
+body.preview-chrome :is(#console-shell .window,#window-svyaz,#window-settings)>.titlebar>.window-controls button[data-preview-grid-control]{color:transparent!important;text-shadow:none!important}
+body.preview-chrome :is(#console-shell .window,#window-svyaz,#window-settings)>.titlebar>.window-controls button[data-preview-grid-control]>svg{visibility:hidden!important}
+@media(forced-colors:active){#preview-window-grid{display:none!important}}
 
 `;
 document.head.append(style);
@@ -99,6 +102,16 @@ function setupBitmapTitles(){
   const win=document.querySelector('#window-'+id), title=win?.querySelector(':scope>.titlebar>span');
   if(title)labels.push({win,title,text,canvas:document.createElement('canvas')});
  }
+ const symbols={
+  close:['10001','01010','00100','01010','10001'],
+  minimize:['00000','00000','00000','00000','11111'],
+  restore:['01111','01001','11101','10111','11100'],
+  fullscreen:['11011','10001','00000','10001','11011'],
+  link:['00111','00011','00101','11000','11100'],
+  pip:['11111','10001','10111','10111','11111'],
+ };
+ const scope=':scope>.titlebar>.window-controls button';
+ const buttonGroups=labels.map(({win})=>({win,strip:win.querySelector(':scope>.titlebar>.window-controls')})).filter(({strip})=>strip);
  const screen=document.createElement('canvas');screen.id='preview-window-grid';screen.setAttribute('aria-hidden','true');screen.hidden=true;
  document.body.append(screen);
  const ctx=screen.getContext('2d');
@@ -111,6 +124,7 @@ function setupBitmapTitles(){
    if(screen.width!==w||screen.height!==h){screen.width=w;screen.height=h;screen.style.width=w*pitch+'px';screen.style.height=h*pitch+'px';}
    ctx.clearRect(0,0,w,h);
    const playing=document.fullscreenElement||document.querySelector('.fullscreen-fallback');
+   const moving=new Set(labels.map(({win})=>win).filter(win=>!win.hidden&&win.getAnimations().some(a=>a.playState==='running'&&Number.isFinite(a.effect?.getComputedTiming().endTime))));
    let rendered=false;
    for(const {win,title,text,canvas} of labels){
     const r=title.getBoundingClientRect(),bar=title.parentElement.getBoundingClientRect();
@@ -121,7 +135,7 @@ function setupBitmapTitles(){
     const room=gy*pitch>=bar.top&&((gy+rows)*pitch)<=bar.bottom&&gx+size<=end;
     const onTop=room&&[gx+1,gx+Math.floor(size/2),gx+size-1].every(x=>
      title.parentElement.contains(document.elementFromPoint(x*pitch+pitch/2,(gy+Math.floor(rows/2))*pitch)));
-    const paint=!contrast.matches&&root.hidden&&!playing&&!win.hidden&&win.ownerDocument===document&&r.width>0&&room&&onTop
+    const paint=!contrast.matches&&root.hidden&&!playing&&!moving.has(win)&&!win.hidden&&win.ownerDocument===document&&r.width>0&&room&&onTop
       &&gy>=0&&gy+rows<=h;
     title.toggleAttribute('data-preview-grid-ink',paint);
     if(!paint)continue;
@@ -129,13 +143,37 @@ function setupBitmapTitles(){
     canvas.width=size;canvas.height=rows;
     (compact?bitmap.drawCompact:bitmap.draw)(canvas,text,color);ctx.drawImage(canvas,gx,gy);rendered=true;
    }
+   // Replace ink only: the original button still owns sizing, hit targets, focus and actions.
+   for(const {win} of buttonGroups)for(const button of win.querySelectorAll(scope)){
+    const r=button.getBoundingClientRect(), action=button.dataset.action, pressed=button.getAttribute('aria-pressed')==='true';
+    const kind=button.hasAttribute('data-app-link')?'link':action==='close'||action==='minimize'||action==='pip'?action
+     :(button.id.endsWith('-fullscreen')||action==='maximize')?(pressed?'restore':'fullscreen'):null;
+    const x=Math.round(((r.left+r.right)/2-2.5*pitch)/pitch);
+    const y=Math.round(((r.top+r.bottom)/2-2.5*pitch)/pitch);
+    const pattern=symbols[kind];
+    const room=x>=0&&y>=0&&x+5<=w&&y+5<=h&&x*pitch>=r.left+1&&y*pitch>=r.top+1
+     &&(x+5)*pitch<=r.right-1&&(y+5)*pitch<=r.bottom-1;
+    const paint=!contrast.matches&&root.hidden&&!playing&&!moving.has(win)&&!win.hidden&&win.ownerDocument===document
+     &&room&&pattern&&pattern.every((row,j)=>[...row].every((v,i)=>v==='0'||
+      button.contains(document.elementFromPoint((x+i+.5)*pitch,(y+j+.5)*pitch))));
+    if(!paint){button.removeAttribute('data-preview-grid-control');continue;}
+    button.removeAttribute('data-preview-grid-control');
+    ctx.fillStyle=getComputedStyle(button).color;
+    button.setAttribute('data-preview-grid-control',kind);
+    pattern.forEach((row,j)=>[...row].forEach((v,i)=>{if(v==='1')ctx.fillRect(x+i,y+j,1,1)}));
+    rendered=true;
+   }
    screen.hidden=!rendered;
+   if(moving.size)draw();
   });
  }
  const ro=new ResizeObserver(draw);labels.forEach(({title,win})=>{ro.observe(title);ro.observe(win)});
  const mo=new MutationObserver(draw);labels.forEach(({win})=>mo.observe(win,{attributes:true,attributeFilter:['hidden','style','class']}));
+ const controls=new MutationObserver(draw);
+ buttonGroups.forEach(({strip})=>{ro.observe(strip);controls.observe(strip,{subtree:true,childList:true,attributes:true,attributeFilter:['aria-pressed','hidden','style','class']});});
+ for(const e of ['focusin','focusout','pointerover','pointerout','click','beforetoggle','toggle'])document.addEventListener(e,draw,true);
  contrast.addEventListener('change',draw);
- for(const e of ['windowfocus','windowhide','fullscreenchange','windowresize','console-scale-change','makson-pixel-screen-change'])document.addEventListener(e,draw);
+ for(const e of ['windowfocus','windowhide','fullscreenchange','desktopfullscreenchange','windowresize','console-scale-change','makson-pixel-screen-change'])document.addEventListener(e,draw);
  document.addEventListener('scroll',draw,true);
  addEventListener('resize',draw,{passive:true});draw();
 }
