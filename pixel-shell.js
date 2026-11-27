@@ -12,7 +12,7 @@ style.textContent=`
 #framebuffer-preview{position:fixed;inset:0;z-index:2147483640;overflow:hidden;background:transparent;pointer-events:none;zoom:calc(1 / var(--ui-scale,1))}
 #framebuffer-preview[hidden]{display:none!important}
 body.preview-native-home #app-catalog,body.preview-native-home #catalog-toggle{visibility:hidden!important}
-body.preview-native-home .desktop-header,body.preview-native-home #sphere-stage{opacity:0!important}
+body.preview-native-home .desktop-header,body.preview-native-home #sphere-stage,body.preview-native-home #console-dock{opacity:0!important}
 body.matrix-settings-painted>.console-focus-frame{z-index:2147482499!important}
 body.preview-native-home #framebuffer-preview #controls button:focus-visible{outline-width:var(--preview-cell);outline-offset:calc(-1 * var(--preview-cell))}
 
@@ -106,7 +106,7 @@ function sync(){
    repaint();return;
   }
   leaveSurface();
-  if(!ready||active.length||dock?.childElementCount){hide();return}
+  if(!ready||active.length){hide();return}
   if(drawer!==null){setCatalogCollapsed(drawer);drawer=null}
   if(contrast.matches){
    const focused=document.activeElement;
@@ -124,7 +124,7 @@ function sync(){
    [...root.querySelectorAll('#controls button')].find(el=>el.dataset.key===contrastReturn)?.focus({preventScroll:true});
   }
   contrastReturn=null;
-  if(restore){document.dispatchEvent(new CustomEvent('makson-preview-focus',{detail:restore}));restore=null}
+  if(restore&&!dock?.childElementCount){document.dispatchEvent(new CustomEvent('makson-preview-focus',{detail:restore}));restore=null}
  });
 }
 function open(evt){

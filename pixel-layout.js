@@ -256,6 +256,31 @@ function drawSpeed(scene){
  rect(x-4,y+7,length+7,1,'#46265a');
  compact(text,x,y,'#d9a1f4');
 }
+function drawDock(){
+ const dock=document.querySelector('#console-dock:not([hidden])'),box=anchor(dock);
+ if(!box||box.w<1||box.h<1)return;
+ ctx.save();ctx.beginPath();ctx.rect(box.x,box.y,box.w,box.h);ctx.clip();
+ rect(box.x,box.y,box.w,box.h,ink.catalog);
+ rect(box.x,box.y,box.w,1,ink.edge);
+ for(const item of dock.querySelectorAll('.console-task')){
+  const [restore,close]=item.querySelectorAll('button');
+  const a=anchor(restore),b=anchor(close);if(!a||!b)continue;
+  const highlight=button=>button.matches(':hover,:focus-visible');
+  const plate=(v,button)=>edge(v.x,v.y,v.w,v.h,highlight(button)?'#294b37':'#102519');
+  plate(a,restore);plate(b,close);
+  const key=item.dataset.task,name=(namesForDock.get(key)||restore.textContent.trim()).toUpperCase(),room=a.w-6;
+  let labelText=name;
+  if(compactWidth(labelText)>room){while(labelText&&compactWidth(labelText+'...')>room)labelText=labelText.slice(0,-1);labelText=labelText?labelText+'...':'';}
+  if(labelText){
+   if(width(labelText)<=room)label(labelText,a.x+Math.floor((a.w-width(labelText))/2),a.y+Math.floor((a.h-7)/2),ink.green);
+   else compact(labelText,a.x+Math.floor((a.w-compactWidth(labelText))/2),a.y+Math.floor((a.h-5)/2),ink.green);
+  }
+  const x=b.x+Math.floor(b.w/2),y=b.y+Math.floor(b.h/2);
+  stroke(x-2,y-2,x+2,y+2,ink.green);stroke(x+2,y-2,x-2,y+2,ink.green);
+ }
+ ctx.restore();
+}
+const namesForDock=new Map([...lists.tools,...lists.games].map(([name,icon,key])=>[key,name]));
 const staticLayer=document.createElement('canvas'),staticCtx=staticLayer.getContext('2d');
 let staticDirty=true,catalogNeedsLayout=false;
 function draw(buttons,focusKey){
@@ -371,7 +396,7 @@ function draw(buttons,focusKey){
  edge(x,y,15,15,'#090f0c');stroke(x+4,y+7,x+10,y+7,ink.mint);if(!shown)stroke(x+7,y+4,x+7,y+10,ink.mint);
  if(buttons)btn('toggle',shown?'Свернуть каталог':'Открыть каталог',x,y,15,15,kbd=>{setShown(!shown);if(kbd)focus('toggle')});
  if(native){
-  ctx=mainCtx;ctx.drawImage(staticLayer,0,0);staticDirty=false;
+  drawDock();ctx=mainCtx;ctx.drawImage(staticLayer,0,0);staticDirty=false;
  }
 }
 function queue(){if(!pending)pending=requestAnimationFrame(()=>{pending=0;if(!native||!c.parentElement.hidden)draw(false)})}
@@ -381,8 +406,10 @@ if(native){
  document.addEventListener('makson-pixel-repaint',queue);
  for(const e of ['makson-pixel-screen-change','focusin','focusout','accountchange','windowfocus','windowhide','console-boot-change'])document.addEventListener(e,refresh);
  for(const e of ['pointerover','pointerout'])document.addEventListener(e,event=>{
-  if(event.target.closest?.('.desktop-header,#controls'))refresh();
+  if(event.target.closest?.('.desktop-header,#controls,#console-dock'))refresh();
  });
+ const dock=document.querySelector('#console-dock');
+ if(dock){dock.addEventListener('scroll',refresh,{passive:true});new MutationObserver(refresh).observe(dock,{childList:true,attributes:true,attributeFilter:['hidden']});}
  const header=document.querySelector('.desktop-header');
  if(header)new MutationObserver(refresh).observe(header,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['aria-expanded','class','hidden']});
 }
