@@ -436,7 +436,7 @@ body.matrix-buffer>.console-focus-frame{z-index:2147482499!important}
 export function createToolSurfaces(bitmap,ctx){
  const body=document.body,style=document.createElement('style');
  style.textContent=`
-body.matrix-tool #console-shell #app-workspace .tools-window.matrix-tool-window{
+body.matrix-tool #console-shell #app-workspace :is(.tools-window,.meme-window).matrix-tool-window{
  position:fixed!important;inset:var(--mtop) 0 0!important;width:100%!important;max-width:none!important;
  height:calc(var(--viewport-height,100dvh) - var(--mtop))!important;max-height:none!important;
  min-height:0!important;margin:0!important;border:0!important;box-shadow:none!important;
@@ -501,8 +501,8 @@ body.matrix-tool #console-shell #app-workspace .matrix-tool-window .tools-body .
 body.matrix-tool #console-shell #app-workspace .matrix-tool-window .tools-body .tool-progress progress{
  display:block;width:100%;height:calc(4 * var(--mt));margin:0 0 calc(2 * var(--mt));
 }
-body.matrix-tool #console-shell #app-workspace .tools-window.matrix-tool-window .tools-body [hidden][hidden],
-body.matrix-tool #console-shell #app-workspace .tools-window.matrix-tool-window .tools-body :is(p:empty,details:not([open])>:not(summary)){
+body.matrix-tool #console-shell #app-workspace :is(.tools-window,.meme-window).matrix-tool-window .tools-body [hidden][hidden],
+body.matrix-tool #console-shell #app-workspace :is(.tools-window,.meme-window).matrix-tool-window .tools-body :is(p:empty,details:not([open])>:not(summary)){
  display:none!important;
 }
 body.matrix-tool #console-shell #app-workspace .matrix-tool-window .tools-body form>:is(.tool-note,.tool-details,h3,p){
@@ -514,12 +514,40 @@ body.matrix-tool>#toast{z-index:2147483642!important}
  body.matrix-tool #console-shell #app-workspace .matrix-tool-window>.titlebar button{width:calc(11 * var(--mt))!important}
  body.matrix-tool #console-shell #app-workspace .matrix-tool-window>.titlebar .window-controls{gap:0!important;padding:0!important}
 }
+
+body.matrix-tool #console-shell #app-workspace #window-meme.matrix-tool-window>.meme-root{
+ flex:1 1 0%;min-height:0;overflow:auto;background:#130b11;
+}
+body.matrix-tool #console-shell #app-workspace #window-meme.matrix-tool-window .meme-stage{background:#090609!important}
+body.matrix-tool #console-shell #app-workspace #window-meme.matrix-tool-window .meme-root :is(.meme-toolbar,.meme-footer,.meme-controls,.meme-stage){
+ padding-inline:calc(4 * var(--mt))!important;
+}
+body.matrix-tool #console-shell #app-workspace #window-meme.matrix-tool-window .meme-root :is(button,summary,textarea,select,label.meme-file-button){
+ min-height:calc(15 * var(--mt))!important;min-width:0;
+}
+body.matrix-tool #console-shell #app-workspace #window-meme.matrix-tool-window .meme-root .meme-empty{
+ padding:calc(3 * var(--mt))!important;
+}
+body.matrix-tool #console-shell #app-workspace #window-meme.matrix-tool-window .meme-root .meme-empty svg{display:none}
+body.matrix-tool #console-shell #app-workspace #window-meme.matrix-tool-window .meme-root .meme-empty h2{width:100%;min-height:calc(10 * var(--mt));line-height:calc(10 * var(--mt))}
+body.matrix-tool #console-shell #app-workspace #window-meme.matrix-tool-window .meme-root [data-meme=crop]{min-width:calc(37 * var(--mt))!important}
+body.matrix-tool #console-shell #app-workspace #window-meme.matrix-tool-window .meme-root textarea{
+ resize:none!important;
+ background:#1c1019!important;color:#f7c9df!important;box-shadow:none!important;
+ font:500 calc(5 * var(--mt)) / calc(7 * var(--mt)) ConsoleMono,monospace!important;
+}
+body.matrix-tool #console-shell #app-workspace #window-meme.matrix-tool-window .meme-root [hidden]{display:none!important}
+@media(max-width:470px){
+ body.matrix-tool #console-shell #app-workspace #window-meme.matrix-tool-window>.titlebar button{width:calc(10 * var(--mt))!important}
+}
 `;
  document.head.append(style);
- const colors={page:'#020704',surface:'#08130d',input:'#0b1c12',edge:'#2d5840',text:'#b5eccc',muted:'#80ae91',on:'#76e6a7'};
+ const toolsColors={page:'#020704',surface:'#08130d',input:'#0b1c12',edge:'#2d5840',text:'#b5eccc',muted:'#80ae91',on:'#76e6a7'};
  const font=makeText(bitmap,ctx);
- return Object.fromEntries(['convert','download'].map(id=>{
-  const win=document.getElementById('window-'+id),pane=document.getElementById(id+'-tool'),title=win?.querySelector('.titlebar');
+ return Object.fromEntries(['convert','download','meme'].map(id=>{
+  const media=id==='meme';
+  const colors=media?{page:'#090609',surface:'#170e16',input:'#241421',edge:'#673951',text:'#f6c2df',muted:'#bd8aa6',on:'#fd9fca'}:toolsColors;
+  const win=document.getElementById('window-'+id),pane=document.getElementById(media?'meme-root':id+'-tool'),title=win?.querySelector('.titlebar');
   if(!win||!pane||!title)return [id,null];
   const stop=()=>{win.classList.remove('matrix-tool-window');body.classList.remove('matrix-tool');};
   function paint({pitch,width:w,height:h,headerRows:top,active}){
@@ -548,7 +576,8 @@ body.matrix-tool>#toast{z-index:2147483642!important}
    fill({l:0,t:top,r:w,b:tb.b},colors.surface);
    fill({l:0,t:tb.b-1,r:w,b:tb.b},colors.edge);
    const control=bounds(title.querySelector('.window-controls'));
-   words(win.dataset.title,{l:3,r:control.l-1,t:tb.t,b:tb.b},{full:true});
+   const titleText=win.dataset.title;
+   words(titleText,{l:3,r:control.l-1,t:tb.t,b:tb.b},{full:true});
    for(const el of title.querySelectorAll('button')){
     const b=bounds(el),x=Math.floor((b.l+b.r)/2),y=Math.floor((b.t+b.b)/2);
     const square=(l,t,r,b)=>fill({l,t,r,b},colors.text);
@@ -566,16 +595,37 @@ body.matrix-tool>#toast{z-index:2147483642!important}
    try{
     ctx.beginPath();ctx.rect(pb.l,pb.t,pb.r-pb.l,pb.b-pb.t);ctx.clip();
     fill(pb,colors.surface);
-    const nodes=pane.querySelectorAll('p,h3,summary,label,button,select,input,progress,a.tool-primary');
+    if(media){
+     for(const [sel,color] of [['.meme-toolbar',colors.surface],['.meme-stage',colors.page],['.meme-controls',colors.surface],['.meme-footer',colors.surface]]){
+      const region=pane.querySelector(sel);
+      if(region?.getClientRects().length){const rb=bounds(region);fill(rb,color);fill({...rb,b:rb.t+1},colors.edge);}
+     }
+     const bitmap=pane.querySelector('.meme-image-wrap:not([hidden])');
+     if(bitmap?.getClientRects().length){
+      const image=bounds(bitmap);box({l:image.l-1,r:image.r+1,t:image.t-1,b:image.b+1},colors.edge,colors.page);
+      ctx.clearRect(image.l,image.t,image.r-image.l,image.b-image.t);
+     }
+    }
+    const nodes=pane.querySelectorAll('p,h3,summary,label,button,select,input,progress,a.tool-primary'+(media?',h2,b,output,textarea,.meme-file-name,.meme-empty small':''));
     for(const el of nodes){
      if(el.closest('[hidden]')||!el.getClientRects().length)continue;
      const fold=el.closest('details');if(fold&&!fold.open&&el!==fold.querySelector('summary'))continue;
-     const b=bounds(el);if(b.b<=pb.t||b.t>=pb.b||b.r<=b.l||b.b<=b.t)continue;
-     const tag=el.localName;
-     if(tag==='input'){
+     const b=bounds(el),region=media&&el.closest('.meme-controls');
+     if(region){
+      const room=bounds(region);
+      if(b.b<=room.t||b.t>=room.b)continue;
+     }
+     if(b.b<=pb.t||b.t>=pb.b||b.r<=b.l||b.b<=b.t)continue;
+     const tag=el.localName,room=region&&bounds(region);
+     if(room){ctx.save();ctx.beginPath();ctx.rect(room.l,room.t,room.r-room.l,room.b-room.t);ctx.clip();}
+     try{
+     if(tag==='input'||tag==='textarea'){
       if(el.type==='file')continue;
       box(b,hot(el)?colors.on:colors.edge,colors.input);
-      if(el.type==='range'){
+      if(el.type==='checkbox'){
+       if(el.checked)fill(inset(b,2),colors.on);
+      }else if(el.type==='color')fill(inset(b,1),el.value);
+      else if(el.type==='range'){
        const x=b.l+2,y=Math.floor((b.t+b.b)/2),right=b.r-2,p=(+el.value- +el.min)/(+el.max- +el.min||1),position=Math.round(x+(right-x)*p);
        fill({l:x,r:right,t:y,b:y+1},colors.muted);fill({l:position-1,r:position+2,t:y-2,b:y+3},colors.on);
       }else ctx.clearRect(b.l+1,b.t+1,Math.max(0,b.r-b.l-2),Math.max(0,b.b-b.t-2));
@@ -587,9 +637,11 @@ body.matrix-tool>#toast{z-index:2147483642!important}
       const x=b.r-5,y=Math.floor((b.t+b.b)/2);
       fill({l:x-2,r:x-1,t:y-1,b:y},colors.text);fill({l:x+2,r:x+3,t:y-1,b:y},colors.text);
       fill({l:x-1,r:x+2,t:y,b:y+1},colors.text);fill({l:x,r:x+1,t:y+1,b:y+2},colors.text);
-     }else if(el.matches('button,summary,a.tool-primary,.tool-drop')){
-      let name=tag==='summary'?(el.parentElement.open?'− ':'+ ')+elText(el):el.matches('.tool-drop')?(id==='convert'?'ВЫБРАТЬ ФАЙЛ':'ВЫБРАТЬ'):el.textContent.trim().replace(/\s+→$/,'');
-      const selected=el.matches('.tool-primary,.tool-drop');
+     }else if(el.matches('button,summary,a.tool-primary,.tool-drop,.meme-file-button')){
+      let name=tag==='summary'?(el.parentElement.open?'− ':'+ ')+elText(el):el.matches('.tool-drop')?(id==='convert'?'ВЫБРАТЬ ФАЙЛ':'ВЫБРАТЬ'):el.textContent.trim().replace(/\s+[→↓]$/,'');
+      if(media&&el.matches('.meme-file-button'))name='ОТКРЫТЬ';
+      if(el.id==='download-paste')name='ВСТАВИТЬ';
+      const selected=el.matches('.tool-primary,.tool-drop,.meme-primary,[data-meme=save]');
      if(el.matches('.tool-drop')){
       box(b,hot(el)||el.classList.contains('drag-over')?colors.on:colors.edge,colors.input);
       const mid=Math.floor((b.t+b.b)/2);
@@ -597,19 +649,21 @@ body.matrix-tool>#toast{z-index:2147483642!important}
       words('ДО 256 МБ',{...b,t:mid+2},{center:true,quiet:true});
       continue;
      }
-      box(b,hot(el)||selected?colors.on:colors.edge,hot(el)?'#17412c':colors.input);
+      box(b,hot(el)||selected?colors.on:colors.edge,hot(el)?(media?'#44223a':'#17412c'):colors.input);
       words(name,b,{primary:true,center:true,quiet:el.disabled});
      }else if(tag==='label'){
-      const input=el.querySelector('input,select');const value=elText(el);
+      const input=el.querySelector('input,select,textarea');const value=elText(el);
       if(value){
-       const labelBox=input?{...b,b:bounds(input).t}:b;
+       const labelBox=input?(input.type==='checkbox'?{...b,l:bounds(input).r+1}:{...b,b:bounds(input).t,r:el.querySelector('output')?bounds(el.querySelector('output')).l-1:b.r}):b;
        words(value,labelBox,{primary:true,quiet:true});
       }
       if(input&&el.querySelector('small'))words(el.querySelector('small').textContent,{...b,t:bounds(input).b},{quiet:true});
      }else{
-      const value=el.matches('.tool-lead')?(id==='convert'?'ФАЙЛ В НОВЫЙ ФОРМАТ':'ВИДЕО И АУДИО · YOUTUBE И TIKTOK'):el.textContent;
-      words(value,b,{full:tag==='h3',quiet:!el.matches('.tool-status,h3'),primary:el.id==='convert-name'||el.matches('.tool-lead')});
+      const value=el.matches('.tool-lead')?(id==='convert'?'ФАЙЛ В НОВЫЙ ФОРМАТ':'ВИДЕО И АУДИО · YOUTUBE И TIKTOK'):
+       media&&el.id==='meme-status'&&el.textContent.startsWith('Открой изображение')?'ФОТО ДО 20 МБ':el.textContent;
+      words(value,b,{center:media&&tag==='h2',full:['h3','h2','b','output'].includes(tag),quiet:!el.matches('.tool-status,h3'),primary:el.id==='convert-name'||el.matches('.tool-lead,.meme-file-name,#meme-status,output')});
      }
+     }finally{if(room)ctx.restore();}
     }
    }finally{ctx.restore();}
    const popup=win.querySelector('.app-link-panel');
