@@ -18,7 +18,7 @@ body.preview-native-home #framebuffer-preview #controls button:focus-visible{out
 
 #framebuffer-preview canvas{position:absolute;inset:0 auto auto 0;image-rendering:pixelated;pointer-events:none}
 #framebuffer-preview #controls{position:absolute;inset:0;pointer-events:none}
-#framebuffer-preview #controls button{position:absolute;pointer-events:auto;background:none!important;box-shadow:none!important;border:0!important;color:transparent!important;margin:0;padding:0;appearance:none;cursor:pointer}
+#framebuffer-preview #controls button{position:absolute;pointer-events:auto;background:none!important;box-shadow:none!important;border:0!important;color:transparent!important;margin:0;padding:0;appearance:none;cursor:pointer;overflow:hidden;font-size:0!important;line-height:0!important;white-space:nowrap;touch-action:manipulation;-webkit-user-select:none;user-select:none}
 #framebuffer-preview #controls button:focus-visible{outline:2px solid white!important;outline-offset:-2px}
 /* Keep the original sphere and its touch controls in the visible work area. */
 body.preview-native-home #console-shell{transition:none!important}
