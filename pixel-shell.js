@@ -26,6 +26,13 @@ body.preview-app-header>.console-focus-frame{z-index:2147482499!important}
 body.preview-chrome .window>.titlebar>span[data-preview-grid-ink]{opacity:0!important}
 body.preview-chrome :is(#console-shell .window,#window-svyaz,#window-settings)>.titlebar>.window-controls button[data-preview-grid-control]{color:transparent!important;text-shadow:none!important}
 body.preview-chrome :is(#console-shell .window,#window-svyaz,#window-settings)>.titlebar>.window-controls button[data-preview-grid-control]>svg{visibility:hidden!important}
+@media (orientation:portrait) and (min-width:350px) and (max-width:420px){
+ body.preview-chrome #console-shell #app-workspace #window-importopoly:not(:fullscreen):not(.fullscreen-fallback)>.titlebar{
+  height:auto!important;min-height:0;flex-wrap:wrap;row-gap:calc(3px / var(--ui-scale,1));
+ }
+ body.preview-chrome #console-shell #app-workspace #window-importopoly:not(:fullscreen):not(.fullscreen-fallback)>.titlebar>span{flex:1 0 100%}
+ body.preview-chrome #console-shell #app-workspace #window-importopoly:not(:fullscreen):not(.fullscreen-fallback)>.titlebar>.window-controls{flex:1 0 100%;justify-content:flex-end}
+}
 @media(forced-colors:active){#preview-window-grid{display:none!important}}
 
 `;
@@ -134,18 +141,27 @@ function setupBitmapTitles(){
    if(headerVisible){bitmap.drawDesktopHeader(ctx,pitch,w,rows);rendered=true;}
    document.body.classList.toggle('preview-app-header',!!headerVisible);
    for(const {win,title,text,canvas} of labels){
-    const r=title.getBoundingClientRect(),bar=title.parentElement.getBoundingClientRect();
-    const gx=Math.max(0,Math.ceil((r.left+1)/pitch)),end=Math.min(w,Math.floor((r.right-2)/pitch));
-    const compact=gx+bitmap.width(text)>end || r.height<8*pitch;
-    const size=compact?bitmap.compactWidth(text):bitmap.width(text),rows=compact?5:8;
-    const gy=Math.floor((r.top+(r.height-rows*pitch)/2)/pitch);
-    const room=gy*pitch>=bar.top&&((gy+rows)*pitch)<=bar.bottom&&gx+size<=end;
-    const onTop=room&&[gx+1,gx+Math.floor(size/2),gx+size-1].every(x=>
-     title.parentElement.contains(document.elementFromPoint(x*pitch+pitch/2,(gy+Math.floor(rows/2))*pitch)));
-    const paint=!contrast.matches&&root.hidden&&!playing&&!moving.has(win)&&!win.hidden&&win.ownerDocument===document&&r.width>0&&room&&onTop
-      &&gy>=0&&gy+rows<=h;
-    title.toggleAttribute('data-preview-grid-ink',paint);
-    if(!paint)continue;
+    const active=!contrast.matches&&root.hidden&&!playing&&!moving.has(win)&&!win.hidden&&win.ownerDocument===document;
+    if(!active){title.removeAttribute('data-preview-grid-ink');continue;}
+    const barEl=title.parentElement, r=title.getBoundingClientRect(),bar=barEl.getBoundingClientRect();
+    const gx=Math.max(0,Math.ceil((r.left+1)/pitch));
+    const blockers=[...win.querySelectorAll(scope)].map(btn=>btn.getBoundingClientRect()).filter(b=>b.width&&b.height);
+    function fit(compact){
+     const width=compact?bitmap.compactWidth(text):bitmap.width(text),rows=compact?5:8;
+     const gy=Math.floor((r.top+(r.height-rows*pitch)/2)/pitch),top=gy*pitch,bottom=(gy+rows)*pitch;
+     // Use the free part of the bar, not the width of its clipped/flex-shrunk native label.
+     const limit=Math.min(bar.right-2,w*pitch,...blockers.filter(b=>b.bottom>top&&b.top<bottom).map(b=>b.left-2));
+     if(!r.width||!r.height||r.height+1<rows*pitch||gy<0||gy+rows>h||top<bar.top||bottom>bar.bottom||(gx+width)*pitch>limit)return null;
+     for(const y of [gy,gy+rows-1])for(const x of [gx,gx+Math.floor(width/2),gx+width-1]){
+      const hit=document.elementFromPoint((x+.5)*pitch,(y+.5)*pitch);
+      if(!barEl.contains(hit)||hit?.closest('button, a, input, select, [role=button], [role=menu]'))return null;
+     }
+     return {compact,width,rows,gy};
+    }
+    const layout=fit(false)||fit(true);
+    title.toggleAttribute('data-preview-grid-ink',!!layout);
+    if(!layout)continue;
+    const {compact,width:size,rows,gy}=layout;
     const color=getComputedStyle(title).getPropertyValue('--app-color').trim()||'#96eeb3';
     canvas.width=size;canvas.height=rows;
     (compact?bitmap.drawCompact:bitmap.draw)(canvas,text,color);ctx.drawImage(canvas,gx,gy);rendered=true;
