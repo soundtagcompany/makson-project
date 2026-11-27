@@ -13,6 +13,12 @@ style.textContent=`
 #framebuffer-preview[hidden]{display:none!important}
 body.preview-native-home #app-catalog,body.preview-native-home #catalog-toggle{visibility:hidden!important}
 body.preview-native-home .desktop-header,body.preview-native-home #sphere-stage,body.preview-native-home #console-dock{opacity:0!important}
+body.pixel-app-dock #console-dock .console-task{animation:none!important}
+body.pixel-app-dock #console-dock:not([hidden]){
+ --pixel-dock-size:max(48px,calc(46px / var(--ui-scale,1)));
+ position:fixed!important;inset:calc(var(--viewport-height,100dvh) - var(--pixel-dock-size)) 0 auto!important;
+ height:var(--pixel-dock-size)!important;min-height:0!important;
+}
 body.matrix-settings-painted>.console-focus-frame{z-index:2147482499!important}
 body.preview-native-home #framebuffer-preview #controls button:focus-visible{outline-width:var(--preview-cell);outline-offset:calc(-1 * var(--preview-cell))}
 
@@ -50,7 +56,8 @@ let painter=null,buffer=null,tools={},activeSurface=null,revealStart=0,revealFra
 function leaveSurface(){
  if(!activeSurface)return;
  const prior=activeSurface;activeSurface=null;nav.hidden=false;
- document.body.classList.remove('pixel-app-cover');
+ document.body.classList.remove('pixel-app-cover','pixel-app-dock');
+ document.body.style.removeProperty('--matrix-dock-reserve');
  document.dispatchEvent(new Event('makson-sphere-cover-change'));
  cancelAnimationFrame(revealFrame);revealFrame=0;prior.stop();
 }
@@ -61,7 +68,17 @@ window.MaksonPixelApp=Object.freeze({
  paintSettings(frame){return activeSurface===painter&&painter&&this.paintApp(frame)==='settings';},
  paintApp(frame){
   if(!activeSurface)return '';
-  const {ctx,width,height,headerRows,pitch}=frame;
+  const {ctx,width,headerRows,pitch}=frame;
+  const docked=dock&&!dock.hidden&&activeSurface!==painter;
+  document.body.classList.toggle('pixel-app-dock',!!docked);
+  const dockBox=docked?dock.getBoundingClientRect():null;
+  const height=dockBox?Math.floor(dockBox.top/pitch):frame.height;
+  const scale=Number(document.body.style.zoom)||1;
+  const view=window.visualViewport;
+  const viewportHeight=view?.scale===1?Math.min(innerHeight,view.height):innerHeight;
+  const reserve=dockBox?(Math.max(0,viewportHeight-height*pitch)/scale)+'px':'0px';
+  if(document.body.style.getPropertyValue('--matrix-dock-reserve')!==reserve)document.body.style.setProperty('--matrix-dock-reserve',reserve);
+  if(height<=headerRows){hide();return '';}
   const progress=revealStart?Math.min(1,(performance.now()-revealStart)/235):1;
   const opened=Math.ceil((height-headerRows)*(1-(1-progress)**3));
   ctx.save();ctx.beginPath();ctx.rect(0,headerRows,width,opened);ctx.clip();
@@ -75,6 +92,7 @@ window.MaksonPixelApp=Object.freeze({
  }
 });
 function repaint(){document.dispatchEvent(new Event('makson-pixel-repaint'));}
+window.visualViewport?.addEventListener('resize',()=>{if(activeSurface)repaint();},{passive:true});
 let ready=false,didSchedule=false,restore=null,drawer=null,contrastReturn=null;
 function hide(){leaveSurface();if(root.hidden)return;root.hidden=true;document.body.classList.remove('preview-native-home');document.dispatchEvent(new Event('makson-pixel-screen-change'));for(const [el,old] of previousInert)el.inert=old;previousInert.clear();}
 function show(){
@@ -93,7 +111,8 @@ function sync(){
   // Only an app's own fullscreen needs the native window. The site root still contains the pixel surface.
   const fullscreen=document.fullscreenElement||document.webkitFullscreenElement;
   const appFullscreen=fullscreen&&fullscreen!==document.documentElement;
-  const target=active.length===1&&!dock?.childElementCount&&active[0].ownerDocument===document&&!appFullscreen&&
+  const target=active.length===1&&(!dock?.childElementCount||active[0]!==settingsWin)&&
+   !dock?.querySelector('[data-task="'+active[0].id.slice(7)+'"]')&&active[0].ownerDocument===document&&!appFullscreen&&
    !active[0].classList.contains('fullscreen-fallback')?(active[0]===settingsWin?painter:active[0]===bufferWin?buffer:tools[active[0].id.slice(7)]):null;
   if(ready&&target&&!contrast.matches){
    show();

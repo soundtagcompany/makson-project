@@ -66,7 +66,9 @@ let catalogMotion=null;
 export function setCatalogCollapsed(value){
  const catalog=$('app-catalog'),workspace=$('app-workspace'),toggle=$('catalog-toggle'),shell=$('console-shell');
  const changed=document.body.classList.contains('catalog-collapsed')!==value;
- const moving=changed&&callbacks?.storage.get('settings',{}).motion!==false&&!matchMedia('(prefers-reduced-motion: reduce)').matches;
+ // The raster already paints the catalog. Animating its hidden DOM backdrop
+ // temporarily traps fixed windows and the dock inside the moving workspace.
+ const moving=changed&&!document.body.classList.contains('preview-native-home')&&callbacks?.storage.get('settings',{}).motion!==false&&!matchMedia('(prefers-reduced-motion: reduce)').matches;
  const before=moving?[catalog,workspace,toggle].map(el=>el.getBoundingClientRect()):null;
  catalogMotion?.();catalogMotion=null;
  document.body.classList.toggle('catalog-collapsed',value);catalog.inert=value;

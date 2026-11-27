@@ -233,8 +233,8 @@ export function createBufferSurface(bitmap,ctx){
  const style=document.createElement('style');
  style.textContent=`
 body.matrix-buffer #console-shell #window-buffer{
- position:fixed!important;inset:var(--buffer-top) 0 0!important;margin:0!important;transform:none!important;translate:none!important;
- width:100%!important;height:calc(var(--viewport-height,100dvh) - var(--buffer-top))!important;max-width:none!important;max-height:none!important;
+ position:fixed!important;inset:var(--buffer-top) 0 var(--matrix-dock-reserve,0px)!important;margin:0!important;transform:none!important;translate:none!important;
+ width:100%!important;height:calc(var(--viewport-height,100dvh) - var(--buffer-top) - var(--matrix-dock-reserve,0px))!important;max-width:none!important;max-height:none!important;
  min-height:0!important;border:0!important;box-shadow:none!important;display:flex!important;flex-direction:column!important;
  overflow:hidden!important;background:#08130d!important;
 }
@@ -437,8 +437,8 @@ export function createToolSurfaces(bitmap,ctx){
  const body=document.body,style=document.createElement('style');
  style.textContent=`
 body.matrix-tool #console-shell #app-workspace :is(.tools-window,.meme-window,.editor-window,.svyaz-window,.game-window,.naval-window,.pulse-window,.importopoly-window).matrix-tool-window{
- position:fixed!important;inset:var(--mtop) 0 0!important;width:100%!important;max-width:none!important;
- height:calc(var(--viewport-height,100dvh) - var(--mtop))!important;max-height:none!important;
+ position:fixed!important;inset:var(--mtop) 0 var(--matrix-dock-reserve,0px)!important;width:100%!important;max-width:none!important;
+ height:calc(var(--viewport-height,100dvh) - var(--mtop) - var(--matrix-dock-reserve,0px))!important;max-height:none!important;
  min-height:0!important;margin:0!important;border:0!important;box-shadow:none!important;
  background:#08130d!important;transform:none!important;translate:none!important;overflow:hidden!important;
  display:flex!important;flex-direction:column!important;
@@ -575,8 +575,8 @@ body.matrix-tool #window-editor.matrix-tool-window .editor-root #edit-export sel
  body.matrix-tool #window-editor.matrix-tool-window .edit-transport button{width:44px}
 }
 body.console-desktop.matrix-tool #window-svyaz.matrix-tool-window:not([hidden]){
- position:fixed!important;inset:var(--mtop) 0 0!important;width:100%!important;max-width:none!important;
- height:calc(var(--viewport-height,100dvh) - var(--mtop))!important;max-height:none!important;
+ position:fixed!important;inset:var(--mtop) 0 var(--matrix-dock-reserve,0px)!important;width:100%!important;max-width:none!important;
+ height:calc(var(--viewport-height,100dvh) - var(--mtop) - var(--matrix-dock-reserve,0px))!important;max-height:none!important;
  min-height:0!important;margin:0!important;border:0!important;box-shadow:none!important;
  transform:none!important;translate:none!important;overflow:hidden!important;
  display:flex!important;flex-direction:column!important;background:#050a09!important;
@@ -667,7 +667,7 @@ body.matrix-tool :is(.social-picker,.sv-voice-floating,.sv-photo-viewer){z-index
  body.console-desktop.matrix-tool #window-svyaz.matrix-tool-window #svyaz-chat .sv-bottom{display:none}
 }
 body.console-desktop.matrix-tool #console-shell #app-workspace #window-game.matrix-tool-window{
- inset:var(--mtop) 0 0!important;height:calc(var(--viewport-height,100dvh) - var(--mtop))!important;
+ inset:var(--mtop) 0 var(--matrix-dock-reserve,0px)!important;height:calc(var(--viewport-height,100dvh) - var(--mtop) - var(--matrix-dock-reserve,0px))!important;
 }
 body.console-desktop.matrix-tool #window-game.matrix-tool-window>.titlebar,
 body.console-desktop.matrix-tool #window-game.matrix-tool-window .game-toolbar{
@@ -727,7 +727,7 @@ body.console-desktop.matrix-tool #window-game.matrix-tool-window>.window-status:
  }
 }
 body.console-desktop.matrix-tool #console-shell #app-workspace #window-naval.matrix-tool-window{
- inset:var(--mtop) 0 0!important;height:calc(var(--viewport-height,100dvh) - var(--mtop))!important;
+ inset:var(--mtop) 0 var(--matrix-dock-reserve,0px)!important;height:calc(var(--viewport-height,100dvh) - var(--mtop) - var(--matrix-dock-reserve,0px))!important;
 }
 body.console-desktop.matrix-tool #window-naval.matrix-tool-window :is(.titlebar,.naval-toolbar){
  min-height:max(calc(16 * var(--mt)),calc(44px / var(--ui-scale,1)))!important;

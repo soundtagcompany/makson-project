@@ -297,6 +297,7 @@ function draw(buttons,focusKey){
  if(rasterApp){
   if(buttons)catalogNeedsLayout=true;
   drawHeader(top);
+  drawDock();
   if(rasterApp!=='settings')return;
   const win=document.querySelector('#window-settings');
   const title=anchor(win?.querySelector('.titlebar')),close=anchor(win?.querySelector('[data-action=close]'));
