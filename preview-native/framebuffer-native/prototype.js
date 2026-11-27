@@ -1,7 +1,7 @@
 (() => {
 const c=document.querySelector('#screen'),native=!!c.closest('[data-preview-native]'),ctx=c.getContext('2d',{alpha:native}),nav=document.querySelector('#controls'),status=document.querySelector('#status');
 const ink={bg:'#000000',star:'#6e508e',distant:'#242031',red:'#ff4b50',header:'#050303',rule:'#452025',catalog:'#020906',edge:'#203b27',green:'#96eeb3',mint:'#4bf89b',muted:'#72a285',front:'#ab52e7',back:'#46216a'};
-const lists={root:[['Программы','folder','tools'],['Игры','folder','games'],['Связь','chat','svyaz'],['Настройки','gear','settings']],
+const lists={root:[['Программы','folder','tools'],['Игры','folder','games']],
  tools:[['Монтажка','edit','editor'],['Конвертер','swap','convert'],['Загрузчик','down','download'],['Мемоинатор','photo','meme'],['Буфер','copy','buffer']],
  games:[['Гипноройдер','rocket','game'],['СДВГПОЛИЯ','board','importopoly'],['Пульс','pulse','pulse'],['Морская движуха','naval','naval']]};
 const titles={root:['КАТАЛОГ','МЕНЮ'],tools:['ПРОГРАММЫ','СОФТ'],games:['ИГРЫ']};
