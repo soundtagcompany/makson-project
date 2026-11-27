@@ -909,6 +909,38 @@ body.matrix-tool #window-importopoly.matrix-tool-window>.titlebar{opacity:0!impo
 body.matrix-tool #window-importopoly.matrix-tool-window>#importopoly-frame{
  flex:1 1 0%!important;display:block;width:100%!important;height:100%!important;min-height:0!important;border:0!important;
 }
+@media (max-width:360px) and (pointer:coarse){
+ body.matrix-tool.console-desktop #console-shell #app-workspace .matrix-tool-window:not(.svyaz-window)>.titlebar{
+  height:calc(27 * var(--mt))!important;min-height:calc(27 * var(--mt))!important;
+  flex:0 0 calc(27 * var(--mt))!important;display:grid!important;grid-template-columns:minmax(0,1fr);
+  grid-template-rows:calc(10 * var(--mt)) calc(15 * var(--mt));align-content:center;justify-items:start;
+  gap:0!important;padding:0 calc(3 * var(--mt))!important;
+ }
+ body.matrix-tool.console-desktop #console-shell #app-workspace .matrix-tool-window:not(.svyaz-window)>.titlebar>span{
+  min-height:0!important;width:100%;height:100%;padding:0!important;overflow:hidden;
+ }
+ body.matrix-tool.console-desktop #console-shell #app-workspace .matrix-tool-window:not(.svyaz-window)>.titlebar>.window-controls{
+  position:static!important;display:flex!important;align-items:center;justify-content:flex-start;
+  flex-wrap:nowrap!important;gap:0!important;padding:0!important;width:auto!important;margin:0!important;
+ }
+ body.matrix-tool.console-desktop #console-shell #app-workspace .matrix-tool-window:not(.svyaz-window)>.titlebar .window-controls button{
+  position:static!important;inset:auto!important;
+  width:calc(15 * var(--mt))!important;min-width:calc(15 * var(--mt))!important;
+  height:calc(15 * var(--mt))!important;min-height:calc(15 * var(--mt))!important;
+ }
+ body.matrix-tool.console-desktop #console-shell #app-workspace #window-pulse.matrix-tool-window #pulse-menu{
+  padding:calc(4 * var(--mt));
+ }
+ body.matrix-tool.console-desktop #console-shell #app-workspace #window-pulse.matrix-tool-window #pulse-menu .pulse-front-inner{
+  gap:calc(1 * var(--mt));margin:0;padding:0;
+ }
+ body.matrix-tool.console-desktop #console-shell #app-workspace #window-pulse.matrix-tool-window #pulse-menu :is(.pulse-menu-kicker,#pulse-menu-description){
+  display:none!important;
+ }
+ body.matrix-tool.console-desktop #console-shell #app-workspace #window-pulse.matrix-tool-window #pulse-menu h2{
+  min-height:0!important;height:calc(12 * var(--mt));margin:0 0 calc(2 * var(--mt))!important;
+ }
+}
 `;
  document.head.append(style);
  const toolsColors={page:'#020704',surface:'#08130d',input:'#0b1c12',edge:'#2d5840',text:'#b5eccc',muted:'#80ae91',on:'#76e6a7'};
@@ -975,6 +1007,8 @@ body.matrix-tool #window-importopoly.matrix-tool-window>#importopoly-frame{
    fill({l:0,t:top,r:w,b:tb.b},colors.surface);
    fill({l:0,t:tb.b-1,r:w,b:tb.b},colors.edge);
    const control=bounds(title.querySelector('.window-controls'));
+   const stacked=!chat&&control.t>=tb.t+9&&control.r>control.l;
+   const titleBox=stacked?{l:3,r:w-3,t:tb.t,b:control.t}:{l:3,r:control.l-1,t:tb.t,b:tb.b};
    const titleText=race?'ГИПНОРОЙДЕР':win.dataset.title;
    if(chat){
     const textBounds={l:3,r:control.l-1,t:tb.t,b:tb.b};
@@ -987,9 +1021,9 @@ body.matrix-tool #window-importopoly.matrix-tool-window>#importopoly-frame{
      if(l>=24){const b={l,r,t:y-4,b:y+4};box(b,colors.on,colors.input);words(n,b,{center:true});}
     }
    }else if(race||naval||board){
-    const room={l:3,r:control.l-1,t:tb.t,b:tb.b};
+    const room=titleBox;
     words(bitmap.compactWidth(titleText.toUpperCase())+3<=room.r-room.l?titleText:naval?'ФЛОТ':board?'ПОЛЕ':'ПОЛЁТ',room,{primary:true,full:true});
-   }else words(titleText,{l:3,r:control.l-1,t:tb.t,b:tb.b},{full:true});
+   }else words(titleText,titleBox,{full:true});
    for(const el of title.querySelectorAll('button')){
     const b=bounds(el),x=Math.floor((b.l+b.r)/2),y=Math.floor((b.t+b.b)/2);
     const square=(l,t,r,b)=>fill({l,t,r,b},colors.text);
@@ -1491,6 +1525,8 @@ body.matrix-tool #window-importopoly.matrix-tool-window>#importopoly-frame{
          const x=Math.floor((b.l+b.r)/2),y=Math.floor((b.t+b.b)/2),color=disabled?colors.muted:colors.text;
          fill({l:x-4,r:x-3,t:y-3,b:y+4},color);fill({l:x-2,r:x+4,t:y,b:y+1},color);
          for(let j=0;j<3;j++)fill({l:x-2+j,r:x-1+j,t:y-j,b:y+j+1},color);
+        }else if(el.id==='edit-open'&&bitmap.compactWidth(el.textContent.toUpperCase())>b.r-b.l-2){
+         words('ОТКРЫТЬ ФАЙЛ',b,{primary:true,center:true,quiet:disabled});
         }else drawLabel(el,b,{center:true,quiet:disabled});
        }else if(tag==='select'){
         box(b,hot(el)?colors.on:colors.edge,colors.input);
@@ -1516,6 +1552,8 @@ body.matrix-tool #window-importopoly.matrix-tool-window>#importopoly-frame{
         words(el.textContent,b,{quiet:true});
        }else if(el.matches('#edit-empty>span')){
         words('ДО 256 МБ · ДО 10 МИН',b,{center:true,quiet:true});
+       }else if(el.matches('#edit-empty>p')){
+        words('ИЛИ ПЕРЕТАЩИ ФАЙЛ',b,{center:true,quiet:true});
        }else if(el.id==='edit-main-label'){
         words(el.textContent==='Видео'?'КЛИП':el.textContent,b,{quiet:true});
        }else if(el.matches('.edit-transport>span')){
