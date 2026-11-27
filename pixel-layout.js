@@ -109,7 +109,7 @@ if(native)for(const [key,source] of [
    const k=document.createElement('canvas');k.width=9;k.height=9;const x=k.getContext('2d');
    x.imageSmoothingEnabled=false;x.drawImage(img,0,0,svgIcon?8:9,svgIcon?8:9);const data=x.getImageData(0,0,9,9), pixels=[];
    for(let j=0;j<9;j++)for(let i=0;i<9;i++)if(data.data[(j*9+i)*4+3]>=65)pixels.push([i,j]);
-   if(pixels.length){art.set(key,pixels);queue();}
+   if(pixels.length){art.set(key,pixels);staticDirty=true;queue();}
   };img.src=svgIcon||'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(new XMLSerializer().serializeToString(copy));
  }
  addImage();
@@ -231,6 +231,8 @@ function drawSpeed(scene){
  rect(x-4,y+7,length+7,1,'#46265a');
  compact(text,x,y,'#d9a1f4');
 }
+const staticLayer=document.createElement('canvas'),staticCtx=staticLayer.getContext('2d');
+let staticDirty=true;
 function draw(buttons,focusKey){
  if(buttons)nav.replaceChildren();
  n=innerWidth<490||(innerHeight<490&&matchMedia('(pointer:coarse)').matches)?3:4;
@@ -286,9 +288,15 @@ function draw(buttons,focusKey){
   }
  }
 
- if(native)drawHeader(top);
- else {rect(0,0,W,top,ink.header);rect(0,top-1,W,1,ink.rule);const brand='MAKSON PROJECT';label(brand,Math.max(4,(W-width(brand))/2),5,ink.red);}
-
+ const mainCtx=ctx;
+ if(native){
+  if(!buttons&&!staticDirty&&staticLayer.width===W&&staticLayer.height===H){
+   ctx.drawImage(staticLayer,0,0);return;
+  }
+  if(staticLayer.width!==W||staticLayer.height!==H){staticLayer.width=W;staticLayer.height=H;}
+  staticCtx.clearRect(0,0,W,H);
+  ctx=staticCtx;drawHeader(top);
+ }else {rect(0,0,W,top,ink.header);rect(0,top-1,W,1,ink.rule);const brand='MAKSON PROJECT';label(brand,Math.max(4,(W-width(brand))/2),5,ink.red);}
  const box=narrow?{x:3,y:H-panel-2,w:W-6,h:panel}:native?{x:0,y:top,w:sidebar,h:panel}:{x:3,y:22,w:side,h:panel};
  const sx=narrow?Math.floor(W/2):Math.floor((W+(shown?side+6:0))/2);
  const sy=Math.floor((top+H-(narrow&&shown?panel:0))/2);
@@ -333,10 +341,21 @@ function draw(buttons,focusKey){
  const x=shown?box.x+1:2,y=shown?box.y+1:narrow?H-18:top+3;
  edge(x,y,15,15,'#090f0c');stroke(x+4,y+7,x+10,y+7,ink.mint);if(!shown)stroke(x+7,y+4,x+7,y+10,ink.mint);
  if(buttons)btn('toggle',shown?'Свернуть каталог':'Открыть каталог',x,y,15,15,kbd=>{setShown(!shown);if(kbd)focus('toggle')});
+ if(native){
+  ctx=mainCtx;ctx.drawImage(staticLayer,0,0);staticDirty=false;
+ }
 }
 function queue(){if(!pending)pending=requestAnimationFrame(()=>{pending=0;if(!native||!c.parentElement.hidden)draw(false)})}
 if(native){
- for(const e of ['makson-native-frame','makson-pixel-screen-change','makson-pixel-repaint','focusin','focusout','pointerover','pointerout','accountchange'])document.addEventListener(e,queue);
+ const refresh=()=>{staticDirty=true;queue()};
+ document.addEventListener('makson-native-frame',queue);
+ document.addEventListener('makson-pixel-repaint',queue);
+ for(const e of ['makson-pixel-screen-change','focusin','focusout','accountchange','windowfocus','windowhide','console-boot-change'])document.addEventListener(e,refresh);
+ for(const e of ['pointerover','pointerout'])document.addEventListener(e,event=>{
+  if(event.target.closest?.('.desktop-header,#controls'))refresh();
+ });
+ const header=document.querySelector('.desktop-header');
+ if(header)new MutationObserver(refresh).observe(header,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['aria-expanded','class','hidden']});
 }
 
 document.addEventListener('makson-preview-focus',e=>{
