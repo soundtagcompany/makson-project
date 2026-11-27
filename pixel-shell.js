@@ -111,9 +111,12 @@ function sync(){
   // Only an app's own fullscreen needs the native window. The site root still contains the pixel surface.
   const fullscreen=document.fullscreenElement||document.webkitFullscreenElement;
   const appFullscreen=fullscreen&&fullscreen!==document.documentElement;
-  const target=active.length===1&&(!dock?.childElementCount||active[0]!==settingsWin)&&
-   !dock?.querySelector('[data-task="'+active[0].id.slice(7)+'"]')&&active[0].ownerDocument===document&&!appFullscreen&&
-   !active[0].classList.contains('fullscreen-fallback')?(active[0]===settingsWin?painter:active[0]===bufferWin?buffer:tools[active[0].id.slice(7)]):null;
+  const inPage=active.filter(win=>win.ownerDocument===document);
+  const top=inPage.includes(settingsWin)?settingsWin:active.length===1?inPage[0]:null;
+  // Settings is modal over the workspace. It keeps its pixel frame even with a
+  // suspended task underneath, but does not expose that task until it closes.
+  const target=top&&!appFullscreen&&!top.classList.contains('fullscreen-fallback')&&
+   !dock?.querySelector('[data-task="'+top.id.slice(7)+'"]')?(top===settingsWin?painter:top===bufferWin?buffer:tools[top.id.slice(7)]):null;
   if(ready&&target&&!contrast.matches){
    show();
    if(activeSurface!==target){
@@ -121,6 +124,9 @@ function sync(){
     document.body.classList.add('pixel-app-cover');
     document.dispatchEvent(new Event('makson-sphere-cover-change'));
     revealStart=motion.matches||document.body.classList.contains('reduced-motion')?0:performance.now();
+    if(target===painter&&document.querySelector('#console-settings:focus-visible')){
+     settingsWin.querySelector('[data-action=close]')?.focus({preventScroll:true});
+    }
    }
    repaint();return;
   }
