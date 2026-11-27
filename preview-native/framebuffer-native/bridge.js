@@ -11,6 +11,9 @@ style.textContent=`
 #framebuffer-preview{position:fixed;inset:0;z-index:2147483640;overflow:hidden;background:transparent;pointer-events:none;zoom:calc(1 / var(--ui-scale,1))}
 #framebuffer-preview[hidden]{display:none!important}
 body.preview-native-home #app-catalog,body.preview-native-home #catalog-toggle{visibility:hidden!important}
+body.preview-native-home .desktop-header,body.preview-native-home #sphere-stage{opacity:0!important}
+body.preview-native-home #framebuffer-preview #controls button:focus-visible{outline-width:var(--preview-cell);outline-offset:calc(-1 * var(--preview-cell))}
+
 #framebuffer-preview canvas{position:absolute;inset:0 auto auto 0;image-rendering:pixelated;pointer-events:none}
 #framebuffer-preview #controls{position:absolute;inset:0;pointer-events:none}
 #framebuffer-preview #controls button{position:absolute;pointer-events:auto;background:none!important;box-shadow:none!important;border:0!important;color:transparent!important;margin:0;padding:0;appearance:none;cursor:pointer}
@@ -28,14 +31,14 @@ document.head.append(style);
 const windows=[...document.querySelectorAll('.window[id^="window-"]')], allowed=new Set(windows.map(w=>w.id.slice(7)));
 const dock=document.querySelector('#console-dock'),contrast=matchMedia('(forced-colors:active)'),previousInert=new Map();
 let direct=allowed.has(params.get('app'))&&params.get('app')!=='settings',ready=false,didSchedule=false,restore=null,drawer=null,contrastReturn=null;
-function hide(){if(root.hidden)return;root.hidden=true;document.body.classList.remove('preview-native-home');for(const [el,old] of previousInert)el.inert=old;previousInert.clear();}
+function hide(){if(root.hidden)return;root.hidden=true;document.body.classList.remove('preview-native-home');document.dispatchEvent(new Event('makson-pixel-screen-change'));for(const [el,old] of previousInert)el.inert=old;previousInert.clear();}
 function show(){
  if(!root.hidden)return;
  for(const el of [document.querySelector('#app-catalog'),document.querySelector('#catalog-toggle')]){
   if(!el)continue;previousInert.set(el,el.inert);el.inert=true;
  }
  document.body.classList.add('preview-native-home');
- root.hidden=false;
+ root.hidden=false;document.dispatchEvent(new Event('makson-pixel-screen-change'));
 }
 function sync(){
  if(didSchedule)return;
