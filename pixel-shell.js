@@ -127,7 +127,7 @@ body.preview-matrix-settings #window-settings .console-zoom{
  gap:calc(2 * var(--mx));padding:0;
 }
 body.preview-matrix-settings #window-settings .console-zoom>span{grid-column:auto}
-body.preview-matrix-settings #window-settings .console-zoom output{min-width:calc(24 * var(--mx));margin:0;text-align:center}
+body.preview-matrix-settings #window-settings .console-zoom output{min-width:calc(24 * var(--mx));min-height:calc(10 * var(--mx));margin:0;text-align:center;display:grid;align-items:center}
 body.preview-matrix-settings #window-settings :is(.console-zoom,.settings-fullscreen,.setting){
  min-height:calc(18 * var(--mx));padding:0;margin:0;border:0;gap:calc(2 * var(--mx));
 }
@@ -141,7 +141,7 @@ body.preview-matrix-settings #window-settings .utility-body summary{
  min-height:calc(15 * var(--mx))!important;padding-inline:calc(2 * var(--mx));
 }
 body.preview-matrix-settings #window-settings :is(#zoom-in,#zoom-out){width:calc(15 * var(--mx));min-width:calc(15 * var(--mx))!important}
-body.preview-matrix-settings #window-settings #site-fullscreen{width:calc(18 * var(--mx));min-width:calc(18 * var(--mx))}
+body.preview-matrix-settings #window-settings #site-fullscreen{width:calc(22 * var(--mx));min-width:calc(22 * var(--mx))}
 body.preview-matrix-settings #window-settings .settings-footer{
  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:calc(2 * var(--mx));
  margin:0;padding:calc(3 * var(--mx)) 0 0;
@@ -150,7 +150,7 @@ body.preview-matrix-settings #window-settings .console-input-help p{
  grid-column:1/-1;order:4;line-height:calc(7 * var(--mx))!important;
  --ui-text-min:calc(5 * var(--mx));margin:0;padding:calc(2 * var(--mx)) 0;min-height:calc(39 * var(--mx));
 }
-body.preview-matrix-settings #window-settings .settings-footer :is(button,summary){width:100%;justify-content:center}
+body.preview-matrix-settings #window-settings .settings-footer :is(button,summary){width:100%;height:calc(16 * var(--mx));min-height:calc(16 * var(--mx))!important;justify-content:center}
 @media (min-width:600px){
  body.preview-matrix-settings #window-settings .screen-settings{
   display:grid;grid-template-columns:1.35fr 1fr;gap:calc(4 * var(--mx));
@@ -334,7 +334,7 @@ function settingsSurface(bitmap,ctx){
   const full=pane.querySelector('#site-fullscreen');
   text('ПОЛНЫЙ ЭКРАН',{...fr,r:bounds(full).l-1});
   button(full,full.getAttribute('aria-pressed')==='true'?'ВЫКЛ':'ВКЛ');
-  const labels=['ЗВУК ИНТЕРФЕЙСА','АНИМАЦИЯ','МЕНЬШЕ ЯРКОСТИ'];
+  const labels=['ЗВУК','АНИМАЦИЯ','МЕНЬШЕ ЯРКОСТИ'];
   [...pane.querySelectorAll('label.setting')].forEach((row,i)=>{
    const b=bounds(row),input=row.querySelector('input'),p=bounds(input),checked=input.checked;
    fill(b.l,b.t,b.r,b.t+1,rgb.line);

@@ -20,7 +20,7 @@ const letters={
  '0':[14,17,17,17,17,17,14],'1':[4,12,4,4,4,4,14],'2':[14,17,1,2,4,8,31],
  '3':[30,1,1,14,1,1,30],'4':[2,6,10,18,31,2,2],'5':[31,16,16,30,1,1,30],
  '6':[14,16,16,30,17,17,14],'7':[31,1,2,4,8,8,8],'8':[14,17,17,14,17,17,14],
- '9':[14,17,17,15,1,1,14],'%':[17,18,4,4,4,9,17],'+':[0,4,4,31,4,4,0],'−':[0,0,0,31,0,0,0],
+ '9':[14,17,17,15,1,1,14],'%':[25,26,4,4,4,11,19],'+':[0,4,4,31,4,4,0],'−':[0,0,0,31,0,0,0],
  ':':[0,0,4,0,0,4,0],'.':[0,0,0,0,0,12,12],' ':[]};
 const alias={M:'М',A:'А',K:'К',O:'О',P:'Р',E:'Е',C:'С',T:'Т'};
 const sprites={folder:[24,31,17,17,31],chat:[31,17,31,8,16],gear:[4,14,27,14,4],edit:[17,10,4,10,17],swap:[2,31,2,8,31,8],down:[4,21,21,31],photo:[31,17,21,27,31],copy:[15,9,29,21,31],rocket:[4,14,14,27,4],board:[31,21,31,21,31],pulse:[4,6,27,4],naval:[4,6,21,14]};
@@ -144,7 +144,8 @@ function drawHeader(top){
   rect(a.x+1,a.y+1,a.w-2,a.h-2,chat.matches(':focus-visible')?'#482225':chat.getAttribute('aria-expanded')==='true'||chat.matches(':hover')?'#311317':'#190b0e');
   const text=compactWidth('СВЯЗЬ'),fullChat=a.w>=text+11,ix=fullChat?a.x+1:a.x+Math.round((a.w-9)/2);
   iconAt('svyaz',ix,a.y+Math.round((a.h-9)/2),ink.red,'chat');
-  if(fullChat)compact('СВЯЗЬ',ix+9,a.y+Math.floor((a.h-5)/2),ink.red);
+  if(a.w>=width('СВЯЗЬ')+13)label('СВЯЗЬ',ix+10,a.y+Math.floor((a.h-7)/2),ink.red);
+  else if(fullChat)compact('СВЯЗЬ',ix+9,a.y+Math.floor((a.h-5)/2),ink.red);
   const unread=chat.querySelector('b')?.textContent.trim();
   if(unread||chat.classList.contains('sv-call-active'))rect(a.x+a.w-4,a.y+2,2,2,chat.classList.contains('sv-call-active')?ink.mint:'#ff9296');
  }
