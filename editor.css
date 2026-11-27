@@ -69,3 +69,14 @@
 }
 
 .editor-root #edit-source-error{margin:0;padding:7px 10px;color:#ffe1c2;background:#2a1f14;border-block-start:1px solid #715438;overflow-wrap:anywhere;order:-3}
+
+/* Take space for the complete track labels before drawing the shared ruler. */
+@container (max-width:740px){
+ .editor-root .edit-timeline-panel{--edit-lane-label:max(58px,calc(76px / var(--ui-scale,1)))}
+ .editor-root .edit-timeline-panel :is(.edit-track-main,.edit-track){
+  grid-template-columns:var(--edit-lane-label) minmax(0,1fr);
+ }
+ .editor-root .edit-timeline-panel .edit-track-label{
+  padding-inline:calc(6px / var(--ui-scale,1));white-space:nowrap;
+ }
+}
