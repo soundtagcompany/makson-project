@@ -66,50 +66,60 @@ function reveal(win,origin){
  const animation=win.animate([{scale:panel?'.985':'.88',translate:panel?(win.id==='window-settings'?'-8px -6px':'8px -6px'):travel,opacity:0},{scale:'1',translate:'0 0',opacity:1}],{duration:panel?250:440,easing:'cubic-bezier(.22,1,.36,1)'});
  animation.finished.then(()=>win.classList.remove('window-opening'),()=>win.classList.remove('window-opening'));
 }
-export function openWindow(id){
+export function openWindow(id,{focusRestoredWindow=false}={}){
  if(id==='notes'||id==='shabash')return;
  if(id==='home'){id='svyaz';document.dispatchEvent(new CustomEvent('svyazpage',{detail:'account'}));}
  const win=$('window-'+id);if(!win)return;
  if(panelIds.has(id))for(const other of panelIds)if(other!==id)hideWindow($('window-'+other));
  const source=document.querySelector(`[data-sphere-app="${id}"]`);const launchOrigin=!$('sphere-stage').hidden&&source?source.getBoundingClientRect():null;
  const origin=win.hidden?dockRect(id):null;cancelDock(win);const wasHidden=win.hidden;win.hidden=false;openTasks.add(id);focusWindow(win);
+ const focusRestored=()=>{
+  if(!focusRestoredWindow||win.hidden||win.classList.contains('inactive')||win.ownerDocument!==document)return;
+  // Restore keyboard control without stealing focus if the user already moved elsewhere.
+  if(document.activeElement!==document.body&&!win.contains(document.activeElement))return;
+  win.querySelector('.titlebar [data-action=minimize],.titlebar [data-action=close]')?.focus({preventScroll:true});
+ };
  if(isPictureInPicture(win))win.ownerDocument.defaultView.focus();else if(wasHidden){
   if(origin&&motionEnabled()&&win.ownerDocument===document&&!document.fullscreenElement){
    const token={};win._hideToken=token;const animation=animateDock(win,origin,win.getBoundingClientRect(),true);
-   if(animation)animation.finished.then(()=>{if(win._hideToken===token)cancelDock(win);}).catch(()=>{});else cancelDock(win);
-  }else reveal(win,launchOrigin);
+   if(animation)animation.finished.then(()=>{if(win._hideToken===token){cancelDock(win);focusRestored();}}).catch(()=>{});else{cancelDock(win);focusRestored();}
+  }else{reveal(win,launchOrigin);focusRestored();}
  }
  if(id==='editor')ensureEditor();if(id==='meme')ensureMeme();if(id==='convert'||id==='download')ensureTools();if(id==='game')ensureGame();if(id==='naval')ensureNaval();if(id==='pulse')ensurePulse();if(id==='importopoly')ensureImportopoly();
 }
-function hideWindow(win,close=false,animate=false){
+function hideWindow(win,close=false,animate=false,focusDock=false){
  if(animate&&!close&&win&&!win.hidden&&win.id!=='window-settings'&&motionEnabled()&&!isPictureInPicture(win)&&win.ownerDocument===document&&!document.fullscreenElement&&!win.classList.contains('fullscreen-fallback')){
   if(docking.has(win.id.slice(7)))return;
   cancelDock(win);const from=win.getBoundingClientRect(),id=win.id.slice(7);docking.add(id);renderTasks();const target=dockRect(id);
   if(target){const token={};win._hideToken=token;const animation=animateDock(win,from,target);
-   if(animation){animation.finished.then(()=>{if(win._hideToken===token)hideWindow(win,false);}).catch(()=>{});return;}
-   hideWindow(win,false);return;
+   if(animation){animation.finished.then(()=>{if(win._hideToken===token)hideWindow(win,false,false,focusDock);}).catch(()=>{});return;}
+   hideWindow(win,false,false,focusDock);return;
   }
   docking.delete(id);
  }
 
  if(animate&&win&&!win.hidden&&motionEnabled()&&!isPictureInPicture(win)){
   const token={};win._hideToken=token;win.getAnimations().forEach(a=>a.cancel());
-  win.animate([{opacity:1,translate:'0 0'},{opacity:0,translate:'0 12px'}],{duration:230,easing:'cubic-bezier(.4,0,.7,.2)'}).finished.then(()=>{if(win._hideToken===token){win._hideToken=null;hideWindow(win,close);}}).catch(()=>{});return;
+  win.animate([{opacity:1,translate:'0 0'},{opacity:0,translate:'0 12px'}],{duration:230,easing:'cubic-bezier(.4,0,.7,.2)'}).finished.then(()=>{if(win._hideToken===token){win._hideToken=null;hideWindow(win,close,false,focusDock);}}).catch(()=>{});return;
  }
 
  if(!win)return;cancelDock(win);if(win.hidden){if(close){openTasks.delete(win.id.slice(7));renderTasks();}return;}
  win.dataset.closing='true';restorePictureInPicture(win,{focus:false});delete win.dataset.closing;win.getAnimations().forEach(a=>a.cancel());win.hidden=true;
  const id=win.id.slice(7);if(close)openTasks.delete(id);if(active===id)active='';if(id==='settings')$('console-settings').focus({preventScroll:true});
- document.dispatchEvent(new CustomEvent('windowhide',{detail:id}));desktopState();renderTasks();document.dispatchEvent(new CustomEvent('windowfocus',{detail:active}));
+ document.dispatchEvent(new CustomEvent('windowhide',{detail:id}));desktopState();renderTasks();
+ if(focusDock&&!close&&(document.activeElement===document.body||win.contains(document.activeElement))){
+  $('console-dock').querySelector('[data-task="'+id+'"]>button')?.focus({preventScroll:true});
+ }
+ document.dispatchEvent(new CustomEvent('windowfocus',{detail:active}));
 }
 function renderTasks(){
  for(const button of document.querySelectorAll('[data-select-app]')){const id=button.dataset.selectApp;button.dataset.running=String(openTasks.has(id));button.setAttribute('aria-current',String(active===id&&!$('window-'+id)?.hidden));}
  const dock=$('console-dock'),ids=[...openTasks].filter(id=>id!=='settings'&&($('window-'+id)?.hidden||docking.has(id)));
  for(const item of [...dock.children])if(!ids.includes(item.dataset.task))item.remove();
- for(const id of ids){if(dock.querySelector(`[data-task="${id}"]`))continue;const win=$('window-'+id),item=document.createElement('div');item.className='console-task';item.dataset.task=id;item.style.setProperty('--app-color',win.style.getPropertyValue('--app-color')||'#71ef8b');const restore=document.createElement('button');restore.textContent=win.dataset.title||id;restore.setAttribute('aria-label','Восстановить '+restore.textContent);restore.onclick=()=>openWindow(id);const close=document.createElement('button');close.textContent='×';close.setAttribute('aria-label','Закрыть '+restore.textContent);close.onclick=()=>hideWindow(win,true);item.append(restore,close);dock.append(item);}
+ for(const id of ids){if(dock.querySelector(`[data-task="${id}"]`))continue;const win=$('window-'+id),item=document.createElement('div');item.className='console-task';item.dataset.task=id;item.style.setProperty('--app-color',win.style.getPropertyValue('--app-color')||'#71ef8b');const restore=document.createElement('button');restore.textContent=win.dataset.title||id;restore.setAttribute('aria-label','Восстановить '+restore.textContent);restore.onclick=e=>openWindow(id,{focusRestoredWindow:e.detail===0});const close=document.createElement('button');close.textContent='×';close.setAttribute('aria-label','Закрыть '+restore.textContent);close.onclick=()=>hideWindow(win,true);item.append(restore,close);dock.append(item);}
  dock.hidden=!ids.length;$('app-workspace').classList.toggle('has-docked-apps',!!ids.length);
 }
-function windowAction(button){const win=button.closest('.window');if(!win)return;if(button.dataset.action==='pip')togglePictureInPicture(win);else if(button.dataset.action==='maximize'){if(!button.onclick)toggleFullscreen(win);}else if(['minimize','close'].includes(button.dataset.action))hideWindow(win,button.dataset.action==='close',true);}
+function windowAction(button){const win=button.closest('.window');if(!win)return;if(button.dataset.action==='pip')togglePictureInPicture(win);else if(button.dataset.action==='maximize'){if(!button.onclick)toggleFullscreen(win);}else if(['minimize','close'].includes(button.dataset.action))hideWindow(win,button.dataset.action==='close',true,button.matches(':focus-visible'));}
 onDesktopEvent('click',e=>{
  const open=e.target.closest('[data-open]');if(open)openWindow(open.dataset.open);
  const action=e.target.closest('.window-controls [data-action]');if(action)windowAction(action);
