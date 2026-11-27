@@ -427,5 +427,13 @@ document.addEventListener('makson-preview-keyboard-home',()=>{
 c.onpointerdown=e=>{if(native||e.button!==0)return;pointer=[e.clientX,e.clientY];c.setPointerCapture(e.pointerId)};
 c.onpointermove=e=>{if(!pointer)return;angle+=(e.clientX-pointer[0])*.013;tilt=Math.max(-1,Math.min(1,tilt+(e.clientY-pointer[1])*.01));pointer=[e.clientX,e.clientY];queue()};
 for(const e of ['pointerup','pointercancel','lostpointercapture'])c.addEventListener(e,()=>pointer=null);
-addEventListener('resize',()=>{const key=document.activeElement?.dataset?.key;draw(true,key);if(key)focus(key)},{passive:true});draw(true);
+addEventListener('resize',()=>{
+ const active=document.activeElement;
+ const key=nav.contains(active)?active.dataset.key:undefined;
+ draw(true,key);
+ if(!key||document.activeElement===active)return;
+ const previous=nav.querySelector('[data-key="'+key+'"]');
+ if(previous)previous.focus({preventScroll:true});
+ else focus(shown?lists[folder][page*cap]?.[2]||'toggle':'toggle');
+},{passive:true});draw(true);
 })();

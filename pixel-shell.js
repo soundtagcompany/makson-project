@@ -149,7 +149,12 @@ function sync(){
    [...root.querySelectorAll('#controls button')].find(el=>el.dataset.key===contrastReturn)?.focus({preventScroll:true});
   }
   contrastReturn=null;
-  if(restore&&!dock?.childElementCount){document.dispatchEvent(new CustomEvent('makson-preview-focus',{detail:restore}));restore=null}
+  // On close the browser may drop focus to the document. A different,
+  // minimized app must not prevent returning to the catalog entry.
+  if(restore&&(!dock?.childElementCount||document.activeElement===document.body||document.activeElement?.closest(".window[hidden]"))){
+   const id=restore;restore=null;
+   document.dispatchEvent(new CustomEvent('makson-preview-focus',{detail:id}));
+  }
  });
 }
 function open(evt){
